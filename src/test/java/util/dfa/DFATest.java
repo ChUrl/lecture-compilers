@@ -2,6 +2,7 @@ package util.dfa;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import util.tools.DFAViewUtil;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -25,6 +26,7 @@ class DFATest {
         edges.add(new Edge(c, '1', b));
 
         DFA dfa = new DFA(nodes, c, edges); // Hier werden die Nodes mit Edges befüllt
+        System.out.println(DFAViewUtil.toDot(dfa));
 
         assertThat(c.getNext('0').getName()).isEqualTo("C");
         assertThat(c.getNext('1').getName()).isEqualTo("B");
@@ -43,6 +45,7 @@ class DFATest {
         edges.add(new Edge(c, '0', c));
 
         DFA dfa = new DFA(nodes, c, edges);
+        System.out.println(DFAViewUtil.toDot(dfa));
 
         assertThat(c.getNext('0').getName()).isEqualTo("C");
         assertThatThrownBy(() -> c.getNext('1')).isInstanceOf(DFANoSuchEdgeException.class);
@@ -76,7 +79,7 @@ class DFATest {
         edges.add(new Edge(e, '1', c));
 
         DFA dfa = new DFA(nodes, c, edges);
-        // System.out.println(DFAViewUtil.toDot(dfa));
+        System.out.println(DFAViewUtil.toDot(dfa));
 
         assertThat(dfa.accept("10010")).isEqualTo("CBEDDA ablehnen");
         assertThat(dfa.accept("11001")).isEqualTo("CBABEC akzeptieren");
@@ -124,7 +127,7 @@ class DFATest {
         edges.add(new Edge(e, 'a', d));
 
         DFA dfa = new DFA(nodes, a, edges);
-        // System.out.println(ViewUtil.toDot(dfa));
+        System.out.println(DFAViewUtil.toDot(dfa));
 
         assertThat(dfa.accept("a")).isEqualTo("AB akzeptieren");
         assertThat(dfa.accept("aa")).isEqualTo("ABD akzeptieren");
