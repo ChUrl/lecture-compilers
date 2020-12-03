@@ -1,0 +1,13 @@
+// Tolle Testklasse
+class CommentClass {
+
+    // Das ist ein Kommentar
+    public static void main(String[] args) {
+        /*
+         * Wir testen hier einen Multiline Kommentar.
+         * Ziemlich lang.
+         */
+        System.out.println("Test");
+        // Kommentar mit Code: int x = 45;
+    }
+}

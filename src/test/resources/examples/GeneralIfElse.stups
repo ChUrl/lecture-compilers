@@ -1,0 +1,15 @@
+class IfElseClass {
+
+    public static void main(String[] args) {
+        int x = 5;
+        int y = 10;
+        if (x < y) {
+            System.out.println("x ist kleiner als y.");
+        } else {
+            if (x > y) {
+                System.out.println("x ist groesser als y.");
+            }
+        }
+        System.out.println("x und y sind gleich gross.");
+    }
+}
