@@ -1,16 +1,23 @@
 plugins {
     id 'java'
+    id 'antlr'
 }
 
 group 'de.churl'
 version '1.0-SNAPSHOT'
 sourceCompatibility = '14'
 
+generateGrammarSource {
+    outputDirectory = file("src/main/java/lexer")
+}
+
 repositories {
     mavenCentral()
 }
 
 dependencies {
+    antlr "org.antlr:antlr4:4.8"
+
     testImplementation("org.assertj:assertj-core:3.18.1")
     testImplementation(platform('org.junit:junit-bom:5.7.0'))
     testImplementation('org.junit.jupiter:junit-jupiter')
