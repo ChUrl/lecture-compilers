@@ -16,10 +16,11 @@ import org.antlr.v4.runtime.dfa.DFA;
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class StupsLexer extends Lexer {
 
+    public static final String[] ruleNames = makeRuleNames();
+
     protected static final DFA[] _decisionToDFA;
     protected static final PredictionContextCache _sharedContextCache =
             new PredictionContextCache();
-    private static final String[] _LITERAL_NAMES = makeLiteralNames();
     public static final int
             WHITESPACE = 1, MULTILINE_COMMENT = 2, LINE_COMMENT = 3, CLASS = 4, PUBLIC = 5,
             STATIC = 6, VOID_TYPE = 7, BOOLEAN_TYPE = 8, STRING_TYPE = 9, IF = 10, ELSE = 11,
@@ -28,39 +29,13 @@ public class StupsLexer extends Lexer {
             GREATER = 27, GREATER_EQUAL = 28, L_PAREN = 29, R_PAREN = 30, L_BRACE = 31, R_BRACE = 32,
             L_BRACKET = 33, R_BRACKET = 34, SEMICOLON = 35, COMMA = 36, DOT = 37, INTEGER_LIT = 38,
             STRING_LIT = 39, BOOLEAN_LIT = 40, IDENTIFIER = 41;
-    private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
-    public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
     public static String[] channelNames = {
             "DEFAULT_TOKEN_CHANNEL", "HIDDEN"
     };
 
-    public static final String[] ruleNames = makeRuleNames();
     public static String[] modeNames = {
             "DEFAULT_MODE"
     };
-
-    static {
-        RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION);
-    }
-
-    static {
-        tokenNames = new String[_SYMBOLIC_NAMES.length];
-        for (int i = 0; i < tokenNames.length; i++) {
-            tokenNames[i] = VOCABULARY.getLiteralName(i);
-            if (tokenNames[i] == null) {
-                tokenNames[i] = VOCABULARY.getSymbolicName(i);
-            }
-
-            if (tokenNames[i] == null) {
-                tokenNames[i] = "<INVALID>";
-            }
-        }
-    }
-
-    public StupsLexer(CharStream input) {
-        super(input);
-        _interp = new LexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
-    }
 
     private static String[] makeRuleNames() {
         return new String[]{
@@ -91,6 +66,8 @@ public class StupsLexer extends Lexer {
         };
     }
 
+    private static final String[] _LITERAL_NAMES = makeLiteralNames();
+
     private static String[] makeSymbolicNames() {
         return new String[]{
                 null, "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT", "CLASS", "PUBLIC",
@@ -103,8 +80,31 @@ public class StupsLexer extends Lexer {
         };
     }
 
-    @Override
-    public String[] getRuleNames() { return ruleNames; }
+    private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
+    public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+
+    static {
+        RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION);
+    }
+
+    static {
+        tokenNames = new String[_SYMBOLIC_NAMES.length];
+        for (int i = 0; i < tokenNames.length; i++) {
+            tokenNames[i] = VOCABULARY.getLiteralName(i);
+            if (tokenNames[i] == null) {
+                tokenNames[i] = VOCABULARY.getSymbolicName(i);
+            }
+
+            if (tokenNames[i] == null) {
+                tokenNames[i] = "<INVALID>";
+            }
+        }
+    }
+
+    public StupsLexer(CharStream input) {
+        super(input);
+        _interp = new LexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
+    }
 
     @Override
 
@@ -113,13 +113,19 @@ public class StupsLexer extends Lexer {
     }
 
     @Override
+    @Deprecated
+    public String[] getTokenNames() {
+        return tokenNames;
+    }
+
+    @Override
+    public String[] getRuleNames() { return ruleNames; }
+
+    @Override
     public String getSerializedATN() { return _serializedATN; }
 
     @Override
     public String getGrammarFileName() { return "StupsLexer.g4"; }
-
-    @Override
-    public ATN getATN() { return _ATN; }
 
     @Override
     public String[] getChannelNames() { return channelNames; }
@@ -128,10 +134,7 @@ public class StupsLexer extends Lexer {
     public String[] getModeNames() { return modeNames; }
 
     @Override
-    @Deprecated
-    public String[] getTokenNames() {
-        return tokenNames;
-    }
+    public ATN getATN() { return _ATN; }
 
     public static final String _serializedATN =
             "\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2+\u0143\b\1\4\2\t" +
