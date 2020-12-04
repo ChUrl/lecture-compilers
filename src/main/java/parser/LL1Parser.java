@@ -5,6 +5,8 @@ import parser.grammar.LL1GrammarAnalyzer;
 import util.ast.AST;
 import util.ast.Node;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -15,6 +17,10 @@ public class LL1Parser {
 
     public LL1Parser(ILL1ParsingTable parsetable) {
         this.parsetable = parsetable;
+    }
+
+    public static LL1Parser fromGrammar(Path path) throws IOException {
+        return LL1Parser.fromGrammar(Grammar.fromFile(path));
     }
 
     public static LL1Parser fromGrammar(Grammar grammar) {
