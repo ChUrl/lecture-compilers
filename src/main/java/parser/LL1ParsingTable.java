@@ -1,5 +1,8 @@
 package parser;
 
+import parser.grammar.Grammar;
+import parser.grammar.LL1GrammarAnalyzer;
+
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -7,22 +10,17 @@ import java.util.Set;
 
 public class LL1ParsingTable implements ILL1ParsingTable {
 
-    private final String start;
-    private final Set<String> terminals;
-    private final Set<String> nonterminals;
-    private final String epsilon;
+    private final Grammar grammar;
     private final Map<Entry<String, String>, String> parsetable;
 
-    public LL1ParsingTable(Set<String> nonterminals,
-                           Set<String> terminals,
-                           String start,
-                           String epsilon,
-                           Map<Entry<String, String>, String> parsetable) {
-        this.start = start;
-        this.terminals = terminals;
-        this.nonterminals = nonterminals;
-        this.epsilon = epsilon;
+    public LL1ParsingTable(Grammar grammar, Map<Entry<String, String>, String> parsetable) {
+        this.grammar = grammar;
         this.parsetable = parsetable;
+    }
+
+    public static ILL1ParsingTable fromGrammar(Grammar grammar) {
+        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar);
+        return analyzer.getTable();
     }
 
     @Override
@@ -32,21 +30,21 @@ public class LL1ParsingTable implements ILL1ParsingTable {
 
     @Override
     public String getStartSymbol() {
-        return this.start;
+        return this.grammar.getStartSymbol();
     }
 
     @Override
     public Set<String> getNonterminals() {
-        return this.nonterminals;
+        return this.grammar.getNonterminals();
     }
 
     @Override
     public Set<String> getTerminals() {
-        return this.terminals;
+        return this.grammar.getTerminals();
     }
 
     @Override
     public String getEpsilon() {
-        return this.epsilon;
+        return this.grammar.getEpsilonSymbol();
     }
 }

@@ -1,10 +1,12 @@
-package parser;
+package parser.grammar;
+
+import parser.ILL1ParsingTable;
+import parser.LL1ParsingTable;
 
 import java.util.AbstractMap;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -16,26 +18,41 @@ public class LL1GrammarAnalyzer {
 
     private final ILL1ParsingTable table;
 
-    public LL1GrammarAnalyzer(Set<String> terminals, Set<String> nonterminals,
-                              String start, String epsilon,
-                              Map<String, List<String>> productions) {
+    public LL1GrammarAnalyzer(Grammar grammar) {
 
         // Es muss zwingend in der Reihenfolge [Nullable < First < Follow < Table] initialisiert werden
-        this.nullable = this.initNullable(productions, epsilon);
-        this.first = this.initFirst(productions, terminals, nonterminals, epsilon);
-        this.follow = this.initFollow(productions, terminals, nonterminals, epsilon);
+        this.nullable = this.initNullable(grammar);
+        this.first = this.initFirst(grammar);
+        this.follow = this.initFollow(grammar);
 
-        this.table = this.initParseTable(productions, terminals, nonterminals, start, epsilon);
+        this.table = this.initParseTable(grammar);
     }
 
-    private Set<String> initNullable(Map<String, List<String>> productions, String epsilon) {
+    private Map<String, Set<String>> getProductionMap(Grammar grammar) {
+        Map<String, Set<String>> productionOut = new HashMap<>();
+
+        for (GrammarRule rule : grammar.getRules()) {
+            if (!productionOut.containsKey(rule.getLeftside())) {
+                productionOut.put(rule.getLeftside(), new HashSet<>());
+            }
+
+            productionOut.get(rule.getLeftside()).add(rule.getRightside());
+        }
+
+        return productionOut;
+    }
+
+    private Set<String> initNullable(Grammar grammar) {
         Set<String> nullableOut = new HashSet<>();
         boolean change;
+
+        final String epsilon = grammar.getEpsilonSymbol();
+        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
 
         do {
             change = false;
 
-            for (Map.Entry<String, List<String>> prods : productions.entrySet()) {
+            for (Map.Entry<String, Set<String>> prods : productions.entrySet()) {
                 // Für jedes Nichtterminal
 
                 final String leftX = prods.getKey();
@@ -82,11 +99,14 @@ public class LL1GrammarAnalyzer {
         return true;
     }
 
-    private Map<String, Set<String>> initFirst(Map<String, List<String>> productions,
-                                               Set<String> terminals, Set<String> nonterminals,
-                                               String epsilon) {
+    private Map<String, Set<String>> initFirst(Grammar grammar) {
         Map<String, Set<String>> firstOut = new HashMap<>();
         boolean change;
+
+        final Set<String> terminals = grammar.getTerminals();
+        final Set<String> nonterminals = grammar.getNonterminals();
+        final String epsilon = grammar.getEpsilonSymbol();
+        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
 
         for (String sym : nonterminals) {
             // Alle Nichtterminale mit leeren Sets initialisieren
@@ -103,7 +123,7 @@ public class LL1GrammarAnalyzer {
         do {
             change = false;
 
-            for (Map.Entry<String, List<String>> prods : productions.entrySet()) {
+            for (Map.Entry<String, Set<String>> prods : productions.entrySet()) {
                 // Für jedes Nichtterminal
 
                 final String leftX = prods.getKey();
@@ -169,11 +189,14 @@ public class LL1GrammarAnalyzer {
         return firstOut;
     }
 
-    private Map<String, Set<String>> initFollow(Map<String, List<String>> productions,
-                                                Set<String> terminals, Set<String> nonterminals,
-                                                String epsilon) {
+    private Map<String, Set<String>> initFollow(Grammar grammar) {
         Map<String, Set<String>> followOut = new HashMap<>();
         boolean change;
+
+        final Set<String> terminals = grammar.getTerminals();
+        final Set<String> nonterminals = grammar.getNonterminals();
+        final String epsilon = grammar.getEpsilonSymbol();
+        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
 
         for (String sym : terminals) {
             // Alle Nichtterminale mit leeren Sets initialisieren
@@ -189,7 +212,7 @@ public class LL1GrammarAnalyzer {
         do {
             change = false;
 
-            for (Map.Entry<String, List<String>> prods : productions.entrySet()) {
+            for (Map.Entry<String, Set<String>> prods : productions.entrySet()) {
                 // Für jedes Nichtterminal
 
                 final String leftX = prods.getKey();
@@ -266,10 +289,13 @@ public class LL1GrammarAnalyzer {
         return this.follow.get(sym);
     }
 
-    private ILL1ParsingTable initParseTable(Map<String, List<String>> productions,
-                                            Set<String> terminals, Set<String> nonterminals,
-                                            String start, String epsilon) {
+    private ILL1ParsingTable initParseTable(Grammar grammar) {
         Map<Map.Entry<String, String>, String> parseTableOut = new HashMap<>();
+
+        final Set<String> terminals = grammar.getTerminals();
+        final Set<String> nonterminals = grammar.getNonterminals();
+        final String epsilon = grammar.getEpsilonSymbol();
+        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
 
         for (String leftX : nonterminals) {
             // Für alle Nichtterminale (Zeilen der Tabelle)
@@ -299,7 +325,7 @@ public class LL1GrammarAnalyzer {
             }
         }
 
-        return new LL1ParsingTable(nonterminals, terminals, start, epsilon, parseTableOut);
+        return new LL1ParsingTable(grammar, parseTableOut);
     }
 
     public Set<String> getNullable() {

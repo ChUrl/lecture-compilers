@@ -2,6 +2,7 @@ package parser;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import parser.grammar.Grammar;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
@@ -50,7 +51,11 @@ class LL1ParserTest {
         String production2 = "b";
         map.put(new SimpleEntry<>("E", "b"), production2);
 
-        return new LL1ParsingTable(nonterminals, terminals, startSymbol, epsilonSymbol, map);
+        Grammar grammar = new Grammar(terminals, nonterminals,
+                                      startSymbol, epsilonSymbol,
+                                      null);
+
+        return new LL1ParsingTable(grammar, map);
     }
 
     private static ILL1ParsingTable initTable1() {
@@ -97,7 +102,11 @@ class LL1ParserTest {
         String production12 = "( E )";
         map.put(new SimpleEntry<>("F", "("), production12);
 
-        return new LL1ParsingTable(nonterminals, terminals, startSymbol, epsilonSymbol, map);
+        Grammar grammar = new Grammar(terminals, nonterminals,
+                                      startSymbol, epsilonSymbol,
+                                      null);
+
+        return new LL1ParsingTable(grammar, map);
     }
 
     @Test

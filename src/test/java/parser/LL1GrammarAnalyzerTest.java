@@ -1,12 +1,12 @@
 package parser;
 
 import org.junit.jupiter.api.Test;
+import parser.grammar.Grammar;
+import parser.grammar.GrammarRule;
+import parser.grammar.LL1GrammarAnalyzer;
 
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -32,16 +32,16 @@ class LL1GrammarAnalyzerTest {
         String startSymbol = "S";
         String epsilonSymbol = "epsilon";
 
-        String[] productions0 = {"a", "i E t S"};
-        String[] productions1 = {"b"};
+        Set<GrammarRule> rules = new HashSet<>();
+        rules.add(new GrammarRule("S", "a"));
+        rules.add(new GrammarRule("S", "i", "E", "t", "S"));
+        rules.add(new GrammarRule("E", "b"));
 
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("S", Arrays.asList(productions0));
-        map.put("E", Arrays.asList(productions1));
+        Grammar grammar = new Grammar(terminals, nonterminals,
+                                      startSymbol, epsilonSymbol,
+                                      rules);
 
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(terminals, nonterminals,
-                                                             startSymbol, epsilonSymbol,
-                                                             map);
+        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar);
 
         assertThat(analyzer.getTable().get("S", "a")).isEqualTo("a");
         assertThat(analyzer.getTable().get("S", "i")).isEqualTo("i E t S");
@@ -65,22 +65,21 @@ class LL1GrammarAnalyzerTest {
         String startSymbol = "E";
         String epsilonSymbol = "epsilon";
 
-        String[] production0 = {"T E2"};
-        String[] production1 = {"+ T E2", "epsilon"};
-        String[] production2 = {"F T2"};
-        String[] production3 = {"* F T2", "epsilon"};
-        String[] production4 = {"( E )", "id"};
+        Set<GrammarRule> rules = new HashSet<>();
+        rules.add(new GrammarRule("E", "T", "E2"));
+        rules.add(new GrammarRule("E2", "+", "T", "E2"));
+        rules.add(new GrammarRule("E2", epsilonSymbol));
+        rules.add(new GrammarRule("T", "F", "T2"));
+        rules.add(new GrammarRule("T2", "*", "F", "T2"));
+        rules.add(new GrammarRule("T2", epsilonSymbol));
+        rules.add(new GrammarRule("F", "(", "E", ")"));
+        rules.add(new GrammarRule("F", "id"));
 
-        Map<String, List<String>> map = new HashMap<>();
-        map.put("E", Arrays.asList(production0));
-        map.put("E2", Arrays.asList(production1));
-        map.put("T", Arrays.asList(production2));
-        map.put("T2", Arrays.asList(production3));
-        map.put("F", Arrays.asList(production4));
+        Grammar grammar = new Grammar(terminals, nonterminals,
+                                      startSymbol, epsilonSymbol,
+                                      rules);
 
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(terminals, nonterminals,
-                                                             startSymbol, epsilonSymbol,
-                                                             map);
+        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar);
 
         assertThat(analyzer.getTable().get("F", "id")).isEqualTo("id");
     }

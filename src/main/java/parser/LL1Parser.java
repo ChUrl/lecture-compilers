@@ -1,5 +1,7 @@
 package parser;
 
+import parser.grammar.Grammar;
+import parser.grammar.LL1GrammarAnalyzer;
 import util.ast.AST;
 import util.ast.Node;
 
@@ -13,6 +15,11 @@ public class LL1Parser {
 
     public LL1Parser(ILL1ParsingTable parsetable) {
         this.parsetable = parsetable;
+    }
+
+    public static LL1Parser fromGrammar(Grammar grammar) {
+        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar);
+        return new LL1Parser(analyzer.getTable());
     }
 
     public boolean parse(List<String> token) {
