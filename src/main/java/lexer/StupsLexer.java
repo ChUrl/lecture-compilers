@@ -16,6 +16,10 @@ import org.antlr.v4.runtime.dfa.DFA;
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
 public class StupsLexer extends Lexer {
 
+    protected static final DFA[] _decisionToDFA;
+    protected static final PredictionContextCache _sharedContextCache =
+            new PredictionContextCache();
+    private static final String[] _LITERAL_NAMES = makeLiteralNames();
     public static final int
             WHITESPACE = 1, MULTILINE_COMMENT = 2, LINE_COMMENT = 3, CLASS = 4, PUBLIC = 5,
             STATIC = 6, VOID_TYPE = 7, BOOLEAN_TYPE = 8, STRING_TYPE = 9, IF = 10, ELSE = 11,
@@ -24,12 +28,111 @@ public class StupsLexer extends Lexer {
             GREATER = 27, GREATER_EQUAL = 28, L_PAREN = 29, R_PAREN = 30, L_BRACE = 31, R_BRACE = 32,
             L_BRACKET = 33, R_BRACKET = 34, SEMICOLON = 35, COMMA = 36, DOT = 37, INTEGER_LIT = 38,
             STRING_LIT = 39, BOOLEAN_LIT = 40, IDENTIFIER = 41;
+    private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
+    public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
+    public static String[] channelNames = {
+            "DEFAULT_TOKEN_CHANNEL", "HIDDEN"
+    };
+
     public static final String[] ruleNames = makeRuleNames();
+    public static String[] modeNames = {
+            "DEFAULT_MODE"
+    };
+
+    static {
+        RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION);
+    }
+
+    static {
+        tokenNames = new String[_SYMBOLIC_NAMES.length];
+        for (int i = 0; i < tokenNames.length; i++) {
+            tokenNames[i] = VOCABULARY.getLiteralName(i);
+            if (tokenNames[i] == null) {
+                tokenNames[i] = VOCABULARY.getSymbolicName(i);
+            }
+
+            if (tokenNames[i] == null) {
+                tokenNames[i] = "<INVALID>";
+            }
+        }
+    }
+
+    public StupsLexer(CharStream input) {
+        super(input);
+        _interp = new LexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
+    }
+
+    private static String[] makeRuleNames() {
+        return new String[]{
+                "FIRST_DIGIT", "DIGIT", "LOWERCASE", "UPPERCASE", "LETTER", "LETTER_DIGIT",
+                "WHITE", "ANY", "ANY_NOBREAK", "ANY_NOWHITE", "WHITESPACE", "MULTILINE_COMMENT",
+                "LINE_COMMENT", "CLASS", "PUBLIC", "STATIC", "VOID_TYPE", "BOOLEAN_TYPE",
+                "STRING_TYPE", "IF", "ELSE", "WHILE", "PRINTLN", "ASSIGN", "ADD", "SUB",
+                "MUL", "DIV", "MOD", "NOT", "AND", "OR", "EQUAL", "NOT_EQUAL", "LESS",
+                "LESS_EQUAL", "GREATER", "GREATER_EQUAL", "L_PAREN", "R_PAREN", "L_BRACE",
+                "R_BRACE", "L_BRACKET", "R_BRACKET", "SEMICOLON", "COMMA", "DOT", "INTEGER_LIT",
+                "STRING_LIT", "BOOLEAN_LIT", "IDENTIFIER"
+        };
+    }
+
     /**
      * @deprecated Use {@link #VOCABULARY} instead.
      */
     @Deprecated
     public static final String[] tokenNames;
+
+    private static String[] makeLiteralNames() {
+        return new String[]{
+                null, null, null, null, "'class'", "'public'", "'static'", "'void'",
+                "'boolean'", "'String'", "'if'", "'else'", "'while'", "'System.out.println'",
+                "'='", "'+'", "'-'", "'*'", "'/'", "'%'", "'!'", "'&&'", "'||'", "'=='",
+                "'!='", "'<'", "'<='", "'>'", "'>='", "'('", "')'", "'{'", "'}'", "'['",
+                "']'", "';'", "','", "'.'"
+        };
+    }
+
+    private static String[] makeSymbolicNames() {
+        return new String[]{
+                null, "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT", "CLASS", "PUBLIC",
+                "STATIC", "VOID_TYPE", "BOOLEAN_TYPE", "STRING_TYPE", "IF", "ELSE", "WHILE",
+                "PRINTLN", "ASSIGN", "ADD", "SUB", "MUL", "DIV", "MOD", "NOT", "AND",
+                "OR", "EQUAL", "NOT_EQUAL", "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL",
+                "L_PAREN", "R_PAREN", "L_BRACE", "R_BRACE", "L_BRACKET", "R_BRACKET",
+                "SEMICOLON", "COMMA", "DOT", "INTEGER_LIT", "STRING_LIT", "BOOLEAN_LIT",
+                "IDENTIFIER"
+        };
+    }
+
+    @Override
+    public String[] getRuleNames() { return ruleNames; }
+
+    @Override
+
+    public Vocabulary getVocabulary() {
+        return VOCABULARY;
+    }
+
+    @Override
+    public String getSerializedATN() { return _serializedATN; }
+
+    @Override
+    public String getGrammarFileName() { return "StupsLexer.g4"; }
+
+    @Override
+    public ATN getATN() { return _ATN; }
+
+    @Override
+    public String[] getChannelNames() { return channelNames; }
+
+    @Override
+    public String[] getModeNames() { return modeNames; }
+
+    @Override
+    @Deprecated
+    public String[] getTokenNames() {
+        return tokenNames;
+    }
+
     public static final String _serializedATN =
             "\3\u608b\ua72a\u8133\ub9ed\u417c\u3be7\u7786\u5964\2+\u0143\b\1\4\2\t" +
             "\2\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13" +
@@ -136,111 +239,11 @@ public class StupsLexer extends Lexer {
             "\u0140\3\b\2\2";
     public static final ATN _ATN =
             new ATNDeserializer().deserialize(_serializedATN.toCharArray());
-    protected static final DFA[] _decisionToDFA;
-    protected static final PredictionContextCache _sharedContextCache =
-            new PredictionContextCache();
-    private static final String[] _LITERAL_NAMES = makeLiteralNames();
-    private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
-    public static final Vocabulary VOCABULARY = new VocabularyImpl(_LITERAL_NAMES, _SYMBOLIC_NAMES);
-    public static String[] channelNames = {
-            "DEFAULT_TOKEN_CHANNEL", "HIDDEN"
-    };
-    public static String[] modeNames = {
-            "DEFAULT_MODE"
-    };
-
-    static {
-        RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION);
-    }
-
-    static {
-        tokenNames = new String[_SYMBOLIC_NAMES.length];
-        for (int i = 0; i < tokenNames.length; i++) {
-            tokenNames[i] = VOCABULARY.getLiteralName(i);
-            if (tokenNames[i] == null) {
-                tokenNames[i] = VOCABULARY.getSymbolicName(i);
-            }
-
-            if (tokenNames[i] == null) {
-                tokenNames[i] = "<INVALID>";
-            }
-        }
-    }
 
     static {
         _decisionToDFA = new DFA[_ATN.getNumberOfDecisions()];
         for (int i = 0; i < _ATN.getNumberOfDecisions(); i++) {
             _decisionToDFA[i] = new DFA(_ATN.getDecisionState(i), i);
         }
-    }
-
-    public StupsLexer(CharStream input) {
-        super(input);
-        _interp = new LexerATNSimulator(this, _ATN, _decisionToDFA, _sharedContextCache);
-    }
-
-    private static String[] makeRuleNames() {
-        return new String[]{
-                "FIRST_DIGIT", "DIGIT", "LOWERCASE", "UPPERCASE", "LETTER", "LETTER_DIGIT",
-                "WHITE", "ANY", "ANY_NOBREAK", "ANY_NOWHITE", "WHITESPACE", "MULTILINE_COMMENT",
-                "LINE_COMMENT", "CLASS", "PUBLIC", "STATIC", "VOID_TYPE", "BOOLEAN_TYPE",
-                "STRING_TYPE", "IF", "ELSE", "WHILE", "PRINTLN", "ASSIGN", "ADD", "SUB",
-                "MUL", "DIV", "MOD", "NOT", "AND", "OR", "EQUAL", "NOT_EQUAL", "LESS",
-                "LESS_EQUAL", "GREATER", "GREATER_EQUAL", "L_PAREN", "R_PAREN", "L_BRACE",
-                "R_BRACE", "L_BRACKET", "R_BRACKET", "SEMICOLON", "COMMA", "DOT", "INTEGER_LIT",
-                "STRING_LIT", "BOOLEAN_LIT", "IDENTIFIER"
-        };
-    }
-
-    private static String[] makeLiteralNames() {
-        return new String[]{
-                null, null, null, null, "'class'", "'public'", "'static'", "'void'",
-                "'boolean'", "'String'", "'if'", "'else'", "'while'", "'System.out.println'",
-                "'='", "'+'", "'-'", "'*'", "'/'", "'%'", "'!'", "'&&'", "'||'", "'=='",
-                "'!='", "'<'", "'<='", "'>'", "'>='", "'('", "')'", "'{'", "'}'", "'['",
-                "']'", "';'", "','", "'.'"
-        };
-    }
-
-    private static String[] makeSymbolicNames() {
-        return new String[]{
-                null, "WHITESPACE", "MULTILINE_COMMENT", "LINE_COMMENT", "CLASS", "PUBLIC",
-                "STATIC", "VOID_TYPE", "BOOLEAN_TYPE", "STRING_TYPE", "IF", "ELSE", "WHILE",
-                "PRINTLN", "ASSIGN", "ADD", "SUB", "MUL", "DIV", "MOD", "NOT", "AND",
-                "OR", "EQUAL", "NOT_EQUAL", "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL",
-                "L_PAREN", "R_PAREN", "L_BRACE", "R_BRACE", "L_BRACKET", "R_BRACKET",
-                "SEMICOLON", "COMMA", "DOT", "INTEGER_LIT", "STRING_LIT", "BOOLEAN_LIT",
-                "IDENTIFIER"
-        };
-    }
-
-    @Override
-    public String[] getRuleNames() { return ruleNames; }
-
-    @Override
-
-    public Vocabulary getVocabulary() {
-        return VOCABULARY;
-    }
-
-    @Override
-    public String getSerializedATN() { return _serializedATN; }
-
-    @Override
-    public String getGrammarFileName() { return "StupsLexer.g4"; }
-
-    @Override
-    public ATN getATN() { return _ATN; }
-
-    @Override
-    public String[] getChannelNames() { return channelNames; }
-
-    @Override
-    public String[] getModeNames() { return modeNames; }
-
-    @Override
-    @Deprecated
-    public String[] getTokenNames() {
-        return tokenNames;
     }
 }

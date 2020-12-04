@@ -6,8 +6,9 @@ import org.junit.jupiter.api.Test;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,25 +30,25 @@ class LL1ParserTest {
          S -> i E t S
          E -> b
          */
-        List<String> nonterminals;
+        Set<String> nonterminals;
         String[] narray = {"S", "E"};
-        nonterminals = Arrays.asList(narray);
+        nonterminals = new HashSet<>(Arrays.asList(narray));
 
-        List<String> terminals;
+        Set<String> terminals;
         String[] tarray = {"a", "b", "e", "i", "t"};
-        terminals = Arrays.asList(tarray);
+        terminals = new HashSet<>(Arrays.asList(tarray));
 
         String startSymbol = "S";
         String epsilonSymbol = "epsilon";
 
-        Map<Map.Entry<String, String>, List<String>> map;
+        Map<Map.Entry<String, String>, String> map;
         map = new HashMap<>();
-        String[] production0 = {"a"};
-        map.put(new SimpleEntry<>("S", "a"), Arrays.asList(production0));
-        String[] production1 = {"i", "E", "t", "S"};
-        map.put(new SimpleEntry<>("S", "i"), Arrays.asList(production1));
-        String[] production2 = {"b"};
-        map.put(new SimpleEntry<>("E", "b"), Arrays.asList(production2));
+        String production0 = "a";
+        map.put(new SimpleEntry<>("S", "a"), production0);
+        String production1 = "i E t S";
+        map.put(new SimpleEntry<>("S", "i"), production1);
+        String production2 = "b";
+        map.put(new SimpleEntry<>("E", "b"), production2);
 
         return new LL1ParsingTable(nonterminals, terminals, startSymbol, epsilonSymbol, map);
     }
@@ -56,45 +57,45 @@ class LL1ParserTest {
         /*
          Folie 4b/32
          */
-        List<String> nonterminals;
+        Set<String> nonterminals;
         String[] narray = {"E", "T", "E2", "T2", "F"};
-        nonterminals = Arrays.asList(narray);
+        nonterminals = new HashSet<>(Arrays.asList(narray));
 
-        List<String> terminals;
+        Set<String> terminals;
         String[] tarray = {"id", "+", "*", "(", ")"};
-        terminals = Arrays.asList(tarray);
+        terminals = new HashSet<>(Arrays.asList(tarray));
 
         String startSymbol = "E";
         String epsilonSymbol = "epsilon";
 
-        Map<Map.Entry<String, String>, List<String>> map;
+        Map<Map.Entry<String, String>, String> map;
         map = new HashMap<>();
-        String[] production0 = {"T", "E2"};
-        map.put(new SimpleEntry<>("E", "id"), Arrays.asList(production0));
-        String[] production1 = {"T", "E2"};
-        map.put(new SimpleEntry<>("E", "("), Arrays.asList(production1));
-        String[] production2 = {"+", "T", "E2"};
-        map.put(new SimpleEntry<>("E2", "+"), Arrays.asList(production2));
-        String[] production3 = {"epsilon"};
-        map.put(new SimpleEntry<>("E2", ")"), Arrays.asList(production3));
-        String[] production4 = {"epsilon"};
-        map.put(new SimpleEntry<>("E2", "$"), Arrays.asList(production4));
-        String[] production5 = {"F", "T2"};
-        map.put(new SimpleEntry<>("T", "id"), Arrays.asList(production5));
-        String[] production6 = {"F", "T2"};
-        map.put(new SimpleEntry<>("T", "("), Arrays.asList(production6));
-        String[] production7 = {"epsilon"};
-        map.put(new SimpleEntry<>("T2", "+"), Arrays.asList(production7));
-        String[] production8 = {"*", "F", "T2"};
-        map.put(new SimpleEntry<>("T2", "*"), Arrays.asList(production8));
-        String[] production9 = {"epsilon"};
-        map.put(new SimpleEntry<>("T2", ")"), Arrays.asList(production9));
-        String[] production10 = {"epsilon"};
-        map.put(new SimpleEntry<>("T2", "$"), Arrays.asList(production10));
-        String[] production11 = {"id"};
-        map.put(new SimpleEntry<>("F", "id"), Arrays.asList(production11));
-        String[] production12 = {"(", "E", ")"};
-        map.put(new SimpleEntry<>("F", "("), Arrays.asList(production12));
+        String production0 = "T E2";
+        map.put(new SimpleEntry<>("E", "id"), production0);
+        String production1 = "T E2";
+        map.put(new SimpleEntry<>("E", "("), production1);
+        String production2 = "+ T E2";
+        map.put(new SimpleEntry<>("E2", "+"), production2);
+        String production3 = "epsilon";
+        map.put(new SimpleEntry<>("E2", ")"), production3);
+        String production4 = "epsilon";
+        map.put(new SimpleEntry<>("E2", "$"), production4);
+        String production5 = "F T2";
+        map.put(new SimpleEntry<>("T", "id"), production5);
+        String production6 = "F T2";
+        map.put(new SimpleEntry<>("T", "("), production6);
+        String production7 = "epsilon";
+        map.put(new SimpleEntry<>("T2", "+"), production7);
+        String production8 = "* F T2";
+        map.put(new SimpleEntry<>("T2", "*"), production8);
+        String production9 = "epsilon";
+        map.put(new SimpleEntry<>("T2", ")"), production9);
+        String production10 = "epsilon";
+        map.put(new SimpleEntry<>("T2", "$"), production10);
+        String production11 = "id";
+        map.put(new SimpleEntry<>("F", "id"), production11);
+        String production12 = "( E )";
+        map.put(new SimpleEntry<>("F", "("), production12);
 
         return new LL1ParsingTable(nonterminals, terminals, startSymbol, epsilonSymbol, map);
     }

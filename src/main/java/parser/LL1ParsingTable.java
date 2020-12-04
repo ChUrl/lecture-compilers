@@ -1,23 +1,23 @@
 package parser;
 
 import java.util.AbstractMap.SimpleEntry;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 public class LL1ParsingTable implements ILL1ParsingTable {
 
     private final String start;
-    private final List<String> terminals;
-    private final List<String> nonterminals;
+    private final Set<String> terminals;
+    private final Set<String> nonterminals;
     private final String epsilon;
-    private final Map<Entry<String, String>, ? extends List<String>> parsetable;
+    private final Map<Entry<String, String>, String> parsetable;
 
-    public LL1ParsingTable(List<String> nonterminals,
-                           List<String> terminals,
+    public LL1ParsingTable(Set<String> nonterminals,
+                           Set<String> terminals,
                            String start,
                            String epsilon,
-                           Map<Entry<String, String>, ? extends List<String>> parsetable) {
+                           Map<Entry<String, String>, String> parsetable) {
         this.start = start;
         this.terminals = terminals;
         this.nonterminals = nonterminals;
@@ -26,7 +26,7 @@ public class LL1ParsingTable implements ILL1ParsingTable {
     }
 
     @Override
-    public List<String> get(String nonterminal, String terminal) {
+    public String get(String nonterminal, String terminal) {
         return this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
     }
 
@@ -36,12 +36,12 @@ public class LL1ParsingTable implements ILL1ParsingTable {
     }
 
     @Override
-    public List<String> getNonterminals() {
+    public Set<String> getNonterminals() {
         return this.nonterminals;
     }
 
     @Override
-    public List<String> getTerminals() {
+    public Set<String> getTerminals() {
         return this.terminals;
     }
 

@@ -1,16 +1,16 @@
 package parser;
 
-import java.util.List;
+import java.util.Set;
 
 public interface ILL1ParsingTable {
 
-    List<String> get(String nonterminal, String terminal);
+    String get(String nonterminal, String terminal);
 
     String getStartSymbol();
 
-    List<String> getNonterminals();
+    Set<String> getNonterminals();
 
-    List<String> getTerminals();
+    Set<String> getTerminals();
 
     String getEpsilon();
 }

@@ -26,34 +26,41 @@ public class LL1Parser {
 
         // Parsing
         while (!stack.isEmpty()) {
-            String top = stack.peek().getName();
+            final String top = stack.peek().getName();
 
             if (currentToken >= token.size()) {
                 // Wenn auf dem Stack mehr Nichtterminale liegen als Terminale in der Eingabe vorhanden sind
+
                 throw new MyParseException("Input too long");
             }
-            List<String> prod = this.parsetable.get(top, token.get(currentToken));
+            final String prod = this.parsetable.get(top, token.get(currentToken));
 
             if (top.equals(token.get(currentToken))) {
                 // Wenn auf dem Stack ein Terminal liegt
+
                 stack.pop();
                 currentToken++;
 
             } else if (this.parsetable.getTerminals().contains(top)) {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
+
                 throw new MyParseException("Invalid terminal on stack: " + top);
 
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
+
                 throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + token.get(currentToken));
 
             } else {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
+
+                final String[] split = prod.split(" ");
+
                 System.out.println(top + " -> " + prod);
                 Node pop = stack.pop();
-                for (int i = prod.size() - 1; i >= 0; i--) {
-                    Node node = new Node(prod.get(i));
+                for (int i = split.length - 1; i >= 0; i--) {
+                    Node node = new Node(split[i]);
                     stack.push(node);
                     pop.addChild(node);
                 }
