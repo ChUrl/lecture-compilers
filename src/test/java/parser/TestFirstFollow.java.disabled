@@ -1,0 +1,264 @@
+// javac -cp .:junit-4.12.jar:hamcrest-core-1.3.jar TestFirstFollow.java
+// java -cp .:junit-4.12.jar:hamcrest-core-1.3.jar org.junit.runner.JUnitCore TestFirstFollow
+
+import static org.junit.Assert.assertEquals;
+
+import static org.junit.Assert.assertTrue;
+
+import org.antlr.v4.tool.Grammar;
+import org.antlr.v4.tool.Rule;
+import org.junit.Test;
+import org.junit.Before;
+import parser.ILL1ParsingTable;
+
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Arrays;
+import java.util.Set;
+
+import java.io.FileReader;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Collections;
+
+
+public class TestFirstFollow {
+
+    private Grammar grammar0;
+    private Grammar grammar1;
+
+    @Before
+    public void setUp() {
+        this.initGrammar0();
+        this.initGrammar1();
+    }
+
+    private void initGrammar0() {
+        /*
+         Z -> d
+         Z -> X Y Z
+         Y ->
+         Y -> c
+         X -> Y
+         X -> a
+         */
+
+        List<String> nonterminals = new ArrayList<>();
+        String narray[] = {"X", "Y", "Z"};
+        nonterminals = Arrays.asList(narray);
+
+        List<String> terminals = new ArrayList<>();
+        String tarray[] = {"a", "c", "d", "$"};
+        terminals = Arrays.asList(tarray);
+
+        String startSymbol = "Z";
+        List<Rule> productions = new ArrayList<>();
+        String production0[] = {"d"};
+        productions.add(new Rule("Z", Arrays.asList(production0)));
+        String production1[] = {"X", "Y", "Z"};
+        productions.add(new Rule("Z", Arrays.asList(production1)));
+        productions.add(new Rule("Y", Collections.emptyList()));
+        String production2[] = {"c"};
+        productions.add(new Rule("Y", Arrays.asList(production2)));
+        String production3[] = {"Y"};
+        productions.add(new Rule("X", Arrays.asList(production3)));
+        String production4[] = {"a"};
+        productions.add(new Rule("X", Arrays.asList(production4)));
+
+        this.grammar0 = new Grammar(nonterminals, terminals,
+                                    startSymbol, productions);
+    }
+
+
+    private void initGrammar1() {
+        /*
+         E  -> T E'
+         E' -> + T E'
+         E' ->
+         T  -> F T'
+         T' -> * F T'
+         T' ->
+         F  -> ( E )
+         F  -> id
+
+         */
+
+        List<String> nonterminals = new ArrayList<>();
+        String narray[] = {"E", "E'", "T", "T'", "F"};
+        nonterminals = Arrays.asList(narray);
+
+        List<String> terminals = new ArrayList<>();
+        String tarray[] = {"+", "*", "(", ")", "id", "$"};
+        terminals = Arrays.asList(tarray);
+
+        String startSymbol = "E";
+        List<Rule> productions = new ArrayList<>();
+        String production0[] = {"T", "E'"};
+        productions.add(new Rule("E", Arrays.asList(production0)));
+        String production1[] = {"+", "T", "E'"};
+        productions.add(new Rule("E'", Arrays.asList(production1)));
+        productions.add(new Rule("E'", Collections.emptyList()));
+        String production2[] = {"F", "T'"};
+        productions.add(new Rule("T", Arrays.asList(production2)));
+        String production3[] = {"*", "F", "T'"};
+        productions.add(new Rule("T'", Arrays.asList(production3)));
+        productions.add(new Rule("T'", Collections.emptyList()));
+        String production4[] = {"(", "E", ")"};
+        productions.add(new Rule("F", Arrays.asList(production4)));
+        String production5[] = {"id"};
+        productions.add(new Rule("F", Arrays.asList(production5)));
+
+        this.grammar1 = new Grammar(nonterminals, terminals,
+                                    startSymbol, productions);
+    }
+
+
+    @Test
+    public void testNullable0() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar0);
+        Set<String> nullable = ga.getNullable();
+        assertTrue(nullable.contains("Y"));
+        assertTrue(nullable.contains("X"));
+        assertTrue(!nullable.contains("Z"));
+        assertEquals(2, nullable.size());
+    }
+
+    @Test
+    public void testNullable1() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar1);
+        Set<String> nullable = ga.getNullable();
+        assertTrue(nullable.contains("E'"));
+        assertTrue(nullable.contains("T'"));
+        assertTrue(!nullable.contains("E"));
+        assertEquals(2, nullable.size());
+    }
+
+    @Test
+    public void testFirst0() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar0);
+        Map<String, Set<String>> first = ga.getFirst();
+        assertTrue(first.get("Y").contains("c"));
+        assertEquals(1, first.get("Y").size());
+        assertTrue(first.get("X").contains("c"));
+        assertTrue(first.get("X").contains("a"));
+        assertEquals(2, first.get("X").size());
+        assertTrue(first.get("Z").contains("c"));
+        assertTrue(first.get("Z").contains("a"));
+        assertTrue(first.get("Z").contains("d"));
+        assertEquals(3, first.get("Z").size());
+    }
+
+
+    @Test
+    public void testFirst1() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar1);
+        Map<String, Set<String>> first = ga.getFirst();
+        assertTrue(first.get("E").contains("id"));
+        assertTrue(first.get("E").contains("("));
+        assertEquals(2, first.get("E").size());
+        assertTrue(first.get("T").contains("id"));
+        assertTrue(first.get("T").contains("("));
+        assertEquals(2, first.get("T").size());
+        assertTrue(first.get("E'").contains("+"));
+        assertEquals(1, first.get("E'").size());
+        assertTrue(first.get("T'").contains("*"));
+        assertEquals(1, first.get("T'").size());
+        assertTrue(first.get("F").contains("id"));
+        assertTrue(first.get("F").contains("("));
+        assertEquals(2, first.get("F").size());
+    }
+
+    @Test
+    public void testFollow0() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar0);
+        Map<String, Set<String>> follow = ga.getFollow();
+        assertTrue(follow.get("X").contains("a"));
+        assertTrue(follow.get("X").contains("c"));
+        assertTrue(follow.get("X").contains("d"));
+        assertEquals(3, follow.get("X").size());
+        assertTrue(follow.get("Y").contains("a"));
+        assertTrue(follow.get("Y").contains("c"));
+        assertTrue(follow.get("Y").contains("d"));
+        assertEquals(3, follow.get("Y").size());
+        assertTrue(follow.get("Z").contains("$"));
+        assertEquals(1, follow.get("Z").size());
+    }
+
+    @Test
+    public void testFollow1() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar1);
+        Map<String, Set<String>> follow = ga.getFollow();
+        assertTrue(follow.get("E").contains(")"));
+        assertTrue(follow.get("E").contains("$"));
+        assertEquals(2, follow.get("E").size());
+        assertTrue(follow.get("T").contains("+"));
+        assertTrue(follow.get("T").contains(")"));
+        assertTrue(follow.get("T").contains("$"));
+        assertEquals(3, follow.get("T").size());
+        assertTrue(follow.get("T'").contains("$"));
+        assertTrue(follow.get("T'").contains("+"));
+        assertTrue(follow.get("T'").contains(")"));
+        assertEquals(3, follow.get("T'").size());
+        assertTrue(follow.get("E'").contains("$"));
+        assertTrue(follow.get("E'").contains(")"));
+        assertEquals(2, follow.get("E'").size());
+        assertTrue(follow.get("F").contains("+"));
+        assertTrue(follow.get("F").contains(")"));
+        assertTrue(follow.get("F").contains("*"));
+        assertTrue(follow.get("F").contains("$"));
+        assertEquals(4, follow.get("F").size());
+    }
+
+    @Test
+    public void testTable1() {
+        GrammarAnalyzer ga = new GrammarAnalyzer(this.grammar1);
+        ILL1ParsingTable table = ga.getTable();
+        List production;
+
+        production = table.get("E", "id");
+        assertTrue(production.get(0).equals("T"));
+        assertTrue(production.get(1).equals("E'"));
+        production = table.get("T", "id");
+        assertTrue(production.get(0).equals("F"));
+        assertTrue(production.get(1).equals("T'"));
+        production = table.get("F", "id");
+        assertTrue(production.get(0).equals("id"));
+
+        production = table.get("E'", "+");
+        assertTrue(production.get(0).equals("+"));
+        assertTrue(production.get(1).equals("T"));
+        assertTrue(production.get(2).equals("E'"));
+        production = table.get("T'", "+");
+        assertEquals(0, production.size());
+
+        production = table.get("T'", "*");
+        assertTrue(production.get(0).equals("*"));
+        assertTrue(production.get(1).equals("F"));
+        assertTrue(production.get(2).equals("T'"));
+
+        production = table.get("E", "(");
+        assertTrue(production.get(0).equals("T"));
+        assertTrue(production.get(1).equals("E'"));
+        production = table.get("T", "(");
+        assertTrue(production.get(0).equals("F"));
+        assertTrue(production.get(1).equals("T'"));
+        production = table.get("F", "(");
+        assertTrue(production.get(0).equals("("));
+        assertTrue(production.get(1).equals("E"));
+        assertTrue(production.get(2).equals(")"));
+
+        production = table.get("E'", ")");
+        assertEquals(0, production.size());
+        production = table.get("T'", ")");
+        assertEquals(0, production.size());
+        production = table.get("E'", "$");
+        assertEquals(0, production.size());
+        production = table.get("T'", "$");
+        assertEquals(0, production.size());
+    }
+
+}
