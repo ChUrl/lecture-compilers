@@ -34,44 +34,53 @@ public class LL1Parser {
         Deque<Node> stack = new ArrayDeque<>();
         stack.push(root);
 
-        int currentToken = 0;
+        int inputPosition = 0;
         System.out.println("\nParsing " + token + ":");
 
         // Parsing
         while (!stack.isEmpty()) {
             final String top = stack.peek().getName();
 
-            if (currentToken >= token.size()) {
+            final String currentToken;
+            if (inputPosition >= token.size()) {
                 // Wenn auf dem Stack mehr Nichtterminale liegen als Terminale in der Eingabe vorhanden sind
+                // Die Eingabe wurde komplett konsumiert
 
-                throw new MyParseException("Input too long");
+                currentToken = "$"; // EOF
+            } else {
+                // Es sind noch Eingabesymbole vorhanden
+
+                currentToken = token.get(inputPosition);
             }
-            final String prod = this.parsetable.get(top, token.get(currentToken));
 
-            if (top.equals(token.get(currentToken))) {
-                // Wenn auf dem Stack ein Terminal liegt
+            final String prod = this.parsetable.get(top, currentToken);
+
+            if (top.equals(this.parsetable.getEpsilon())) {
+                // Wenn auf dem Stack das Epsilonsymbol liegt
 
                 stack.pop();
-                currentToken++;
+            } else if (top.equals(currentToken)) {
+                // Wenn auf dem Stack ein Terminal liegt (dieses muss mit der Eingabe übereinstimmen)
 
+                stack.pop();
+                inputPosition++;
             } else if (this.parsetable.getTerminals().contains(top)) {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
 
                 throw new MyParseException("Invalid terminal on stack: " + top);
-
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
-                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + token.get(currentToken));
-
+                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentToken);
             } else {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
 
-                final String[] split = prod.split(" ");
-
                 System.out.println(top + " -> " + prod);
+
                 Node pop = stack.pop();
+
+                final String[] split = prod.split(" ");
                 for (int i = split.length - 1; i >= 0; i--) {
                     Node node = new Node(split[i]);
                     stack.push(node);

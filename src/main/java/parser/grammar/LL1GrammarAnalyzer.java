@@ -26,6 +26,11 @@ public class LL1GrammarAnalyzer {
         this.follow = this.initFollow(grammar);
 
         this.table = this.initParseTable(grammar);
+
+        System.out.println("Nullable:\n" + this.nullable);
+        System.out.println("First:\n" + this.first);
+        System.out.println("Follow:\n" + this.follow);
+        System.out.println("LL-Table:\n" + this.table);
     }
 
     private Map<String, Set<String>> getProductionMap(Grammar grammar) {
@@ -142,15 +147,15 @@ public class LL1GrammarAnalyzer {
 
                     // Das First des linken Nichtterminals X enthält das first des ersten rechten Symbols dieser
                     // Produktionsregel S1 (da X -> S1 ... Sk)
-                    firstOut.get(leftX).addAll(firstOut.get(split[0]));
+                    change = firstOut.get(leftX).addAll(firstOut.get(split[0]));
 
                     for (int i = 1; i < split.length; i++) {
                         // Für das 2-te bis k-te rechte Symbol dieser Produktionsregel
 
-                        final String sym = split[i];
-
                         if (this.nullable(split[i - 1])) {
-                            change = firstOut.get(leftX).addAll(firstOut.get(sym));
+                            // Ein rechtes Symbol ist nullable, also zählt das first des nächsten Symbols
+
+                            change = firstOut.get(leftX).addAll(firstOut.get(split[i]));
                         } else {
                             break;
                         }
@@ -209,6 +214,8 @@ public class LL1GrammarAnalyzer {
             followOut.put(sym, new HashSet<>());
         }
 
+        followOut.get(startsymbol).add("$");
+
         do {
             change = false;
 
@@ -230,7 +237,7 @@ public class LL1GrammarAnalyzer {
 
                         // Das follow des i-ten rechten Symbols dieser Produktionsregel enthält das first des
                         // (i+1)-ten rechten Sybols dieser Produktionsregel
-                        followOut.get(sym).addAll(this.first(split[i + 1]));
+                        change = followOut.get(sym).addAll(this.first(split[i + 1]));
 
                         for (int j = i + 2; j < prods.getValue().size(); j++) {
                             // Für das (i+2)-te bis letzte rechte Symbol dieser Produktionsregel

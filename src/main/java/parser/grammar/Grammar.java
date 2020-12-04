@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Grammar {
 
@@ -30,6 +31,9 @@ public class Grammar {
     public static Grammar fromFile(Path path) throws IOException {
         List<String> lines = Files.readAllLines(path);
 
+        lines = lines.stream().filter(line -> !(line.isBlank() || line.startsWith("//")))
+                     .collect(Collectors.toUnmodifiableList());
+
         try {
             String startSymbol = lines.get(0).split(" ")[1];
             String epsilonSymbol = lines.get(1).split(" ")[1];
@@ -43,7 +47,7 @@ public class Grammar {
             Set<String> nonterminals = new HashSet<>(Arrays.asList(nterm));
 
             Set<GrammarRule> rules = new HashSet<>();
-            for (int i = 5; i < lines.size(); i++) {
+            for (int i = 4; i < lines.size(); i++) {
                 // "S -> E T2 | EPS" wird zu leftside = "S" und rightside = "E T2 | epsilon"
                 String[] split = lines.get(i)
                                       .replaceAll("EPS", epsilonSymbol)

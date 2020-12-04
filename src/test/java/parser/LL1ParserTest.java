@@ -160,13 +160,13 @@ class LL1ParserTest {
     void testArithExpression() {
         LL1Parser parser = new LL1Parser(table1);
 
-        String[] token1 = {"id", "+", "id", "*", "id"};
+        String[] token1 = {"id", "+", "id"};
         String[] token2 = {"id", "*", "id", "*", "id"};
-        String[] token3 = {"id", "+", "id"};
+        String[] token3 = {"id", "+", "id", "*", "id"};
 
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token1))).isInstanceOf(MyParseException.class);
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token2))).isInstanceOf(MyParseException.class);
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token3))).isInstanceOf(MyParseException.class);
+        assertThat(parser.parse(Arrays.asList(token1))).isTrue();
+        assertThat(parser.parse(Arrays.asList(token2))).isTrue();
+        assertThat(parser.parse(Arrays.asList(token3))).isTrue();
     }
 
     @Test
@@ -174,13 +174,13 @@ class LL1ParserTest {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/SimpleGrammar1.grammar").toURI());
         LL1Parser parser = LL1Parser.fromGrammar(path);
 
-        String[] token1 = {"id", "+", "id", "*", "id"};
+        String[] token1 = {"id", "+", "id"};
         String[] token2 = {"id", "*", "id", "*", "id"};
-        String[] token3 = {"id", "+", "id"};
+        String[] token3 = {"id", "+", "id", "*", "id"};
 
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token1))).isInstanceOf(MyParseException.class);
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token2))).isInstanceOf(MyParseException.class);
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token3))).isInstanceOf(MyParseException.class);
+        assertThat(parser.parse(Arrays.asList(token1))).isTrue();
+        assertThat(parser.parse(Arrays.asList(token2))).isTrue();
+        assertThat(parser.parse(Arrays.asList(token3))).isTrue();
     }
 
     @Test

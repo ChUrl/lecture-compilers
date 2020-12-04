@@ -4,9 +4,12 @@ import parser.grammar.Grammar;
 import parser.grammar.LL1GrammarAnalyzer;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Formatter;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class LL1ParsingTable implements ILL1ParsingTable {
 
@@ -46,5 +49,43 @@ public class LL1ParsingTable implements ILL1ParsingTable {
     @Override
     public String getEpsilon() {
         return this.grammar.getEpsilonSymbol();
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder output = new StringBuilder();
+        Formatter format = new Formatter(output);
+
+        List<String> inputSymbols = this.parsetable.keySet().stream()
+                                                   .map(Entry::getValue)
+                                                   .distinct()
+                                                   .collect(Collectors.toList());
+
+        output.append(" ".repeat(8))
+              .append("| ");
+        for (String terminal : inputSymbols) {
+            format.format("%-9s ", terminal);
+        }
+        output.append("|\n");
+
+        output.append("-".repeat(8))
+              .append("+")
+              .append("-".repeat(10 * inputSymbols.size() + 1))
+              .append("+")
+              .append("\n");
+
+        for (String nonterminal : this.grammar.getNonterminals()) {
+            format.format("%-7s | ", nonterminal);
+
+            for (String terminal : inputSymbols) {
+                String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
+                format.format("%-9s ", prod == null ? " ".repeat(9) : prod);
+            }
+            output.append("|\n");
+        }
+
+        format.close();
+
+        return output.toString();
     }
 }

@@ -3,6 +3,9 @@ EPS: epsilon
 TERM: id + * ( )
 NTERM: E E2 T T2 F
 
+// Leerzeilen sind egal
+// Man kann Line-Comments schreiben und Produktionen verodern
+
 E -> T E2
 E2 -> + T E2 | EPS
 T -> F T2
