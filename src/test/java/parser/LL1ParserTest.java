@@ -4,6 +4,10 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import parser.grammar.Grammar;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -123,6 +127,20 @@ class LL1ParserTest {
     }
 
     @Test
+    void testIfThenElseFromFile() throws MyParseException, IOException, URISyntaxException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/SimpleGrammar0.grammar").toURI());
+        LL1Parser parser = LL1Parser.fromGrammar(path);
+
+        String[] token1 = {"i", "b", "t", "a"};
+        String[] token2 = {"i", "b", "t", "i", "b", "t", "a"};
+        String[] token3 = {"i", "b", "t", "i", "b", "t", "i", "b", "t", "a"};
+
+        assertThat(parser.parse(Arrays.asList(token1))).isTrue();
+        assertThat(parser.parse(Arrays.asList(token2))).isTrue();
+        assertThat(parser.parse(Arrays.asList(token3))).isTrue();
+    }
+
+    @Test
     void testException0() {
         LL1Parser parser = new LL1Parser(table0);
         String[] token1 = {"i", "b", "t"};
@@ -146,8 +164,22 @@ class LL1ParserTest {
         String[] token2 = {"id", "*", "id", "*", "id"};
         String[] token3 = {"id", "+", "id"};
 
+        assertThatThrownBy(() -> parser.parse(Arrays.asList(token1))).isInstanceOf(MyParseException.class);
+        assertThatThrownBy(() -> parser.parse(Arrays.asList(token2))).isInstanceOf(MyParseException.class);
         assertThatThrownBy(() -> parser.parse(Arrays.asList(token3))).isInstanceOf(MyParseException.class);
-        assertThatThrownBy(() -> parser.parse(Arrays.asList(token3))).isInstanceOf(MyParseException.class);
+    }
+
+    @Test
+    void testArithExpressionFromFile() throws MyParseException, IOException, URISyntaxException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/SimpleGrammar1.grammar").toURI());
+        LL1Parser parser = LL1Parser.fromGrammar(path);
+
+        String[] token1 = {"id", "+", "id", "*", "id"};
+        String[] token2 = {"id", "*", "id", "*", "id"};
+        String[] token3 = {"id", "+", "id"};
+
+        assertThatThrownBy(() -> parser.parse(Arrays.asList(token1))).isInstanceOf(MyParseException.class);
+        assertThatThrownBy(() -> parser.parse(Arrays.asList(token2))).isInstanceOf(MyParseException.class);
         assertThatThrownBy(() -> parser.parse(Arrays.asList(token3))).isInstanceOf(MyParseException.class);
     }
 

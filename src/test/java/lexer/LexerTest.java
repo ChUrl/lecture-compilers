@@ -13,12 +13,11 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 class LexerTest {
 
     private Lexer initLexer(String program) {
         try {
-            Path path = Paths.get(this.getClass().getClassLoader().getResource("examples/" + program).toURI());
+            Path path = Paths.get(this.getClass().getClassLoader().getResource("examplePrograms/" + program).toURI());
             String programCode = Files.readString(path, StandardCharsets.US_ASCII);
             return new StupsLexer(CharStreams.fromString(programCode));
         } catch (Exception ignore) {
