@@ -1,0 +1,10 @@
+START: E
+EPS: epsilon
+TERM: id + * ( )
+NTERM: E E2 T T2 F
+
+E -> T E2
+E2 -> + T E2 | EPS
+T -> F T2
+T2 -> * F T2 | EPS
+F -> ( E ) | id

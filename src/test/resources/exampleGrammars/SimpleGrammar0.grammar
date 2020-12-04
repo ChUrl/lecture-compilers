@@ -1,0 +1,8 @@
+START: S
+EPS: epsilon
+TERM: a i t b
+NTERM: S E
+
+S -> a
+S -> i E t S
+E -> b
