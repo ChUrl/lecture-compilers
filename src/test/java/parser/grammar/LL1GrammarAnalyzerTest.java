@@ -1,4 +1,4 @@
-package parser;
+package parser.grammar;
 
 import org.junit.jupiter.api.Test;
 import parser.grammar.Grammar;
