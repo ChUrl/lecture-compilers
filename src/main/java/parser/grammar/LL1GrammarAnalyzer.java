@@ -4,340 +4,294 @@ import parser.ILL1ParsingTable;
 import parser.LL1ParsingTable;
 
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class LL1GrammarAnalyzer {
 
-    private final Set<String> nullable;
+    private final Grammar grammar;
+
     private final Map<String, Set<String>> first;
     private final Map<String, Set<String>> follow;
 
     private final ILL1ParsingTable table;
 
     public LL1GrammarAnalyzer(Grammar grammar) {
+        this.grammar = grammar;
 
         // Es muss zwingend in der Reihenfolge [Nullable < First < Follow < Table] initialisiert werden
-        this.nullable = this.initNullable(grammar);
-        this.first = this.initFirst(grammar);
-        this.follow = this.initFollow(grammar);
+        this.first = this.initFirst();
+        this.follow = this.initFollow();
 
-        this.table = this.initParseTable(grammar);
+        this.table = this.initParseTable();
 
-        System.out.println("Nullable:\n" + this.nullable);
-        System.out.println("First:\n" + this.first);
-        System.out.println("Follow:\n" + this.follow);
+        //        System.out.println("First:\n" + this.first);
+        //        System.out.println("Follow:\n" + this.follow);
         System.out.println("LL-Table:\n" + this.table);
     }
 
-    private Map<String, Set<String>> getProductionMap(Grammar grammar) {
-        Map<String, Set<String>> productionOut = new HashMap<>();
+    private Map<String, Set<String>> initFirst() {
+        final Map<String, Set<String>> firstOut = new HashMap<>();
 
-        for (GrammarRule rule : grammar.getRules()) {
-            if (!productionOut.containsKey(rule.getLeftside())) {
-                productionOut.put(rule.getLeftside(), new HashSet<>());
-            }
+        // Die Methode funktioniert erst, nachdem first initialisiert ist.
+        // Deshalb hier doppelt.
+        final Predicate<String> nullable = sym -> sym.equals(this.grammar.getEpsilonSymbol())
+                                                  || sym.isBlank()
+                                                  || firstOut.get(sym).contains(this.grammar.getEpsilonSymbol());
+        final Predicate<String[]> allNullable = split -> split.length == 0
+                                                         || Arrays.stream(split).allMatch(nullable);
 
-            productionOut.get(rule.getLeftside()).add(rule.getRightside());
+        // Initialisieren
+        for (String nterm : this.grammar.getNonterminals()) {
+            firstOut.put(nterm, new HashSet<>());
+        }
+        for (String term : this.grammar.getTerminals()) {
+            // 1. If X is a terminal, then first(X) = {X}.
+
+            firstOut.put(term, new HashSet<>());
+            firstOut.get(term).add(term);
         }
 
-        return productionOut;
-    }
-
-    private Set<String> initNullable(Grammar grammar) {
-        Set<String> nullableOut = new HashSet<>();
         boolean change;
-
-        final String epsilon = grammar.getEpsilonSymbol();
-        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
 
         do {
             change = false;
 
-            for (Map.Entry<String, Set<String>> prods : productions.entrySet()) {
-                // Für jedes Nichtterminal
+            for (String leftside : this.grammar.getLeftSides()) {
+                // 2. (a) If X is a nonterminal...
 
-                final String leftX = prods.getKey();
+                for (String rightside : this.grammar.getRightsides(leftside)) {
+                    // ...and X -> Y1 Y2 ... Yk is a production...
 
-                for (String prod : prods.getValue()) {
-                    // Für jede Produktionsregel von diesem Nichtterminal
-                    // Produktionsregel der Form X -> S1 S2 S3 ... Sk
+                    if (!rightside.equals(this.grammar.getEpsilonSymbol())) {
+                        // ...for some k >= 1...
 
-                    final String[] split = prod.split(" ");
+                        final String[] split = rightside.split(" ");
 
-                    boolean allNullable = true; // Sind alle rechten Symbole nullable?
-                    for (String rightSi : split) {
-                        // Für jedes rechte Symbol dieser Produktionsregel
+                        // !: Dumm implementiert, alles wird mehrfach auf nullable gecheckt:
+                        // !: nullable(Y1), nullable(Y1 Y2), nullable(Y1 Y2 Y3)...
+                        for (int i = 0; i < split.length; i++) {
 
-                        if (!(nullableOut.contains(rightSi) || rightSi.equals(epsilon))) {
-                            allNullable = false;
-                            break;
+                            // All Y1 ... Yi-1
+                            final String[] sub = Arrays.copyOfRange(split, 0, i);
+
+                            if (allNullable.test(sub)) {
+                                // ...then place a in first(X) if a is in first(Yi) for some i...
+                                // ...and epsilon is in all of first(Y1) ... first(Yi-1).
+
+                                // Because a != epsilon
+                                Set<String> firstYiNoEps = firstOut.get(split[i]).stream()
+                                                                   .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                                                   .collect(Collectors.toSet());
+
+                                change = change || firstOut.get(leftside).addAll(firstYiNoEps);
+                            }
+
+                            if (i == split.length - 1 && allNullable.test(split)) {
+                                // 2. (b) If epsilon is in first(Y1) ... first(Yk), then add epsilon to first(X).
+
+                                change = change || firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                            }
                         }
                     }
 
-                    if (!(nullableOut.contains(leftX) || leftX.equals(epsilon)) && allNullable) {
-                        // Alle rechten Symbole sind nullable, also ist X nullable
+                    if (rightside.equals(this.grammar.getEpsilonSymbol())) {
+                        // 3. If X -> epsilon is a production, then add epsilon to first(X).
 
-                        change = nullableOut.add(leftX);
-                    }
-                }
-            }
-        } while (change);
-
-        return nullableOut;
-    }
-
-    public boolean nullable(String sym) {
-        return this.nullable.contains(sym);
-    }
-
-    public boolean stringNullable(String prod) {
-        for (String rightSi : prod.split(" ")) {
-            if (!this.nullable.contains(rightSi)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private Map<String, Set<String>> initFirst(Grammar grammar) {
-        Map<String, Set<String>> firstOut = new HashMap<>();
-        boolean change;
-
-        final Set<String> terminals = grammar.getTerminals();
-        final Set<String> nonterminals = grammar.getNonterminals();
-        final String epsilon = grammar.getEpsilonSymbol();
-        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
-
-        for (String sym : nonterminals) {
-            // Alle Nichtterminale mit leeren Sets initialisieren
-
-            firstOut.put(sym, new HashSet<>());
-        }
-        for (String sym : terminals) {
-            // Alle Terminale mit der Identität initialisieren
-
-            firstOut.put(sym, new HashSet<>());
-            firstOut.get(sym).add(sym);
-        }
-
-        do {
-            change = false;
-
-            for (Map.Entry<String, Set<String>> prods : productions.entrySet()) {
-                // Für jedes Nichtterminal
-
-                final String leftX = prods.getKey();
-
-                for (String prod : prods.getValue()) {
-                    // Für jede Produktionsregel von diesem Nichtterminal
-                    // Produktionsregel der Form X -> S1 S2 S3 ... Sk
-
-                    if (prod.equals(epsilon)) {
-                        // Epsilonregeln überspringen
-
-                        continue;
-                    }
-
-                    final String[] split = prod.split(" ");
-
-                    // Das First des linken Nichtterminals X enthält das first des ersten rechten Symbols dieser
-                    // Produktionsregel S1 (da X -> S1 ... Sk)
-                    change = firstOut.get(leftX).addAll(firstOut.get(split[0]));
-
-                    for (int i = 1; i < split.length; i++) {
-                        // Für das 2-te bis k-te rechte Symbol dieser Produktionsregel
-
-                        if (this.nullable(split[i - 1])) {
-                            // Ein rechtes Symbol ist nullable, also zählt das first des nächsten Symbols
-
-                            change = firstOut.get(leftX).addAll(firstOut.get(split[i]));
-                        } else {
-                            break;
-                        }
+                        change = change || firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
                     }
                 }
             }
         } while (change);
 
         return firstOut;
+    }
+
+    private Map<String, Set<String>> initFollow() {
+        final Map<String, Set<String>> followOut = new HashMap<>();
+
+        // Initialisieren
+        for (String nterm : this.grammar.getNonterminals()) {
+            followOut.put(nterm, new HashSet<>());
+        }
+
+        // 1. Place $ in follow(S), where S is the start symbol, and $ is the input right endmarker
+        followOut.get(this.grammar.getStartSymbol()).add("$");
+
+        boolean change;
+
+        do {
+            change = false;
+
+            for (String leftside : this.grammar.getLeftSides()) {
+
+                for (String rightside : this.grammar.getRightsides(leftside)) {
+
+                    final String[] split = rightside.split(" ");
+
+                    for (int i = 1; i < split.length; i++) {
+                        // 2. If there is a production A -> aBb, then everything in first(b) except epsilon
+                        //    is in follow(B).
+
+                        if (!this.grammar.getNonterminals().contains(split[i - 1])) {
+                            // Follow nur für Nichtterminale berechnen
+
+                            continue;
+                        }
+
+                        // !: Hier wird wieder alles doppelt geprüft
+                        for (int k = i; k < split.length; k++) {
+                            // Behandelt solche Fälle: X -> Y1 Y2 Y3, wo Y2 nullable ist.
+                            // Dann beinhaltet follow(Y1) auch first(Y3)
+
+                            final String[] sub = Arrays.copyOfRange(split, i, k);
+
+                            if (this.allNullable(sub)) {
+
+                                final Set<String> firstXkNoEps = this.first(split[k]).stream()
+                                                                     .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                                                     .collect(Collectors.toSet());
+
+                                change = change || followOut.get(split[i - 1]).addAll(firstXkNoEps);
+                            }
+                        }
+
+                        // 3. (b) If there is a production A -> aBb, where b is nullable, then everything in
+                        //        follow(A) is in follow(B)
+                        final String[] sub = Arrays.copyOfRange(split, i, split.length);
+
+                        if (this.allNullable(sub)) {
+
+                            change = change || followOut.get(split[i - 1]).addAll(followOut.get(leftside));
+                        }
+                    }
+
+                    if (this.grammar.getNonterminals().contains(split[split.length - 1])) {
+                        // 3. (a) If there is a production A -> aB, then everything in follow(A) is in follow(B).
+
+                        change = change || followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
+                    }
+                }
+            }
+
+        } while (change);
+
+        return followOut;
+    }
+
+    private ILL1ParsingTable initParseTable() {
+        Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
+
+        for (String leftside : this.grammar.getLeftSides()) {
+
+            for (String rightside : this.grammar.getRightsides(leftside)) {
+                // For each production A -> a of the grammar, do the following:
+
+                final Set<String> firstRightside = this.stringFirst(rightside);
+
+                for (String sym : firstRightside) {
+                    // 1. For each terminal t in first(a), add A -> a to table[A, t]
+
+                    tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+                }
+
+                final Set<String> followLeftside = this.follow(leftside);
+
+                System.out.println(leftside + " -> " + rightside);
+                System.out.println("First: " + firstRightside);
+
+                if (firstRightside.contains(this.grammar.getEpsilonSymbol())) {
+                    // 2. If epsilon in first(a), then...
+
+                    for (String sym : followLeftside) {
+                        // ...for each terminal b in follow(A), add A -> a to table[A, b].
+
+                        tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+                    }
+
+                    if (followLeftside.contains("$")) {
+                        // If epsilon is in first(a) and $ is in follow(A), add A -> a to table[A, $].
+
+                        tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
+                    }
+                }
+            }
+        }
+
+        return new LL1ParsingTable(this.grammar, tableOut);
+    }
+
+
+    public boolean nullable(String sym) {
+        return sym.isBlank()
+               || sym.equals(this.grammar.getEpsilonSymbol())
+               || this.first.get(sym).contains(this.grammar.getEpsilonSymbol());
+    }
+
+    public boolean allNullable(String rightside) {
+        return rightside.isBlank()
+               || Arrays.stream(rightside.split(" ")).allMatch(this::nullable);
+    }
+
+    public boolean allNullable(String[] split) {
+        return split.length == 0
+               || Arrays.stream(split).allMatch(this::nullable);
     }
 
     public Set<String> first(String sym) {
         return this.first.get(sym);
     }
 
-    public Set<String> stringFirst(String prod) {
-        if (prod.isEmpty()) {
-            return Collections.emptySet();
-        }
+    public Set<String> stringFirst(String rightside) {
+        return this.stringFirst(rightside.split(" "));
+    }
 
-        String front;
-        String rest;
-        if (prod.indexOf(' ') < 0) {
-            front = prod;
-            rest = "";
-        } else {
-            front = prod.substring(0, prod.indexOf(' '));
-            rest = prod.substring(prod.indexOf(' ') + 1);
-        }
+    public Set<String> stringFirst(String[] split) {
+        final Set<String> firstOut = new HashSet<>();
 
-        Set<String> firstOut = new HashSet<>(this.first(front));
-        if (this.nullable(front)) {
-            firstOut.addAll(this.stringFirst(rest));
+        // !: Hier wird wieder doppelt getestet
+        for (int i = 0; i < split.length; i++) {
+            final String[] sub = Arrays.copyOfRange(split, 0, i);
+
+            if (this.allNullable(sub)) {
+                // X1 ... Xi-1 are nullable, so first(X1 ... Xn) contains first(Xi)
+
+                Set<String> firstXiNoEps;
+                if (split.length == 1 && split[0].equals(this.grammar.getEpsilonSymbol())) {
+                    // Stream collect has to be evaluated, doesn't work on empty stream
+
+                    firstXiNoEps = Collections.emptySet();
+                } else {
+                    // Only non-epsilon symbols
+
+                    firstXiNoEps = this.first(split[i]).stream()
+                                       .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                       .collect(Collectors.toSet());
+                }
+
+                firstOut.addAll(firstXiNoEps);
+
+                if (i == split.length - 1) {
+                    // Finally, add epsilon to first(X1 X2 ... Xn) if, for all i, epsilon is in first(Xi).
+
+                    firstOut.add(this.grammar.getEpsilonSymbol());
+                }
+            }
         }
 
         return firstOut;
-    }
-
-    private Map<String, Set<String>> initFollow(Grammar grammar) {
-        Map<String, Set<String>> followOut = new HashMap<>();
-        boolean change;
-
-        final Set<String> terminals = grammar.getTerminals();
-        final Set<String> nonterminals = grammar.getNonterminals();
-        final String epsilon = grammar.getEpsilonSymbol();
-        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
-
-        for (String sym : terminals) {
-            // Alle Nichtterminale mit leeren Sets initialisieren
-
-            followOut.put(sym, new HashSet<>());
-        }
-        for (String sym : nonterminals) {
-            // Alle Terminale mit leeren Sets initialisieren
-
-            followOut.put(sym, new HashSet<>());
-        }
-
-        followOut.get(startsymbol).add("$");
-
-        do {
-            change = false;
-
-            for (Map.Entry<String, Set<String>> prods : productions.entrySet()) {
-                // Für jedes Nichtterminal
-
-                final String leftX = prods.getKey();
-
-                for (String prod : prods.getValue()) {
-                    // Für jede Produktionsregel von diesem Nichtterminal
-                    // Produktionsregel der Form X -> S1 S2 S3 ... Sk
-
-                    final String[] split = prod.split(" ");
-
-                    for (int i = 0; i < split.length - 1; i++) {
-                        // Für das 1-te bis vorletzte rechte Symbol dieser Produktionsregel
-
-                        final String sym = split[i];
-
-                        // Das follow des i-ten rechten Symbols dieser Produktionsregel enthält das first des
-                        // (i+1)-ten rechten Sybols dieser Produktionsregel
-                        change = followOut.get(sym).addAll(this.first(split[i + 1]));
-
-                        for (int j = i + 2; j < prods.getValue().size(); j++) {
-                            // Für das (i+2)-te bis letzte rechte Symbol dieser Produktionsregel
-
-                            boolean allNullable = true; // Sind alle rechten Symbole nullable?
-                            for (int k = i + 1; k < j; k++) {
-                                // Für das (i+1)-te bis letzte rechte Symbol dieser Produktionsregel
-
-                                if (!this.nullable(split[k])) {
-                                    allNullable = false;
-                                    break;
-                                }
-                            }
-
-                            if (allNullable) {
-                                // Alle zwischen dem (i+1)-ten und j-ten rechten Symbol dieser Produktionsregel sind
-                                // nullable, deshalb enthält follow(Si) auch follow(Sj)
-
-                                change = followOut.get(sym).addAll(this.first(split[j]));
-                            }
-                        }
-
-                        boolean allNullable = true; // Sind alle rechten Symbole nullable?
-                        for (int k = i + 1; k < split.length; k++) {
-                            // Für das (i+1)-te bis letzte rechte Symbol dieser Produktionsregel
-
-                            if (!this.nullable(split[k])) {
-                                allNullable = false;
-                                break;
-                            }
-                        }
-
-                        if (allNullable) {
-                            // Alle zwischen dem (i+1)-ten bis letzten rechten Symbol dieser Produktionsregel sind
-                            // nullable, deshalb enthält follow(Si) auch follow(X)
-
-                            change = followOut.get(sym).addAll(followOut.get(leftX));
-                        }
-                    }
-
-                    // Dem letzten rechten Symbol dieser Produktionsregel wird das follow des linken Nichtterminals
-                    // hinzugefügt: follow(Sk) enthält follow(X) (da X -> S1 ... Sk)
-                    if (!split[split.length - 1].equals(epsilon)) {
-                        //Epsilonregeln überspringen
-
-                        followOut.get(split[split.length - 1]).addAll(followOut.get(leftX));
-                    }
-                }
-            }
-        } while (change);
-
-        return followOut;
     }
 
     public Set<String> follow(String sym) {
         return this.follow.get(sym);
     }
 
-    private ILL1ParsingTable initParseTable(Grammar grammar) {
-        Map<Map.Entry<String, String>, String> parseTableOut = new HashMap<>();
-
-        final Set<String> terminals = grammar.getTerminals();
-        final Set<String> nonterminals = grammar.getNonterminals();
-        final String epsilon = grammar.getEpsilonSymbol();
-        final Map<String, Set<String>> productions = this.getProductionMap(grammar);
-
-        for (String leftX : nonterminals) {
-            // Für alle Nichtterminale (Zeilen der Tabelle)
-
-            for (String terminal : terminals) {
-                // Für alle Terminale (Spalten der Tabelle)
-
-                final Map.Entry<String, String> cell = new AbstractMap.SimpleEntry<>(leftX, terminal);
-
-                for (String prod : productions.get(leftX)) {
-                    // Für jede Produktionsregel für dieses Nichtterminal
-
-                    if (prod.equals(epsilon)) {
-                        // Epsilonregeln überspringen
-
-                        continue;
-                    }
-
-                    if (this.stringFirst(prod).contains(terminal)
-                        || (this.stringNullable(prod) && this.follow(leftX).contains(terminal))) {
-                        // Verwende Produktion X -> S1 ... Sk, wenn Eingabe c in first(S1 ... Sk) ist
-                        // oder nullable(S1 ... Sk) und Eingabe c in follow(X) ist
-
-                        parseTableOut.put(cell, prod);
-                    }
-                }
-            }
-        }
-
-        return new LL1ParsingTable(grammar, parseTableOut);
-    }
-
-    public Set<String> getNullable() {
-        return this.nullable;
-    }
 
     public Map<String, Set<String>> getFirst() {
         return this.first;

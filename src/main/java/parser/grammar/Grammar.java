@@ -96,4 +96,17 @@ public class Grammar {
     public Set<GrammarRule> getRules() {
         return this.rules;
     }
+
+    public Set<String> getRightsides(String leftside) {
+        return this.rules.stream()
+                         .filter(rule -> rule.getLeftside().equals(leftside))
+                         .map(GrammarRule::getRightside)
+                         .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public Set<String> getLeftSides() {
+        return this.rules.stream()
+                         .map(GrammarRule::getLeftside)
+                         .collect(Collectors.toUnmodifiableSet());
+    }
 }

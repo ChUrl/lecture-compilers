@@ -20,6 +20,10 @@ public class GrammarRule {
         return this.rightside;
     }
 
+    public String[] getSymbols() {
+        return this.rightside.split(" ");
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof GrammarRule) {
