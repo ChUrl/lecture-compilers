@@ -43,8 +43,6 @@ WHILE : 'while' ;
 PRINTLN : 'System.out.println' ;
 
 // Operators
-ASSIGN : '=' ;
-
 ADD : '+' ;
 SUB : '-' ;
 MUL : '*' ;
@@ -61,6 +59,8 @@ LESS : '<' ;
 LESS_EQUAL : '<=' ;
 GREATER : '>' ;
 GREATER_EQUAL : '>=' ;
+
+ASSIGN : '=' ;
 
 // Structural
 L_PAREN : '(' ;
@@ -79,4 +79,5 @@ STRING_LIT : '"' ANY_NOBREAK* '"' ;
 BOOLEAN_LIT : 'true' | 'false' ;
 
 // Identifier
+IDENTIFIER_MAIN : 'main' ;
 IDENTIFIER : LETTER LETTER_DIGIT* ;

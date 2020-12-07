@@ -66,7 +66,7 @@ class LexerTest {
                                           "PUBLIC",
                                           "STATIC",
                                           "VOID_TYPE",
-                                          "IDENTIFIER",
+                                          "IDENTIFIER_MAIN",
                                           "L_PAREN",
                                           "STRING_TYPE",
                                           "L_BRACKET",
