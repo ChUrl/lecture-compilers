@@ -1,0 +1,10 @@
+class DanglingElse {
+
+    public static void main(String[] args) {
+        if (expr) {
+            expr;
+        } else {
+            expr;
+        }
+    }
+}
