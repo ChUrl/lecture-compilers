@@ -71,11 +71,11 @@ public class LL1Parser {
             } else if (this.parsetable.getTerminals().contains(top)) {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
 
-                throw new MyParseException("Invalid terminal on stack: " + top);
+                throw new MyParseException("Invalid terminal on stack: " + top, tree);
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
-                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentToken);
+                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentToken, tree);
             } else {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
