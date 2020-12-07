@@ -11,6 +11,8 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
+import static util.tools.Logger.log;
+
 public class LL1Parser {
 
     private final ILL1ParsingTable parsetable;
@@ -35,7 +37,9 @@ public class LL1Parser {
         stack.push(root);
 
         int inputPosition = 0;
-        System.out.println("\nParsing " + token + ":");
+
+        log("\nParsing:");
+        log("Input: " + token + "\n");
 
         // Parsing
         while (!stack.isEmpty()) {
@@ -76,8 +80,7 @@ public class LL1Parser {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
 
-                System.out.println(top + " -> " + prod);
-
+                log("Used: " + top + " -> " + prod);
                 Node pop = stack.pop();
 
                 final String[] split = prod.split(" ");
@@ -89,7 +92,9 @@ public class LL1Parser {
             }
         }
 
-        System.out.println("\n" + tree);
+        log("\nParsed AST:\n" + tree);
+        log("-".repeat(100) + "\n");
+
         return true;
     }
 }

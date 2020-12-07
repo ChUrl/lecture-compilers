@@ -13,6 +13,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static util.tools.Logger.log;
+import static util.tools.Logger.logIfTrue;
+import static util.tools.Logger.logNullable;
+
 public class LL1GrammarAnalyzer {
 
     private final Grammar grammar;
@@ -25,15 +29,14 @@ public class LL1GrammarAnalyzer {
     public LL1GrammarAnalyzer(Grammar grammar) {
         this.grammar = grammar;
 
+        log("-".repeat(100));
+        log("Analyzing Grammar:\n");
+
         // Es muss zwingend in der Reihenfolge [Nullable < First < Follow < Table] initialisiert werden
         this.first = this.initFirst();
         this.follow = this.initFollow();
 
         this.table = this.initParseTable();
-
-        //        System.out.println("First:\n" + this.first);
-        //        System.out.println("Follow:\n" + this.follow);
-        System.out.println("LL-Table:\n" + this.table);
     }
 
     private Map<String, Set<String>> initFirst() {
@@ -46,6 +49,8 @@ public class LL1GrammarAnalyzer {
                                                   || firstOut.get(sym).contains(this.grammar.getEpsilonSymbol());
         final Predicate<String[]> allNullable = split -> split.length == 0
                                                          || Arrays.stream(split).allMatch(nullable);
+
+        log("First Initialisieren:");
 
         // Initialisieren
         for (String nterm : this.grammar.getNonterminals()) {
@@ -90,13 +95,19 @@ public class LL1GrammarAnalyzer {
                                                                    .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
                                                                    .collect(Collectors.toSet());
 
-                                change = change || firstOut.get(leftside).addAll(firstYiNoEps);
+                                boolean changeNow = firstOut.get(leftside).addAll(firstYiNoEps);
+                                change = change || changeNow;
+
+                                logIfTrue(changeNow, "First: Added " + firstYiNoEps + " to " + leftside + " (All before are nullable)");
                             }
 
                             if (i == split.length - 1 && allNullable.test(split)) {
                                 // 2. (b) If epsilon is in first(Y1) ... first(Yk), then add epsilon to first(X).
 
-                                change = change || firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                                boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                                change = change || changeNow;
+
+                                logIfTrue(changeNow, "First: Added " + this.grammar.getEpsilonSymbol() + " to " + leftside + " (All are nullable)");
                             }
                         }
                     }
@@ -104,17 +115,25 @@ public class LL1GrammarAnalyzer {
                     if (rightside.equals(this.grammar.getEpsilonSymbol())) {
                         // 3. If X -> epsilon is a production, then add epsilon to first(X).
 
-                        change = change || firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                        boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                        change = change || changeNow;
+
+                        logIfTrue(changeNow, "First: Added " + this.grammar.getEpsilonSymbol() + " to " + leftside + " (X -> EPS exists)");
                     }
                 }
             }
         } while (change);
+
+        log("\n" + firstOut);
+        log("-".repeat(100) + "\n");
 
         return firstOut;
     }
 
     private Map<String, Set<String>> initFollow() {
         final Map<String, Set<String>> followOut = new HashMap<>();
+
+        log("Follow Initialisieren:");
 
         // Initialisieren
         for (String nterm : this.grammar.getNonterminals()) {
@@ -158,7 +177,10 @@ public class LL1GrammarAnalyzer {
                                                                      .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
                                                                      .collect(Collectors.toSet());
 
-                                change = change || followOut.get(split[i - 1]).addAll(firstXkNoEps);
+                                boolean changeNow = followOut.get(split[i - 1]).addAll(firstXkNoEps);
+                                change = change || changeNow;
+
+                                logIfTrue(changeNow, "Follow: Added " + firstXkNoEps + " to " + split[i - 1] + " (Dazwischen nullable)");
                             }
                         }
 
@@ -168,25 +190,36 @@ public class LL1GrammarAnalyzer {
 
                         if (this.allNullable(sub)) {
 
-                            change = change || followOut.get(split[i - 1]).addAll(followOut.get(leftside));
+                            boolean changeNow = followOut.get(split[i - 1]).addAll(followOut.get(leftside));
+                            change = change || changeNow;
+
+                            logIfTrue(changeNow, "Follow: Added " + leftside + " to " + split[i - 1] + " (Dahinter nullable)");
                         }
                     }
 
                     if (this.grammar.getNonterminals().contains(split[split.length - 1])) {
                         // 3. (a) If there is a production A -> aB, then everything in follow(A) is in follow(B).
 
-                        change = change || followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
+                        boolean changeNow = followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
+                        change = change || changeNow;
+
+                        logIfTrue(changeNow, "Follow: Added " + followOut.get(leftside) + " to " + split[split.length - 1] + " (Ende der Regel)");
                     }
                 }
             }
 
         } while (change);
 
+        log("\n" + followOut);
+        log("-".repeat(100) + "\n");
+
         return followOut;
     }
 
     private ILL1ParsingTable initParseTable() {
         Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
+
+        log("Parsetable Aufstellen:");
 
         for (String leftside : this.grammar.getLeftSides()) {
 
@@ -198,13 +231,17 @@ public class LL1GrammarAnalyzer {
                 for (String sym : firstRightside) {
                     // 1. For each terminal t in first(a), add A -> a to table[A, t]
 
-                    tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+                    String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+
+                    log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in first of " + rightside + ")");
+                    logNullable("Overwritten " + prev + "!\n");
                 }
 
                 final Set<String> followLeftside = this.follow(leftside);
 
-                System.out.println(leftside + " -> " + rightside);
-                System.out.println("First: " + firstRightside);
+                //                log(leftside + " -> " + rightside);
+                //                log("First: " + firstRightside);
+                //                log("Follow: " + followLeftside + "\n");
 
                 if (firstRightside.contains(this.grammar.getEpsilonSymbol())) {
                     // 2. If epsilon in first(a), then...
@@ -212,19 +249,30 @@ public class LL1GrammarAnalyzer {
                     for (String sym : followLeftside) {
                         // ...for each terminal b in follow(A), add A -> a to table[A, b].
 
-                        tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+                        String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+
+                        log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in follow of " + leftside + ")");
+                        logNullable("Overwritten " + prev + "!\n");
                     }
 
                     if (followLeftside.contains("$")) {
                         // If epsilon is in first(a) and $ is in follow(A), add A -> a to table[A, $].
 
-                        tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
+                        String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
+
+                        log("Add " + rightside + " to cell (" + leftside + ", $) (epsilon in first of " + rightside + " and $ in follow of " + leftside + ")");
+                        logNullable("Overwritten " + prev + "!\n");
                     }
                 }
             }
         }
 
-        return new LL1ParsingTable(this.grammar, tableOut);
+        final LL1ParsingTable table = new LL1ParsingTable(this.grammar, tableOut);
+
+        log("\n" + table);
+        log("-".repeat(100) + "\n");
+
+        return table;
     }
 
 
@@ -277,7 +325,7 @@ public class LL1GrammarAnalyzer {
 
                 firstOut.addAll(firstXiNoEps);
 
-                if (i == split.length - 1) {
+                if (i == split.length - 1 && this.allNullable(split)) {
                     // Finally, add epsilon to first(X1 X2 ... Xn) if, for all i, epsilon is in first(Xi).
 
                     firstOut.add(this.grammar.getEpsilonSymbol());
