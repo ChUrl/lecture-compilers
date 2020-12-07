@@ -35,33 +35,42 @@ public class Grammar {
                      .collect(Collectors.toUnmodifiableList());
 
         try {
-            String startSymbol = lines.get(0).split(" ")[1];
-            String epsilonSymbol = lines.get(1).split(" ")[1];
-
-            String[] term = lines.get(2).split(" ");
-            term = Arrays.copyOfRange(term, 1, term.length);
-            Set<String> terminals = new HashSet<>(Arrays.asList(term));
-
-            String[] nterm = lines.get(3).split(" ");
-            nterm = Arrays.copyOfRange(nterm, 1, nterm.length);
-            Set<String> nonterminals = new HashSet<>(Arrays.asList(nterm));
+            String startSymbol = "";
+            String epsilonSymbol = "";
+            Set<String> terminals = new HashSet<>();
+            Set<String> nonterminals = new HashSet<>();
 
             Set<GrammarRule> rules = new HashSet<>();
-            for (int i = 4; i < lines.size(); i++) {
-                // "S -> E T2 | EPS" wird zu leftside = "S" und rightside = "E T2 | epsilon"
-                String[] split = lines.get(i)
-                                      .replaceAll("EPS", epsilonSymbol)
-                                      .split("->");
+            for (String line : lines) {
 
-                String leftside = split[0].trim();
-                String rightside = split[1].trim();
+                if (line.startsWith("START:")) {
 
-                // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
-                String[] prods = rightside.split("\\|");
+                    startSymbol = line.split(" ")[1];
+                } else if (line.startsWith("EPS:")) {
 
-                for (String prod : prods) {
-                    GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
-                    rules.add(rule);
+                    epsilonSymbol = line.split(" ")[1];
+                } else if (line.startsWith("TERM:")) {
+
+                    terminals.addAll(Arrays.stream(line.split(" ")).skip(1).collect(Collectors.toSet()));
+                } else if (line.startsWith("NTERM:")) {
+
+                    nonterminals.addAll(Arrays.stream(line.split(" ")).skip(1).collect(Collectors.toSet()));
+                } else {
+
+                    // "S -> E T2 | EPS" wird zu leftside = "S" und rightside = "E T2 | epsilon"
+                    String[] split = line.replaceAll("EPS", epsilonSymbol)
+                                         .split("->");
+
+                    String leftside = split[0].trim();
+                    String rightside = split[1].trim();
+
+                    // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
+                    String[] prods = rightside.split("\\|");
+
+                    for (String prod : prods) {
+                        GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
+                        rules.add(rule);
+                    }
                 }
             }
 
