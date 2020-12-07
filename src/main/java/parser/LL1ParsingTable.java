@@ -5,6 +5,7 @@ import parser.grammar.LL1GrammarAnalyzer;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Formatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,25 +62,54 @@ public class LL1ParsingTable implements ILL1ParsingTable {
                                                    .distinct()
                                                    .collect(Collectors.toList());
 
-        output.append(" ".repeat(8))
+        // Determine margins
+        Map<String, Integer> margins = new HashMap<>();
+        margins.put("NTERM", 0);
+        for (String terminal : inputSymbols) {
+            margins.put(terminal, 0);
+        }
+
+        for (String nonterminal : this.grammar.getNonterminals()) {
+
+            margins.put("NTERM", Math.max(margins.get("NTERM"), nonterminal.length()));
+
+            for (String terminal : inputSymbols) {
+                String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
+
+                int length;
+                if (prod == null) {
+                    length = 0;
+                } else {
+                    length = prod.length();
+                }
+
+                margins.put(terminal, Math.max(margins.get(terminal), length));
+                margins.put(terminal, Math.max(margins.get(terminal), terminal.length()));
+            }
+        }
+
+        output.append(" ".repeat(margins.get("NTERM")))
               .append("| ");
         for (String terminal : inputSymbols) {
-            format.format("%-9s ", terminal);
+            format.format("%-Xs ".replaceAll("X", String.valueOf(margins.get(terminal))), terminal);
         }
         output.append("|\n");
 
-        output.append("-".repeat(8))
-              .append("+")
-              .append("-".repeat(10 * inputSymbols.size() + 1))
+        output.append("-".repeat(margins.get("NTERM")))
+              .append("+");
+        for (String terminal : inputSymbols) {
+            output.append("-".repeat(margins.get(terminal)));
+        }
+        output.append("-".repeat(inputSymbols.size() + 1))
               .append("+")
               .append("\n");
 
         for (String nonterminal : this.grammar.getNonterminals()) {
-            format.format("%-7s | ", nonterminal);
+            format.format("%-Xs| ".replaceAll("X", String.valueOf(margins.get("NTERM"))), nonterminal);
 
             for (String terminal : inputSymbols) {
                 String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
-                format.format("%-9s ", prod == null ? " ".repeat(9) : prod);
+                format.format("%-Xs ".replaceAll("X", String.valueOf(margins.get(terminal))), prod == null ? " ".repeat(9) : prod);
             }
             output.append("|\n");
         }
