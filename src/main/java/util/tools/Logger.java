@@ -14,7 +14,7 @@ public final class Logger {
     }
 
     public static void logNullable(String message) {
-        if (message != null) {
+        if (message != null && !message.isBlank() && !message.isEmpty() && !"null".equals(message)) {
             log(message);
         }
     }
