@@ -1,5 +1,7 @@
 package parser.grammar;
 
+import util.tools.Logger;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,7 +33,9 @@ public class Grammar {
     public static Grammar fromFile(Path path) throws IOException {
         List<String> lines = Files.readAllLines(path);
 
-        lines = lines.stream().filter(line -> !(line.isBlank() || line.startsWith("//")))
+        lines = lines.stream()
+                     .map(String::trim)
+                     .filter(line -> !(line.isBlank() || line.startsWith("//")))
                      .collect(Collectors.toUnmodifiableList());
 
         try {
@@ -41,7 +45,11 @@ public class Grammar {
             Set<String> nonterminals = new HashSet<>();
 
             Set<GrammarRule> rules = new HashSet<>();
+
+            Logger.log("Parsing Grammar from File:");
             for (String line : lines) {
+
+                Logger.log("Parsed: " + line);
 
                 if (line.startsWith("START:")) {
 
@@ -73,6 +81,7 @@ public class Grammar {
                     }
                 }
             }
+            Logger.log("-".repeat(100));
 
             return new Grammar(terminals, nonterminals,
                                startSymbol, epsilonSymbol,
