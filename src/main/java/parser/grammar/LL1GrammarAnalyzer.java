@@ -29,7 +29,6 @@ public class LL1GrammarAnalyzer {
     public LL1GrammarAnalyzer(Grammar grammar) {
         this.grammar = grammar;
 
-        log("-".repeat(100));
         log("Analyzing Grammar:\n");
 
         // Es muss zwingend in der Reihenfolge [Nullable < First < Follow < Table] initialisiert werden
