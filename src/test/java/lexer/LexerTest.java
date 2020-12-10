@@ -2,6 +2,7 @@ package lexer;
 
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -84,7 +85,7 @@ class LexerTest {
 
         List<String> token = this.getSymbols(lex);
 
-        assertThat(token).hasSize(58)
+        assertThat(token).hasSize(68)
                          .containsSequence("WHILE",
                                            "L_PAREN",
                                            "IDENTIFIER",
@@ -127,7 +128,7 @@ class LexerTest {
 
         List<String> token = this.getSymbols(lex);
 
-        assertThat(token).hasSize(60)
+        assertThat(token).hasSize(96)
                          .containsSequence("IF",
                                            "L_PAREN",
                                            "IDENTIFIER",

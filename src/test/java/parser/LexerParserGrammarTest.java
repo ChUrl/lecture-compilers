@@ -3,7 +3,9 @@ package parser;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import parser.grammar.Grammar;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -30,21 +32,14 @@ class LexerParserGrammarTest {
         return null;
     }
 
-    private List<String> getSymbols(Lexer lex) {
-        return lex.getAllTokens().stream()
-                  .map(tok -> lex.getVocabulary().getSymbolicName(tok.getType()))
-                  .collect(Collectors.toUnmodifiableList());
-    }
-
     @Test
     void testEmptyFile() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         LL1Parser parser = LL1Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("EmptyFile.stups");
-        List<String> token = this.getSymbols(lex);
 
-        assertThat(parser.parse(token)).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
     }
 
     @Test
@@ -53,9 +48,8 @@ class LexerParserGrammarTest {
         LL1Parser parser = LL1Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("EmptyMain.stups");
-        List<String> token = this.getSymbols(lex);
 
-        assertThat(parser.parse(token)).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
     }
 
     @Test
@@ -64,9 +58,38 @@ class LexerParserGrammarTest {
         LL1Parser parser = LL1Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralComment.stups");
-        List<String> token = this.getSymbols(lex);
 
-        assertThat(parser.parse(token)).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+    }
+
+    @Test
+    void tesMultiDecl() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        LL1Parser parser = LL1Parser.fromGrammar(path);
+
+        Lexer lex = this.initLexer("MultipleDeclarations.stups");
+
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+    }
+
+    @Test
+    void testDeclarationAssignment() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        LL1Parser parser = LL1Parser.fromGrammar(path);
+
+        Lexer lex = this.initLexer("DeclarationAssignment.stups");
+
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+    }
+
+    @Test
+    void testExpr() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        LL1Parser parser = LL1Parser.fromGrammar(path);
+
+        Lexer lex = this.initLexer("Expr.stups");
+
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
     }
 
     @Test
@@ -75,8 +98,17 @@ class LexerParserGrammarTest {
         LL1Parser parser = LL1Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralWhile.stups");
-        List<String> token = this.getSymbols(lex);
 
-        assertThat(parser.parse(token)).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+    }
+
+    @Test
+    void testGeneralIfElse() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        LL1Parser parser = LL1Parser.fromGrammar(path);
+
+        Lexer lex = this.initLexer("GeneralIfElse.stups");
+
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
     }
 }
