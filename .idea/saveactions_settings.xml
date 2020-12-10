@@ -4,11 +4,9 @@
     <option name="actions">
       <set>
         <option value="activate" />
-        <option value="reformat" />
         <option value="unqualifiedFieldAccess" />
         <option value="unqualifiedMethodAccess" />
         <option value="missingOverrideAnnotation" />
-        <option value="useBlocks" />
         <option value="explicitTypeCanBeDiamond" />
       </set>
     </option>
