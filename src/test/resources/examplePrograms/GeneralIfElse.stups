@@ -11,5 +11,15 @@ class IfElseClass {
             }
         }
         System.out.println("x und y sind gleich gross.");
+
+        if (1 < 2)
+            String s = "Ohne Klammern, da 1 Line.";
+
+        if (1 < 2)
+            s = "If 1";
+        if (2 < x)
+            s = "If 2";
+        else
+            s = "Dangling else";
     }
 }

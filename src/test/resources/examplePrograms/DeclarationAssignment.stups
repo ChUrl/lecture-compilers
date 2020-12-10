@@ -1,0 +1,14 @@
+class WhileClass {
+
+    public static void main(String[] args) {
+
+        int test = 1;
+        test = 2;
+
+        {
+            // Shadowing
+            int test = 1;
+            test = 2;
+        }
+    }
+}
