@@ -34,6 +34,7 @@ STATIC : 'static' ;
 
 VOID_TYPE : 'void' ;
 BOOLEAN_TYPE : 'boolean' ;
+INTEGER_TYPE : 'int';
 STRING_TYPE : 'String' ;
 
 IF : 'if' ;
@@ -74,7 +75,7 @@ COMMA : ',' ;
 DOT : '.' ;
 
 // Literals
-INTEGER_LIT : '-'? DIGIT+ ;
+INTEGER_LIT : DIGIT+ ;
 STRING_LIT : '"' ANY_NOBREAK* '"' ;
 BOOLEAN_LIT : 'true' | 'false' ;
 
