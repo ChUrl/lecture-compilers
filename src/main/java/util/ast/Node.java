@@ -7,10 +7,17 @@ import java.util.List;
 public class Node {
 
     private final String name;
+    private String value;
     private final List<Node> children = new ArrayList<>();
 
     public Node(String name) {
         this.name = name;
+        this.value = "";
+    }
+
+    public Node(String name, String value) {
+        this.name = name;
+        this.value = value;
     }
 
     public void addChild(Node node) {
@@ -23,6 +30,10 @@ public class Node {
 
     public String getName() {
         return this.name;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     @Override
@@ -51,6 +62,10 @@ public class Node {
     private void print(StringBuilder buffer, String prefix, String childrenPrefix) {
         buffer.append(prefix);
         buffer.append(this.name);
+        if (!this.value.isBlank()) {
+            buffer.append(": ");
+            buffer.append(this.value);
+        }
         buffer.append('\n');
 
         for (Iterator<Node> it = this.children.listIterator(); it.hasNext(); ) {
