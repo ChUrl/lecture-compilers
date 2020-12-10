@@ -1,5 +1,7 @@
 package parser;
 
+import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.Vocabulary;
 import parser.grammar.Grammar;
 import parser.grammar.LL1GrammarAnalyzer;
 import util.ast.AST;
@@ -8,6 +10,7 @@ import util.ast.Node;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 
@@ -30,7 +33,7 @@ public class LL1Parser {
         return new LL1Parser(analyzer.getTable());
     }
 
-    public boolean parse(List<String> token) {
+    public boolean parse(List<? extends Token> token, Vocabulary voc) {
         Node root = new Node(this.parsetable.getStartSymbol());
         AST tree = new AST(root);
         Deque<Node> stack = new ArrayDeque<>();
@@ -45,25 +48,25 @@ public class LL1Parser {
         while (!stack.isEmpty()) {
             final String top = stack.peek().getName();
 
-            final String currentToken;
+            final String currentTokenSym;
             if (inputPosition >= token.size()) {
                 // Wenn auf dem Stack mehr Nichtterminale liegen als Terminale in der Eingabe vorhanden sind
                 // Die Eingabe wurde komplett konsumiert
 
-                currentToken = "$"; // EOF
+                currentTokenSym = "$"; // EOF
             } else {
                 // Es sind noch Eingabesymbole vorhanden
 
-                currentToken = token.get(inputPosition);
+                currentTokenSym = voc.getSymbolicName(token.get(inputPosition).getType());
             }
 
-            final String prod = this.parsetable.get(top, currentToken);
+            final String prod = this.parsetable.get(top, currentTokenSym);
 
             if (top.equals(this.parsetable.getEpsilon())) {
                 // Wenn auf dem Stack das Epsilonsymbol liegt
 
                 stack.pop();
-            } else if (top.equals(currentToken)) {
+            } else if (top.equals(currentTokenSym)) {
                 // Wenn auf dem Stack ein Terminal liegt (dieses muss mit der Eingabe übereinstimmen)
 
                 stack.pop();
@@ -75,7 +78,7 @@ public class LL1Parser {
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
-                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentToken, tree);
+                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
             } else {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
@@ -84,8 +87,20 @@ public class LL1Parser {
                 Node pop = stack.pop();
 
                 final String[] split = prod.split(" ");
+
                 for (int i = split.length - 1; i >= 0; i--) {
                     Node node = new Node(split[i]);
+
+                    if (inputPosition + i < token.size()) {
+                        // Die Schleife geht in der Eingabe weiter
+                        Token currentTok = token.get(inputPosition + i);
+
+                        // Die Token mit semantischem Inhalt auswählen
+                        if ("IDENTIFIER".equals(split[i]) || split[i].endsWith("_LIT")) {
+                            node.setValue(currentTok.getText());
+                        }
+                    }
+
                     stack.push(node);
                     pop.addChild(node);
                 }
