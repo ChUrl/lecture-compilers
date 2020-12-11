@@ -25,6 +25,8 @@ public final class ASTCompacter {
             removed += change;
         } while (change != 0);
 
+        rename(tree);
+
         log(tree.toString());
         log("\nCleaned Tree: " + removed + " nodes removed.");
         log("-".repeat(100));
@@ -136,4 +138,25 @@ public final class ASTCompacter {
         return removed + toRemove.size();
     }
 
+    private static void rename(AST tree) {
+        rename(tree.getRoot());
+        log("-".repeat(100));
+    }
+
+    private static void rename(Node root) {
+        String newName = switch (root.getName()) {
+            case "EXPR_2", "EXPR_F" -> "EXPR";
+            default -> root.getName();
+        };
+
+        if (!newName.equals(root.getName())) {
+            log("Rename " + root.getName() + " to " + newName + ".");
+        }
+
+        root.setName(newName);
+
+        for (Node child : root.getChildren()) {
+            rename(child);
+        }
+    }
 }
