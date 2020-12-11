@@ -1,10 +1,13 @@
 package parser.grammar;
 
+import parser.Actions;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -102,6 +105,14 @@ public class Grammar {
                                                       .map(String::trim)
                                                       .filter(flag -> !flag.isEmpty())
                                                       .collect(Collectors.toList());
+                        List<String> enumActions = Arrays.stream(Actions.values())
+                                                         .map(action -> action.toString().toLowerCase())
+                                                         .collect(Collectors.toList());
+                        for (String flag : flagList) {
+                            if (!enumActions.contains(flag)) {
+                                throw new GrammarParseException("Falsche Action in Grammatik");
+                            }
+                        }
 
                         // "S[C R]" wird zu "S"
                         leftside = leftside.substring(0, open);
@@ -171,5 +182,13 @@ public class Grammar {
 
     public Set<String> getActions(String leftside, String rightside) {
         return this.actions == null ? Collections.emptySet() : this.actions.get(new SimpleEntry<>(leftside, rightside));
+    }
+
+    public Set<String> getAllActions(String rightside) {
+        return this.actions.entrySet().stream()
+                           .filter(entry -> entry.getKey().getValue().equals(rightside))
+                           .map(Map.Entry::getValue)
+                           .flatMap(Collection::stream)
+                           .collect(Collectors.toUnmodifiableSet());
     }
 }
