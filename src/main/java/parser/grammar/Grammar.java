@@ -3,6 +3,7 @@ package parser.grammar;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,7 +22,7 @@ public class Grammar {
     private final String startSymbol;
     private final String epsilonSymbol;
 
-    private final Map<String, Set<String>> actions;
+    private final Map<Map.Entry<String, String>, Set<String>> actions;
 
     private final Set<GrammarRule> rules;
 
@@ -38,7 +39,7 @@ public class Grammar {
 
     public Grammar(Set<String> terminals, Set<String> nonterminals,
                    String startSymbol, String epsilonSymbol,
-                   Map<String, Set<String>> actions, Set<GrammarRule> rules) {
+                   Map<Map.Entry<String, String>, Set<String>> actions, Set<GrammarRule> rules) {
         this.terminals = terminals;
         this.nonterminals = nonterminals;
         this.startSymbol = startSymbol;
@@ -61,7 +62,7 @@ public class Grammar {
             Set<String> terminals = new HashSet<>();
             Set<String> nonterminals = new HashSet<>();
 
-            Map<String, Set<String>> actions = new HashMap<>();
+            Map<Map.Entry<String, String>, Set<String>> actions = new HashMap<>();
             Set<GrammarRule> rules = new HashSet<>();
 
             log("Parsing Grammar from File:");
@@ -105,10 +106,10 @@ public class Grammar {
                         // "S[C R]" wird zu "S"
                         leftside = leftside.substring(0, open);
 
-                        actions.put(leftside, new HashSet<>());
-                        actions.get(leftside).addAll(flagList);
+                        actions.put(new SimpleEntry<>(leftside, rightside), new HashSet<>());
+                        actions.get(new SimpleEntry<>(leftside, rightside)).addAll(flagList);
                         if (!flagList.isEmpty()) {
-                            log("Registered actions for " + leftside + ": " + flagList + "\n");
+                            log("Registered actions: " + flagList + "\n");
                         }
                     }
 
@@ -168,7 +169,7 @@ public class Grammar {
                          .collect(Collectors.toUnmodifiableSet());
     }
 
-    public Set<String> getActions(String leftside) {
-        return this.actions == null ? Collections.emptySet() : this.actions.get(leftside);
+    public Set<String> getActions(String leftside, String rightside) {
+        return this.actions == null ? Collections.emptySet() : this.actions.get(new SimpleEntry<>(leftside, rightside));
     }
 }
