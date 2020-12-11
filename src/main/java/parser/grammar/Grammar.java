@@ -93,6 +93,7 @@ public class Grammar {
                     String leftside = split[0].trim();
                     String rightside = split[1].trim();
 
+                    List<String> flagList = Collections.emptyList();
                     if (leftside.indexOf('[') >= 0) {
                         // Handle actions if they exist
 
@@ -101,10 +102,10 @@ public class Grammar {
 
                         // Aus "S[C R]" wird flags = {"C", "R"} extrahiert
                         String[] flags = leftside.substring(open + 1, close).split(" ");
-                        List<String> flagList = Arrays.stream(flags)
-                                                      .map(String::trim)
-                                                      .filter(flag -> !flag.isEmpty())
-                                                      .collect(Collectors.toList());
+                        flagList = Arrays.stream(flags)
+                                         .map(String::trim)
+                                         .filter(flag -> !flag.isEmpty())
+                                         .collect(Collectors.toList());
                         List<String> enumActions = Arrays.stream(Actions.values())
                                                          .map(action -> action.toString().toLowerCase())
                                                          .collect(Collectors.toList());
@@ -116,12 +117,6 @@ public class Grammar {
 
                         // "S[C R]" wird zu "S"
                         leftside = leftside.substring(0, open);
-
-                        actions.put(new SimpleEntry<>(leftside, rightside), new HashSet<>());
-                        actions.get(new SimpleEntry<>(leftside, rightside)).addAll(flagList);
-                        if (!flagList.isEmpty()) {
-                            log("Registered actions: " + flagList + "\n");
-                        }
                     }
 
                     // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
@@ -130,9 +125,21 @@ public class Grammar {
                     for (String prod : prods) {
                         GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
                         rules.add(rule);
+
+                        actions.put(new SimpleEntry<>(leftside, prod), new HashSet<>());
+                        actions.get(new SimpleEntry<>(leftside, prod)).addAll(flagList);
+                        if (!flagList.isEmpty()) {
+                            log("Registered actions: " + leftside + " -> " + prod + ": " + flagList);
+                        }
+                    }
+
+                    if (!flagList.isEmpty()) {
+                        log("\n");
                     }
                 }
             }
+
+            log("\n" + actions);
             log("-".repeat(100));
 
             return new Grammar(terminals, nonterminals,
