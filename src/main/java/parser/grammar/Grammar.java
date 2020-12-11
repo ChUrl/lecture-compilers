@@ -1,15 +1,18 @@
 package parser.grammar;
 
-import util.tools.Logger;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static util.tools.Logger.log;
 
 public class Grammar {
 
@@ -17,6 +20,8 @@ public class Grammar {
     private final Set<String> nonterminals;
     private final String startSymbol;
     private final String epsilonSymbol;
+
+    private final Map<String, Set<String>> actions;
 
     private final Set<GrammarRule> rules;
 
@@ -27,6 +32,18 @@ public class Grammar {
         this.nonterminals = nonterminals;
         this.startSymbol = startSymbol;
         this.epsilonSymbol = epsilonSymbol;
+        this.actions = null;
+        this.rules = rules;
+    }
+
+    public Grammar(Set<String> terminals, Set<String> nonterminals,
+                   String startSymbol, String epsilonSymbol,
+                   Map<String, Set<String>> actions, Set<GrammarRule> rules) {
+        this.terminals = terminals;
+        this.nonterminals = nonterminals;
+        this.startSymbol = startSymbol;
+        this.epsilonSymbol = epsilonSymbol;
+        this.actions = actions;
         this.rules = rules;
     }
 
@@ -44,12 +61,13 @@ public class Grammar {
             Set<String> terminals = new HashSet<>();
             Set<String> nonterminals = new HashSet<>();
 
+            Map<String, Set<String>> actions = new HashMap<>();
             Set<GrammarRule> rules = new HashSet<>();
 
-            Logger.log("Parsing Grammar from File:");
+            log("Parsing Grammar from File:");
             for (String line : lines) {
 
-                Logger.log("Parsed: " + line);
+                log("Parsed: " + line);
 
                 if (line.startsWith("START:")) {
 
@@ -64,13 +82,31 @@ public class Grammar {
 
                     nonterminals.addAll(Arrays.stream(line.split(" ")).skip(1).collect(Collectors.toSet()));
                 } else {
-
-                    // "S -> E T2 | EPS" wird zu leftside = "S" und rightside = "E T2 | epsilon"
+                    // "S[] -> E T2 | EPS" wird zu leftside = "S[]" und rightside = "E T2 | epsilon"
                     String[] split = line.replaceAll("EPS", epsilonSymbol)
                                          .split("->");
 
                     String leftside = split[0].trim();
                     String rightside = split[1].trim();
+
+                    int open = leftside.indexOf('[');
+                    int close = leftside.indexOf(']');
+
+                    // Aus "S[C R]" wird flags = {"C", "R"} extrahiert
+                    String[] flags = leftside.substring(open + 1, close).split(" ");
+                    List<String> flagList = Arrays.stream(flags)
+                                                  .map(String::trim)
+                                                  .filter(flag -> !flag.isEmpty())
+                                                  .collect(Collectors.toList());
+
+                    // "S[C R]" wird zu "S"
+                    leftside = leftside.substring(0, open);
+
+                    actions.put(leftside, new HashSet<>());
+                    actions.get(leftside).addAll(flagList);
+                    if (!flagList.isEmpty()) {
+                        log("Registered actions for " + leftside + ": " + flagList + "\n");
+                    }
 
                     // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
                     String[] prods = rightside.split("\\|");
@@ -81,7 +117,7 @@ public class Grammar {
                     }
                 }
             }
-            Logger.log("-".repeat(100));
+            log("-".repeat(100));
 
             return new Grammar(terminals, nonterminals,
                                startSymbol, epsilonSymbol,
@@ -126,5 +162,9 @@ public class Grammar {
         return this.rules.stream()
                          .map(GrammarRule::getLeftside)
                          .collect(Collectors.toUnmodifiableSet());
+    }
+
+    public Set<String> getActions(String leftside) {
+        return this.actions == null ? Collections.emptySet() : this.actions.get(leftside);
     }
 }
