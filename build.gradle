@@ -1,11 +1,13 @@
 plugins {
     id 'java'
+    id 'application'
     id 'antlr'
 }
 
 group 'de.churl'
 version '1.0-SNAPSHOT'
 sourceCompatibility = '14'
+mainClassName = 'StupsCompiler'
 
 generateGrammarSource {
     outputDirectory = file("src/main/java/lexer")
