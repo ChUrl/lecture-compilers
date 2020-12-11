@@ -73,9 +73,13 @@ public class LL1Parser {
             } else if (this.parsetable.getTerminals().contains(top)) {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
 
+                System.out.println("Syntaxfehler.");
+
                 throw new MyParseException("Invalid terminal on stack: " + top, tree);
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
+
+                System.out.println("Syntaxfehler.");
 
                 throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
             } else {
