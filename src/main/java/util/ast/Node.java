@@ -3,6 +3,7 @@ package util.ast;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 public class Node {
 
@@ -15,17 +16,16 @@ public class Node {
         this.value = "";
     }
 
-    public Node(String name, String value) {
-        this.name = name;
-        this.value = value;
-    }
-
     public void addChild(Node node) {
         this.children.add(node);
     }
 
     public boolean hasChildren() {
         return !this.children.isEmpty();
+    }
+
+    public List<Node> getChildren() {
+        return this.children;
     }
 
     public String getName() {
@@ -76,5 +76,10 @@ public class Node {
                 next.print(buffer, childrenPrefix + "└── ", childrenPrefix + "    ");
             }
         }
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name, this.value, this.children); // TODO: children?
     }
 }

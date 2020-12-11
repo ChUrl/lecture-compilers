@@ -1,5 +1,7 @@
 package util.ast;
 
+import java.util.Objects;
+
 public class AST {
 
     private final Node root;
@@ -24,5 +26,10 @@ public class AST {
     @Override
     public String toString() {
         return this.root.toString();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.root);
     }
 }
