@@ -40,7 +40,7 @@ class LL1GrammarAnalyzerTest {
         rules.add(new GrammarRule("S", "i", "E", "t", "S"));
         rules.add(new GrammarRule("E", "b"));
 
-        grammar0 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, rules);
+        grammar0 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null, rules);
     }
 
     @BeforeAll
@@ -70,7 +70,7 @@ class LL1GrammarAnalyzerTest {
         rules.add(new GrammarRule("F", "(", "E", ")"));
         rules.add(new GrammarRule("F", "id"));
 
-        grammar1 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, rules);
+        grammar1 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null, rules);
     }
 
     @BeforeAll
@@ -103,7 +103,7 @@ class LL1GrammarAnalyzerTest {
         rules.add(new GrammarRule("X", "Y"));
         rules.add(new GrammarRule("X", "a"));
 
-        grammar2 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, rules);
+        grammar2 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null, rules);
     }
 
     @Test
