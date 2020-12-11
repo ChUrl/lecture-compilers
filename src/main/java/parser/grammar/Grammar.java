@@ -5,9 +5,7 @@ import parser.Actions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static parser.Actions.COMPACT;
 import static util.tools.Logger.log;
 
 public class Grammar {
@@ -25,29 +24,19 @@ public class Grammar {
     private final String startSymbol;
     private final String epsilonSymbol;
 
-    private final Map<Map.Entry<String, String>, Set<String>> actions;
+    // Actions
+    private final Map<String, Set<String>> compact;
 
     private final Set<GrammarRule> rules;
 
     public Grammar(Set<String> terminals, Set<String> nonterminals,
                    String startSymbol, String epsilonSymbol,
-                   Set<GrammarRule> rules) {
+                   Map<String, Set<String>> compact, Set<GrammarRule> rules) {
         this.terminals = terminals;
         this.nonterminals = nonterminals;
         this.startSymbol = startSymbol;
         this.epsilonSymbol = epsilonSymbol;
-        this.actions = null;
-        this.rules = rules;
-    }
-
-    public Grammar(Set<String> terminals, Set<String> nonterminals,
-                   String startSymbol, String epsilonSymbol,
-                   Map<Map.Entry<String, String>, Set<String>> actions, Set<GrammarRule> rules) {
-        this.terminals = terminals;
-        this.nonterminals = nonterminals;
-        this.startSymbol = startSymbol;
-        this.epsilonSymbol = epsilonSymbol;
-        this.actions = actions;
+        this.compact = compact;
         this.rules = rules;
     }
 
@@ -65,7 +54,7 @@ public class Grammar {
             Set<String> terminals = new HashSet<>();
             Set<String> nonterminals = new HashSet<>();
 
-            Map<Map.Entry<String, String>, Set<String>> actions = new HashMap<>();
+            Map<String, Set<String>> compact = new HashMap<>();
             Set<GrammarRule> rules = new HashSet<>();
 
             log("Parsing Grammar from File:");
@@ -116,20 +105,20 @@ public class Grammar {
                         }
 
                         // "S[C R]" wird zu "S"
-                        leftside = leftside.substring(0, open);
+                        leftside = leftside.substring(0, open).trim();
                     }
 
                     // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
                     String[] prods = rightside.split("\\|");
 
+                    compact.put(leftside, new HashSet<>());
                     for (String prod : prods) {
                         GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
                         rules.add(rule);
 
-                        actions.put(new SimpleEntry<>(leftside, prod), new HashSet<>());
-                        actions.get(new SimpleEntry<>(leftside, prod)).addAll(flagList);
-                        if (!flagList.isEmpty()) {
-                            log("Registered actions: " + leftside + " -> " + prod + ": " + flagList);
+                        if (flagList.contains(COMPACT.toString().toLowerCase())) {
+                            compact.get(leftside).add(prod.trim());
+                            log("Registered compact: " + leftside + " -> " + prod.trim());
                         }
                     }
 
@@ -139,15 +128,15 @@ public class Grammar {
                 }
             }
 
-            log("\n" + actions);
+            log("\n" + compact);
             log("-".repeat(100));
 
             return new Grammar(terminals, nonterminals,
                                startSymbol, epsilonSymbol,
-                               rules);
+                               compact, rules);
         } catch (Exception e) {
-            System.out.println("Die Grammatik kann nicht gelesen werden!");
-            System.out.println(path);
+            log("Die Grammatik kann nicht gelesen werden!");
+            log(path.toString());
             e.printStackTrace();
         }
 
@@ -187,15 +176,7 @@ public class Grammar {
                          .collect(Collectors.toUnmodifiableSet());
     }
 
-    public Set<String> getActions(String leftside, String rightside) {
-        return this.actions == null ? Collections.emptySet() : this.actions.get(new SimpleEntry<>(leftside, rightside));
-    }
-
-    public Set<String> getAllActions(String rightside) {
-        return this.actions.entrySet().stream()
-                           .filter(entry -> entry.getKey().getValue().equals(rightside))
-                           .map(Map.Entry::getValue)
-                           .flatMap(Collection::stream)
-                           .collect(Collectors.toUnmodifiableSet());
+    public boolean hasCompact(String leftside, String rightside) {
+        return this.compact != null && this.compact.get(leftside).contains(rightside);
     }
 }
