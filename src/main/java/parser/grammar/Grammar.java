@@ -6,15 +6,13 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static parser.Actions.COMPACT;
+import static parser.Actions.NULLABLE;
 import static util.tools.Logger.log;
 
 public class Grammar {
@@ -25,18 +23,21 @@ public class Grammar {
     private final String epsilonSymbol;
 
     // Actions
-    private final Map<String, Set<String>> compact;
+    private final Set<String> compact;
+    private final Set<String> nullable;
 
     private final Set<GrammarRule> rules;
 
     public Grammar(Set<String> terminals, Set<String> nonterminals,
                    String startSymbol, String epsilonSymbol,
-                   Map<String, Set<String>> compact, Set<GrammarRule> rules) {
+                   Set<String> compact, Set<String> nullable,
+                   Set<GrammarRule> rules) {
         this.terminals = terminals;
         this.nonterminals = nonterminals;
         this.startSymbol = startSymbol;
         this.epsilonSymbol = epsilonSymbol;
         this.compact = compact;
+        this.nullable = nullable;
         this.rules = rules;
     }
 
@@ -54,7 +55,8 @@ public class Grammar {
             Set<String> terminals = new HashSet<>();
             Set<String> nonterminals = new HashSet<>();
 
-            Map<String, Set<String>> compact = new HashMap<>();
+            Set<String> compact = new HashSet<>();
+            Set<String> nullable = new HashSet<>();
             Set<GrammarRule> rules = new HashSet<>();
 
             log("Parsing Grammar from File:");
@@ -82,7 +84,6 @@ public class Grammar {
                     String leftside = split[0].trim();
                     String rightside = split[1].trim();
 
-                    List<String> flagList = Collections.emptyList();
                     if (leftside.indexOf('[') >= 0) {
                         // Handle actions if they exist
 
@@ -91,10 +92,12 @@ public class Grammar {
 
                         // Aus "S[C R]" wird flags = {"C", "R"} extrahiert
                         String[] flags = leftside.substring(open + 1, close).split(" ");
-                        flagList = Arrays.stream(flags)
-                                         .map(String::trim)
-                                         .filter(flag -> !flag.isEmpty())
-                                         .collect(Collectors.toList());
+                        List<String> flagList = Arrays.stream(flags)
+                                                      .map(String::trim)
+                                                      .filter(flag -> !flag.isEmpty())
+                                                      .collect(Collectors.toList());
+
+                        // Check for action validity
                         List<String> enumActions = Arrays.stream(Actions.values())
                                                          .map(action -> action.toString().toLowerCase())
                                                          .collect(Collectors.toList());
@@ -106,24 +109,25 @@ public class Grammar {
 
                         // "S[C R]" wird zu "S"
                         leftside = leftside.substring(0, open).trim();
+
+                        // Register action
+                        if (flagList.contains(COMPACT.toString().toLowerCase())) {
+                            compact.add(leftside.trim());
+                            log("Registered compact: " + leftside.trim());
+                        }
+                        if (flagList.contains(NULLABLE.toString().toLowerCase())) {
+                            nullable.add(leftside.trim());
+                            log("Registered nullable: " + leftside.trim());
+                        }
                     }
 
                     // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
                     String[] prods = rightside.split("\\|");
 
-                    compact.put(leftside, new HashSet<>());
                     for (String prod : prods) {
                         GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
                         rules.add(rule);
 
-                        if (flagList.contains(COMPACT.toString().toLowerCase())) {
-                            compact.get(leftside).add(prod.trim());
-                            log("Registered compact: " + leftside + " -> " + prod.trim());
-                        }
-                    }
-
-                    if (!flagList.isEmpty()) {
-                        log("\n");
                     }
                 }
             }
@@ -133,7 +137,8 @@ public class Grammar {
 
             return new Grammar(terminals, nonterminals,
                                startSymbol, epsilonSymbol,
-                               compact, rules);
+                               compact, nullable,
+                               rules);
         } catch (Exception e) {
             log("Die Grammatik kann nicht gelesen werden!");
             log(path.toString());
@@ -176,7 +181,11 @@ public class Grammar {
                          .collect(Collectors.toUnmodifiableSet());
     }
 
-    public boolean hasCompact(String leftside, String rightside) {
-        return this.compact != null && this.compact.get(leftside).contains(rightside);
+    public boolean hasCompact(String leftside) {
+        return this.compact != null && this.compact.contains(leftside);
+    }
+
+    public boolean hasNullable(String leftside) {
+        return this.nullable != null && this.nullable.contains(leftside);
     }
 }
