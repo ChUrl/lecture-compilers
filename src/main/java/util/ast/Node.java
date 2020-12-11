@@ -82,4 +82,8 @@ public class Node {
     public int hashCode() {
         return Objects.hash(this.name, this.value, this.children); // TODO: children?
     }
+
+    public String getValue() {
+        return this.value;
+    }
 }
