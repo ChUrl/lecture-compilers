@@ -3,9 +3,7 @@ package parser;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import parser.grammar.Grammar;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -13,8 +11,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -39,7 +35,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("EmptyFile.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -49,7 +45,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("EmptyMain.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -59,7 +55,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("GeneralComment.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -69,7 +65,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("MultipleDeclarations.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -79,7 +75,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("DeclarationAssignment.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -89,7 +85,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("Expr.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -99,7 +95,7 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("GeneralWhile.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
@@ -109,6 +105,6 @@ class LexerParserGrammarTest {
 
         Lexer lex = this.initLexer("GeneralIfElse.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isTrue();
+        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 }

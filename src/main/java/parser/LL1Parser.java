@@ -10,7 +10,6 @@ import util.ast.Node;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayDeque;
-import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 
@@ -33,7 +32,7 @@ public class LL1Parser {
         return new LL1Parser(analyzer.getTable());
     }
 
-    public boolean parse(List<? extends Token> token, Vocabulary voc) {
+    public AST parse(List<? extends Token> token, Vocabulary voc) {
         Node root = new Node(this.parsetable.getStartSymbol());
         AST tree = new AST(root);
         Deque<Node> stack = new ArrayDeque<>();
@@ -110,6 +109,6 @@ public class LL1Parser {
         log("\nParsed AST:\n" + tree);
         log("-".repeat(100) + "\n");
 
-        return true;
+        return tree;
     }
 }
