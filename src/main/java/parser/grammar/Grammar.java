@@ -89,23 +89,27 @@ public class Grammar {
                     String leftside = split[0].trim();
                     String rightside = split[1].trim();
 
-                    int open = leftside.indexOf('[');
-                    int close = leftside.indexOf(']');
+                    if (leftside.indexOf('[') >= 0) {
+                        // Handle actions if they exist
 
-                    // Aus "S[C R]" wird flags = {"C", "R"} extrahiert
-                    String[] flags = leftside.substring(open + 1, close).split(" ");
-                    List<String> flagList = Arrays.stream(flags)
-                                                  .map(String::trim)
-                                                  .filter(flag -> !flag.isEmpty())
-                                                  .collect(Collectors.toList());
+                        int open = leftside.indexOf('[');
+                        int close = leftside.indexOf(']');
 
-                    // "S[C R]" wird zu "S"
-                    leftside = leftside.substring(0, open);
+                        // Aus "S[C R]" wird flags = {"C", "R"} extrahiert
+                        String[] flags = leftside.substring(open + 1, close).split(" ");
+                        List<String> flagList = Arrays.stream(flags)
+                                                      .map(String::trim)
+                                                      .filter(flag -> !flag.isEmpty())
+                                                      .collect(Collectors.toList());
 
-                    actions.put(leftside, new HashSet<>());
-                    actions.get(leftside).addAll(flagList);
-                    if (!flagList.isEmpty()) {
-                        log("Registered actions for " + leftside + ": " + flagList + "\n");
+                        // "S[C R]" wird zu "S"
+                        leftside = leftside.substring(0, open);
+
+                        actions.put(leftside, new HashSet<>());
+                        actions.get(leftside).addAll(flagList);
+                        if (!flagList.isEmpty()) {
+                            log("Registered actions for " + leftside + ": " + flagList + "\n");
+                        }
                     }
 
                     // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
