@@ -7,9 +7,9 @@ import java.util.Objects;
 
 public class Node {
 
-    private final String name;
+    private String name;
     private String value;
-    private final List<Node> children = new ArrayList<>();
+    private List<Node> children = new ArrayList<>();
 
     public Node(String name) {
         this.name = name;
@@ -32,23 +32,17 @@ public class Node {
         return this.name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public void setValue(String value) {
         this.value = value;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof Node) {
-            for (int i = 0; i < this.children.size(); i++) {
-                if (!this.children.get(i).equals(((Node) obj).children.get(i))) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
+    public int hashCode() {
+        return Objects.hash(this.name, this.value, this.children);
     }
 
     // toString() und print() von hier: https://stackoverflow.com/a/8948691
@@ -79,11 +73,31 @@ public class Node {
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(this.name, this.value, this.children); // TODO: children?
+    public boolean equals(Object obj) {
+        if (obj instanceof Node) {
+            return this.name.equals(((Node) obj).name)
+                   && this.value.equals(((Node) obj).value)
+                   && this.children.equals(((Node) obj).children);
+        }
+
+        return false;
     }
 
     public String getValue() {
         return this.value;
+    }
+
+    public void setChildren(List<Node> children) {
+        this.children = children;
+    }
+
+    public long size() {
+        int s = 0;
+
+        for (Node child : this.children) {
+            s += child.size();
+        }
+
+        return s + 1;
     }
 }

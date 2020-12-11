@@ -14,6 +14,10 @@ public class AST {
         return this.root;
     }
 
+    public long size() {
+        return this.root.size();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof AST) {
