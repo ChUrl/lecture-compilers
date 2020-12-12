@@ -1,11 +1,10 @@
-package parser;
+package parser.ast;
 
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
-import parser.ast.AST;
-import parser.ast.ASTCompacter;
+import parser.LL1Parser;
 import parser.grammar.Grammar;
 
 import java.io.IOException;
@@ -82,6 +81,6 @@ class ASTCompacterTest {
 
         ASTCompacter.clean(tree, grammar);
 
-        assertThat(tree.size()).isEqualTo(33);
+        assertThat(tree.size()).isEqualTo(31);
     }
 }

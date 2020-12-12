@@ -67,6 +67,18 @@ class ExpressionBalancerTest {
     }
 
     @Test
+    void testTree1Flip2x() {
+        AST tree = tree1();
+        System.out.println("Before:\n" + tree);
+
+        ExpressionBalancer.flip(tree);
+        ExpressionBalancer.flip(tree);
+        System.out.println("After:\n" + tree);
+
+        assertThat(tree).isEqualTo(tree1());
+    }
+
+    @Test
     void testTree2Flip() {
         AST tree = tree2();
         System.out.println("Before:\n" + tree);
@@ -81,6 +93,18 @@ class ExpressionBalancerTest {
     }
 
     @Test
+    void testTree2Flip2x() {
+        AST tree = tree2();
+        System.out.println("Before:\n" + tree);
+
+        ExpressionBalancer.flip(tree);
+        ExpressionBalancer.flip(tree);
+        System.out.println("After:\n" + tree);
+
+        assertThat(tree).isEqualTo(tree2());
+    }
+
+    @Test
     void testTree1Rotate() {
         AST tree = tree1();
         ExpressionBalancer.flip(tree);
@@ -90,6 +114,7 @@ class ExpressionBalancerTest {
         System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(3);
+        assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
     }
 
     @Test
@@ -102,5 +127,6 @@ class ExpressionBalancerTest {
         System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(5);
+        assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
     }
 }

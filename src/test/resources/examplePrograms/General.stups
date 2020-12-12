@@ -1,6 +1,7 @@
 class MyClass {
 
     public static void main(String[] args) {
-        int a = (1 + 2) * 3;
+        while (1 < 2)
+            i = 1;
     }
 }

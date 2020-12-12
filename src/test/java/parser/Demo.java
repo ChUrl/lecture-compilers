@@ -6,6 +6,7 @@ import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
 import parser.ast.AST;
 import parser.ast.ASTCompacter;
+import parser.ast.ExpressionBalancer;
 import parser.grammar.Grammar;
 
 import java.io.IOException;
@@ -30,7 +31,7 @@ class Demo {
     }
 
     @Test
-    void demo() throws URISyntaxException, IOException {
+    void demoClean() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
         LL1Parser parser = LL1Parser.fromGrammar(grammar);
@@ -39,5 +40,18 @@ class Demo {
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
+    }
+
+    @Test
+    void demoBalance() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        Grammar grammar = Grammar.fromFile(path);
+        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+
+        Lexer lex = this.initLexer("General.stups");
+        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+
+        ASTCompacter.clean(tree, grammar);
+        ExpressionBalancer.balance(tree);
     }
 }
