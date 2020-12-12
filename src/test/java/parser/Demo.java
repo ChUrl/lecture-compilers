@@ -4,8 +4,9 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
+import parser.ast.AST;
+import parser.ast.ASTCompacter;
 import parser.grammar.Grammar;
-import util.ast.AST;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -14,7 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-class GeneralTest {
+class Demo {
 
     private Lexer initLexer(String program) {
         try {
@@ -29,7 +30,7 @@ class GeneralTest {
     }
 
     @Test
-    void testClean() throws URISyntaxException, IOException {
+    void demo() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
         LL1Parser parser = LL1Parser.fromGrammar(grammar);

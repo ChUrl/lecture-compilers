@@ -1,4 +1,4 @@
-package parser;
+package parser.grammar;
 
 public enum Actions {
     COMPACT,

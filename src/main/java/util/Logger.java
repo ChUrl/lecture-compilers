@@ -1,4 +1,4 @@
-package util.tools;
+package util;
 
 // Maximal professioneller Logger
 public final class Logger {

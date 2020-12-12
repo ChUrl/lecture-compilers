@@ -1,6 +1,7 @@
-package util.ast;
+package parser.ast;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -89,6 +90,11 @@ public class Node {
 
     public void setChildren(List<Node> children) {
         this.children = children;
+    }
+
+    public void setChildren(Node... children) {
+        this.children = new ArrayList<>();
+        this.children.addAll(Arrays.asList(children));
     }
 
     public long size() {

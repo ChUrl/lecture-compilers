@@ -1,4 +1,4 @@
-package util.ast;
+package parser.ast;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,13 +1,11 @@
-package parser;
+package parser.ast;
 
 import parser.grammar.Grammar;
-import util.ast.AST;
-import util.ast.Node;
 
 import java.util.Collection;
 import java.util.HashSet;
 
-import static util.tools.Logger.log;
+import static util.Logger.log;
 
 public final class ASTCompacter {
 
