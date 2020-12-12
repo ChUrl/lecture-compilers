@@ -1,6 +1,5 @@
 package parser.grammar;
 
-import parser.ILL1ParsingTable;
 import parser.LL1ParsingTable;
 
 import java.util.AbstractMap;
@@ -13,9 +12,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static util.tools.Logger.log;
-import static util.tools.Logger.logIfTrue;
-import static util.tools.Logger.logNullable;
+import static util.Logger.log;
+import static util.Logger.logIfTrue;
+import static util.Logger.logNullable;
 
 public class LL1GrammarAnalyzer {
 
@@ -24,7 +23,7 @@ public class LL1GrammarAnalyzer {
     private final Map<String, Set<String>> first;
     private final Map<String, Set<String>> follow;
 
-    private final ILL1ParsingTable table;
+    private final LL1ParsingTable table;
 
     public LL1GrammarAnalyzer(Grammar grammar) {
         this.grammar = grammar;
@@ -215,7 +214,7 @@ public class LL1GrammarAnalyzer {
         return followOut;
     }
 
-    private ILL1ParsingTable initParseTable() {
+    private LL1ParsingTable initParseTable() {
         Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
 
         log("Parsetable Aufstellen:");
@@ -348,7 +347,7 @@ public class LL1GrammarAnalyzer {
         return this.follow;
     }
 
-    public ILL1ParsingTable getTable() {
+    public LL1ParsingTable getTable() {
         return this.table;
     }
 }

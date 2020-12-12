@@ -1,8 +1,8 @@
 package parser;
 
-import util.ast.AST;
+import parser.ast.AST;
 
-import static util.tools.Logger.log;
+import static util.Logger.log;
 
 public class MyParseException extends RuntimeException {
 

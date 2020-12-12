@@ -2,10 +2,10 @@ package parser;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
+import parser.ast.AST;
+import parser.ast.Node;
 import parser.grammar.Grammar;
 import parser.grammar.LL1GrammarAnalyzer;
-import util.ast.AST;
-import util.ast.Node;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,13 +13,13 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 
-import static util.tools.Logger.log;
+import static util.Logger.log;
 
 public class LL1Parser {
 
-    private final ILL1ParsingTable parsetable;
+    private final LL1ParsingTable parsetable;
 
-    public LL1Parser(ILL1ParsingTable parsetable) {
+    public LL1Parser(LL1ParsingTable parsetable) {
         this.parsetable = parsetable;
     }
 

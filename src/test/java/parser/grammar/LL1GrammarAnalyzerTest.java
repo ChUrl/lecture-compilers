@@ -2,7 +2,7 @@ package parser.grammar;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import parser.ILL1ParsingTable;
+import parser.LL1ParsingTable;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -165,7 +165,7 @@ class LL1GrammarAnalyzerTest {
     @Test
     void testTableGrammar1() {
         LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar1);
-        ILL1ParsingTable table = analyzer.getTable();
+        LL1ParsingTable table = analyzer.getTable();
 
         assertThat(table.get("E", "id")).isEqualTo("T E2");
         assertThat(table.get("E", "(")).isEqualTo("T E2");

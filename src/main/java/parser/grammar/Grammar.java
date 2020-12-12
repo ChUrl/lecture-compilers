@@ -1,7 +1,5 @@
 package parser.grammar;
 
-import parser.Actions;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -11,9 +9,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static parser.Actions.COMPACT;
-import static parser.Actions.NULLABLE;
-import static util.tools.Logger.log;
+import static parser.grammar.Actions.COMPACT;
+import static parser.grammar.Actions.NULLABLE;
+import static util.Logger.log;
 
 public class Grammar {
 
