@@ -1,11 +1,25 @@
 package parser.ast;
 
+import java.util.Collections;
+
+import static util.Logger.log;
+
 public final class ExpressionBalancer {
 
     private ExpressionBalancer() {}
 
-    // Spiegelt den Baum, da meine Müll-Grammatik die EXPRs rückwärts parst
+    public static void balance(AST tree) {
+        flip(tree);
+        leftPrecedence(tree);
+        operatorPrecedence(tree);
+
+        log(tree.toString());
+        log("-".repeat(100));
+    }
+
+    // Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen
     public static void flip(AST tree) {
+        log("Flipping expressions");
         flip(tree.getRoot());
     }
 
@@ -14,25 +28,18 @@ public final class ExpressionBalancer {
             flip(child);
         }
 
-        if (root.getChildren().size() == 2) {
-            Node left = root.getChildren().get(0);
-            Node right = root.getChildren().get(1);
-
-            root.setChildren(right, left);
-        }
+        Collections.reverse(root.getChildren());
     }
 
     // Führt Linksrotationen durch
     // Es werden EXPR-Nodes (2 Childs, 1 davon EXPR, Kein Wert) solange wie möglich linksrotiert
     public static void leftPrecedence(AST tree) {
-        boolean change;
-
-        do {
-            change = leftPrecedence(tree.getRoot());
-        } while (change);
+        log("Rotating expressions for left-precedence");
+        leftPrecedence(tree.getRoot());
     }
 
-    private static boolean leftPrecedence(Node root) {
+    // Es wird solange rotiert bis die letzte "Rotation" durchgeführt wurde
+    private static void leftPrecedence(Node root) {
         for (Node child : root.getChildren()) {
             leftPrecedence(child);
         }
@@ -40,15 +47,18 @@ public final class ExpressionBalancer {
         Node expr = getExpr(root);
 
         if (expr == null || root.getChildren().size() != 2 || !root.getValue().isEmpty()) {
-            return false;
+            return;
         }
 
-        leftRotate(root);
+        boolean change;
 
-        return true;
+        do {
+            change = leftRotate(root);
+        } while (change);
     }
 
-    private static void leftRotate(Node root) {
+    // Die Letzte Rotation ist keine richtige Rotation, dort wird false zurückgegeben
+    private static boolean leftRotate(Node root) {
         Node left = root.getChildren().get(0);
         Node right = root.getChildren().get(1);
 
@@ -57,7 +67,7 @@ public final class ExpressionBalancer {
             root.setName(right.getName());
             root.setValue(right.getValue());
             root.setChildren(left, right.getChildren().get(0));
-            return;
+            return false;
         }
 
         Node insertLeft = new Node(root.getName());
@@ -66,6 +76,8 @@ public final class ExpressionBalancer {
 
         root.setName(right.getName());
         root.setChildren(insertLeft, right.getChildren().get(1));
+
+        return true;
     }
 
     private static Node getExpr(Node root) {
