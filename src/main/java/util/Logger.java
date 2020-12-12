@@ -13,8 +13,8 @@ public final class Logger {
         }
     }
 
-    public static void logNullable(String message) {
-        if (message != null && !message.isBlank() && !message.isEmpty() && !"null".equals(message)) {
+    public static void logNullable(String message, String nullable) {
+        if (nullable != null && !nullable.isBlank() && !nullable.isEmpty() && !"null".equals(nullable)) {
             log(message);
         }
     }

@@ -232,7 +232,7 @@ public class LL1GrammarAnalyzer {
                     String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
                     log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in first of " + rightside + ")");
-                    logNullable("Overwritten " + prev + "!\n");
+                    logNullable("Overwritten " + prev + "!\n", prev);
                 }
 
                 final Set<String> followLeftside = this.follow(leftside);
@@ -250,7 +250,7 @@ public class LL1GrammarAnalyzer {
                         String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
                         log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in follow of " + leftside + ")");
-                        logNullable("Overwritten " + prev + "!\n");
+                        logNullable("Overwritten " + prev + "!\n", prev);
                     }
 
                     if (followLeftside.contains("$")) {
@@ -259,7 +259,7 @@ public class LL1GrammarAnalyzer {
                         String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
 
                         log("Add " + rightside + " to cell (" + leftside + ", $) (epsilon in first of " + rightside + " and $ in follow of " + leftside + ")");
-                        logNullable("Overwritten " + prev + "!\n");
+                        logNullable("Overwritten " + prev + "!\n", prev);
                     }
                 }
             }
