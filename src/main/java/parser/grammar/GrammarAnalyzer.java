@@ -1,6 +1,6 @@
 package parser.grammar;
 
-import parser.LL1ParsingTable;
+import parser.ParsingTable;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -16,16 +16,16 @@ import static util.Logger.log;
 import static util.Logger.logIfTrue;
 import static util.Logger.logNullable;
 
-public class LL1GrammarAnalyzer {
+public class GrammarAnalyzer {
 
     private final Grammar grammar;
 
     private final Map<String, Set<String>> first;
     private final Map<String, Set<String>> follow;
 
-    private final LL1ParsingTable table;
+    private final ParsingTable table;
 
-    public LL1GrammarAnalyzer(Grammar grammar) {
+    public GrammarAnalyzer(Grammar grammar) {
         this.grammar = grammar;
 
         log("Analyzing Grammar:\n");
@@ -214,7 +214,7 @@ public class LL1GrammarAnalyzer {
         return followOut;
     }
 
-    private LL1ParsingTable initParseTable() {
+    private ParsingTable initParseTable() {
         Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
 
         log("Parsetable Aufstellen:");
@@ -265,7 +265,7 @@ public class LL1GrammarAnalyzer {
             }
         }
 
-        final LL1ParsingTable table = new LL1ParsingTable(this.grammar, tableOut);
+        final ParsingTable table = new ParsingTable(this.grammar, tableOut);
 
         log("\n" + table);
         log("-".repeat(100) + "\n");
@@ -347,7 +347,7 @@ public class LL1GrammarAnalyzer {
         return this.follow;
     }
 
-    public LL1ParsingTable getTable() {
+    public ParsingTable getTable() {
         return this.table;
     }
 }

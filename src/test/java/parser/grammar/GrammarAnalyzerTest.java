@@ -2,7 +2,7 @@ package parser.grammar;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import parser.LL1ParsingTable;
+import parser.ParsingTable;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LL1GrammarAnalyzerTest {
+class GrammarAnalyzerTest {
 
     private static Grammar grammar0;
     private static Grammar grammar1;
@@ -108,7 +108,7 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar0() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar0);
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
 
         assertThat(analyzer.getFirst().get("S")).containsOnly("i", "a");
         assertThat(analyzer.getFirst().get("E")).containsOnly("b");
@@ -116,7 +116,7 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar1() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar1);
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
 
         assertThat(analyzer.getFirst().get("E")).containsOnly("id", "(");
         assertThat(analyzer.getFirst().get("E2")).containsOnly("+", grammar1.getEpsilonSymbol());
@@ -127,7 +127,7 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar2() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar2);
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
 
         assertThat(analyzer.getFirst().get("X")).containsOnly("c", "a", grammar2.getEpsilonSymbol());
         assertThat(analyzer.getFirst().get("Y")).containsOnly("c", grammar2.getEpsilonSymbol());
@@ -136,7 +136,7 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar0() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar0);
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
 
         assertThat(analyzer.getFollow().get("S")).containsOnly("$");
         assertThat(analyzer.getFollow().get("E")).containsOnly("t");
@@ -144,7 +144,7 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar1() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar1);
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
 
         assertThat(analyzer.getFollow().get("E")).containsOnly(")", "$");
         assertThat(analyzer.getFollow().get("E2")).containsOnly(")", "$");
@@ -155,7 +155,7 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar2() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar2);
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
 
         assertThat(analyzer.getFollow().get("X")).containsOnly("a", "c", "d");
         assertThat(analyzer.getFollow().get("Y")).containsOnly("a", "c", "d");
@@ -164,8 +164,8 @@ class LL1GrammarAnalyzerTest {
 
     @Test
     void testTableGrammar1() {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar1);
-        LL1ParsingTable table = analyzer.getTable();
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        ParsingTable table = analyzer.getTable();
 
         assertThat(table.get("E", "id")).isEqualTo("T E2");
         assertThat(table.get("E", "(")).isEqualTo("T E2");

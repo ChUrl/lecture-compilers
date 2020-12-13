@@ -3,9 +3,9 @@ package parser;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
 import parser.ast.AST;
-import parser.ast.Node;
+import parser.ast.ASTNode;
 import parser.grammar.Grammar;
-import parser.grammar.LL1GrammarAnalyzer;
+import parser.grammar.GrammarAnalyzer;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -15,27 +15,27 @@ import java.util.List;
 
 import static util.Logger.log;
 
-public class LL1Parser {
+public class Parser {
 
-    private final LL1ParsingTable parsetable;
+    private final ParsingTable parsetable;
 
-    public LL1Parser(LL1ParsingTable parsetable) {
+    public Parser(ParsingTable parsetable) {
         this.parsetable = parsetable;
     }
 
-    public static LL1Parser fromGrammar(Path path) throws IOException {
-        return LL1Parser.fromGrammar(Grammar.fromFile(path));
+    public static Parser fromGrammar(Path path) throws IOException {
+        return Parser.fromGrammar(Grammar.fromFile(path));
     }
 
-    public static LL1Parser fromGrammar(Grammar grammar) {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar);
-        return new LL1Parser(analyzer.getTable());
+    public static Parser fromGrammar(Grammar grammar) {
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
+        return new Parser(analyzer.getTable());
     }
 
     public AST parse(List<? extends Token> token, Vocabulary voc) {
-        Node root = new Node(this.parsetable.getStartSymbol());
+        ASTNode root = new ASTNode(this.parsetable.getStartSymbol());
         AST tree = new AST(root);
-        Deque<Node> stack = new ArrayDeque<>();
+        Deque<ASTNode> stack = new ArrayDeque<>();
         stack.push(root);
 
         int inputPosition = 0;
@@ -75,24 +75,24 @@ public class LL1Parser {
 
                 System.out.println("Syntaxfehler.");
 
-                throw new MyParseException("Invalid terminal on stack: " + top, tree);
+                throw new ParseException("Invalid terminal on stack: " + top, tree);
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
                 System.out.println("Syntaxfehler.");
 
-                throw new MyParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
+                throw new ParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
             } else {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
 
                 log("Used: " + top + " -> " + prod);
-                Node pop = stack.pop();
+                ASTNode pop = stack.pop();
 
                 final String[] split = prod.split(" ");
 
                 for (int i = split.length - 1; i >= 0; i--) {
-                    Node node = new Node(split[i]);
+                    ASTNode ASTNode = new ASTNode(split[i]);
 
                     if (inputPosition + i < token.size()) {
                         // Die Schleife geht in der Eingabe weiter
@@ -100,12 +100,12 @@ public class LL1Parser {
 
                         // Die Token mit semantischem Inhalt auswählen
                         if ("IDENTIFIER".equals(split[i]) || split[i].endsWith("_LIT")) {
-                            node.setValue(currentTok.getText());
+                            ASTNode.setValue(currentTok.getText());
                         }
                     }
 
-                    stack.push(node);
-                    pop.addChild(node);
+                    stack.push(ASTNode);
+                    pop.addChild(ASTNode);
                 }
             }
         }

@@ -8,7 +8,7 @@ class ASTTest {
 
     @Test
     void testOneNode() {
-        Node root = new Node("Wurzel");
+        ASTNode root = new ASTNode("Wurzel");
 
         AST tree = new AST(root);
         System.out.println(tree);
@@ -18,9 +18,9 @@ class ASTTest {
 
     @Test
     void testThreeNodesBinary() {
-        Node root = new Node("Wurzel");
-        Node childA = new Node("A");
-        Node childB = new Node("B");
+        ASTNode root = new ASTNode("Wurzel");
+        ASTNode childA = new ASTNode("A");
+        ASTNode childB = new ASTNode("B");
 
         root.addChild(childA);
         root.addChild(childB);
@@ -33,9 +33,9 @@ class ASTTest {
 
     @Test
     void testThreeNodesLinear() {
-        Node root = new Node("Wurzel");
-        Node childA = new Node("A");
-        Node childB = new Node("B");
+        ASTNode root = new ASTNode("Wurzel");
+        ASTNode childA = new ASTNode("A");
+        ASTNode childB = new ASTNode("B");
 
         root.addChild(childA);
         childA.addChild(childB);

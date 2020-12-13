@@ -53,11 +53,11 @@ public final class ASTCompacter {
         return compacted;
     }
 
-    private static int compact(Node root, Grammar grammar) {
+    private static int compact(ASTNode root, Grammar grammar) {
         int compacted = 0;
-        Collection<Node> toRemove = new HashSet<>();
+        Collection<ASTNode> toRemove = new HashSet<>();
 
-        for (Node child : root.getChildren()) {
+        for (ASTNode child : root.getChildren()) {
             if (grammar.hasCompact(root.getName())
                 && root.getChildren().size() == 1) {
 
@@ -91,11 +91,11 @@ public final class ASTCompacter {
         return removed;
     }
 
-    private static int removeNullable(Node root, Grammar grammar) {
+    private static int removeNullable(ASTNode root, Grammar grammar) {
         int removed = 0;
-        Collection<Node> toRemove = new HashSet<>();
+        Collection<ASTNode> toRemove = new HashSet<>();
 
-        for (Node child : root.getChildren()) {
+        for (ASTNode child : root.getChildren()) {
             if (grammar.hasNullable(child.getName())
                 && child.getValue().isEmpty()
                 && !child.hasChildren()) {
@@ -125,11 +125,11 @@ public final class ASTCompacter {
         return removed;
     }
 
-    private static int removeEpsilon(Node root, Grammar grammar) {
+    private static int removeEpsilon(ASTNode root, Grammar grammar) {
         int removed = 0;
-        Collection<Node> toRemove = new HashSet<>();
+        Collection<ASTNode> toRemove = new HashSet<>();
 
-        for (Node child : root.getChildren()) {
+        for (ASTNode child : root.getChildren()) {
             if (child.getName().equals(grammar.getEpsilonSymbol()) && !child.hasChildren()) {
                 log("Removing " + root.getName() + " -> " + child.getName());
                 toRemove.add(child);
@@ -155,13 +155,13 @@ public final class ASTCompacter {
         return removed;
     }
 
-    private static int removeRedundant(Node root) {
+    private static int removeRedundant(ASTNode root) {
         int removed = 0;
-        Collection<Node> toRemove = new HashSet<>();
+        Collection<ASTNode> toRemove = new HashSet<>();
 
         Collection<String> removable = Arrays.asList("IF", "ELSE", "WHILE", "ASSIGN");
 
-        for (Node child : root.getChildren()) {
+        for (ASTNode child : root.getChildren()) {
             if (removable.contains(child.getName()) && !child.hasChildren()) {
                 log("Removing " + root.getName() + " -> " + child.getName());
                 toRemove.add(child);
@@ -182,7 +182,7 @@ public final class ASTCompacter {
         log("-".repeat(100));
     }
 
-    private static void renameEXPR(Node root) {
+    private static void renameEXPR(ASTNode root) {
         String newName = switch (root.getName()) {
             case "EXPR_2", "EXPR_F" -> "EXPR";
             default -> root.getName();
@@ -194,7 +194,7 @@ public final class ASTCompacter {
 
         root.setName(newName);
 
-        for (Node child : root.getChildren()) {
+        for (ASTNode child : root.getChildren()) {
             renameEXPR(child);
         }
     }
@@ -206,12 +206,12 @@ public final class ASTCompacter {
         log("-".repeat(100));
     }
 
-    private static void moveOperatorToEXPR(Node root) {
-        for (Node child : root.getChildren()) {
+    private static void moveOperatorToEXPR(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             moveOperatorToEXPR(child);
         }
 
-        Node op = getOp(root);
+        ASTNode op = getOp(root);
 
         if (op == null || !"EXPR".equals(root.getName())) {
             return;
@@ -222,9 +222,9 @@ public final class ASTCompacter {
         root.getChildren().remove(op);
     }
 
-    private static Node getOp(Node root) {
-        for (Node child : root.getChildren()) {
-            Node op = switch (child.getName()) {
+    private static ASTNode getOp(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
+            ASTNode op = switch (child.getName()) {
                 case "ADD", "SUB", "MUL", "DIV", "MOD" -> child;
                 case "NOT", "AND", "OR" -> child;
                 case "LESS", "LESS_EQUAL", "GREATER", "GREATER_EQUAL", "EQUAL", "NOT_EQUAL" -> child;
@@ -245,12 +245,12 @@ public final class ASTCompacter {
         log("-".repeat(100));
     }
 
-    private static void moveIdentifierToASSIGNMENT(Node root) {
-        for (Node child : root.getChildren()) {
+    private static void moveIdentifierToASSIGNMENT(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             moveIdentifierToASSIGNMENT(child);
         }
 
-        Node id = getId(root);
+        ASTNode id = getId(root);
 
         if (id == null || !"ASSIGNMENT".equals(root.getName())) {
             return;
@@ -261,8 +261,8 @@ public final class ASTCompacter {
         root.getChildren().remove(id);
     }
 
-    private static Node getId(Node root) {
-        for (Node child : root.getChildren()) {
+    private static ASTNode getId(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             if (child.getName().equals("IDENTIFIER")) {
                 return child;
             }

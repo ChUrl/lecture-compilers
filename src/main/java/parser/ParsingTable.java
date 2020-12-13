@@ -1,7 +1,7 @@
 package parser;
 
 import parser.grammar.Grammar;
-import parser.grammar.LL1GrammarAnalyzer;
+import parser.grammar.GrammarAnalyzer;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Formatter;
@@ -12,18 +12,18 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class LL1ParsingTable {
+public class ParsingTable {
 
     private final Grammar grammar;
     private final Map<Entry<String, String>, String> parsetable;
 
-    public LL1ParsingTable(Grammar grammar, Map<Entry<String, String>, String> parsetable) {
+    public ParsingTable(Grammar grammar, Map<Entry<String, String>, String> parsetable) {
         this.grammar = grammar;
         this.parsetable = parsetable;
     }
 
-    public static LL1ParsingTable fromGrammar(Grammar grammar) {
-        LL1GrammarAnalyzer analyzer = new LL1GrammarAnalyzer(grammar);
+    public static ParsingTable fromGrammar(Grammar grammar) {
+        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
         return analyzer.getTable();
     }
 

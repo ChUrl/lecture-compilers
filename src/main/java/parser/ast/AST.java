@@ -6,13 +6,13 @@ import java.util.Objects;
 
 public class AST {
 
-    private final Node root;
+    private final ASTNode root;
 
-    public AST(Node root) {
+    public AST(ASTNode root) {
         this.root = root;
     }
 
-    public Node getRoot() {
+    public ASTNode getRoot() {
         return this.root;
     }
 
@@ -22,7 +22,7 @@ public class AST {
 
     public void preprocess(Grammar grammar) {
         ASTCompacter.clean(this, grammar);
-        ExpressionBalancer.balance(this);
+        ASTBalancer.balance(this);
     }
 
     @Override

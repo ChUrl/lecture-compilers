@@ -4,7 +4,7 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
-import parser.LL1Parser;
+import parser.Parser;
 import parser.ast.AST;
 import parser.grammar.Grammar;
 import typechecker.SymbolAlreadyDefinedException;
@@ -38,7 +38,7 @@ class SymbolTableTest {
     void testSingleSymbol() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("SingleSymbol.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -54,7 +54,7 @@ class SymbolTableTest {
     void testMultipleSymbol() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("MultipleSymbol.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -75,7 +75,7 @@ class SymbolTableTest {
     void testExistingSymbol() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("ExistingSymbol.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());

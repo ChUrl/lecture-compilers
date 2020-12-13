@@ -31,7 +31,7 @@ class LexerParserGrammarTest {
     @Test
     void testEmptyFile() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("EmptyFile.stups");
 
@@ -41,7 +41,7 @@ class LexerParserGrammarTest {
     @Test
     void testEmptyMain() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("EmptyMain.stups");
 
@@ -51,7 +51,7 @@ class LexerParserGrammarTest {
     @Test
     void testGeneralComment() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralComment.stups");
 
@@ -61,7 +61,7 @@ class LexerParserGrammarTest {
     @Test
     void tesMultiDecl() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("MultipleDeclarations.stups");
 
@@ -71,7 +71,7 @@ class LexerParserGrammarTest {
     @Test
     void testDeclarationAssignment() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("DeclarationAssignment.stups");
 
@@ -81,7 +81,7 @@ class LexerParserGrammarTest {
     @Test
     void testExpr() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("Expr.stups");
 
@@ -91,7 +91,7 @@ class LexerParserGrammarTest {
     @Test
     void testGeneralWhile() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralWhile.stups");
 
@@ -101,7 +101,7 @@ class LexerParserGrammarTest {
     @Test
     void testGeneralIfElse() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        LL1Parser parser = LL1Parser.fromGrammar(path);
+        Parser parser = Parser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralIfElse.stups");
 

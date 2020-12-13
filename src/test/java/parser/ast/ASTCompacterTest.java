@@ -4,7 +4,7 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
-import parser.LL1Parser;
+import parser.Parser;
 import parser.grammar.Grammar;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ class ASTCompacterTest {
     void testRemoveEpsilon() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -47,7 +47,7 @@ class ASTCompacterTest {
     void testCompact() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -60,7 +60,7 @@ class ASTCompacterTest {
     void testRemoveNullable() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -74,7 +74,7 @@ class ASTCompacterTest {
     void testClean() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());

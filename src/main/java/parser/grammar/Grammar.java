@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static parser.grammar.Actions.COMPACT;
-import static parser.grammar.Actions.NULLABLE;
+import static parser.grammar.GrammarActions.COMPACT;
+import static parser.grammar.GrammarActions.NULLABLE;
 import static util.Logger.log;
 
 public class Grammar {
@@ -96,7 +96,7 @@ public class Grammar {
                                                       .collect(Collectors.toList());
 
                         // Check for action validity
-                        List<String> enumActions = Arrays.stream(Actions.values())
+                        List<String> enumActions = Arrays.stream(GrammarActions.values())
                                                          .map(action -> action.toString().toLowerCase())
                                                          .collect(Collectors.toList());
                         for (String flag : flagList) {

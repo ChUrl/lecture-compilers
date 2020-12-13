@@ -4,22 +4,22 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ExpressionBalancerTest {
+class ASTBalancerTest {
 
     //EXPR
     //├── EXPR: SUB
     //|   └── INTEGER_LIT: 2
     //└── INTEGER_LIT: 1
     private static AST tree1() {
-        AST tree = new AST(new Node("EXPR"));
+        AST tree = new AST(new ASTNode("EXPR"));
 
-        Node right = new Node("INTEGER_LIT");
+        ASTNode right = new ASTNode("INTEGER_LIT");
         right.setValue("1");
 
-        Node left = new Node("EXPR");
+        ASTNode left = new ASTNode("EXPR");
         left.setValue("SUB");
 
-        Node lleft = new Node("INTEGER_LIT");
+        ASTNode lleft = new ASTNode("INTEGER_LIT");
         lleft.setValue("2");
         left.setChildren(lleft);
 
@@ -29,21 +29,21 @@ class ExpressionBalancerTest {
     }
 
     private static AST tree2() {
-        AST tree = new AST(new Node("EXPR"));
+        AST tree = new AST(new ASTNode("EXPR"));
 
-        Node right = new Node("INTEGER_LIT");
+        ASTNode right = new ASTNode("INTEGER_LIT");
         right.setValue("1");
 
-        Node left = new Node("EXPR");
+        ASTNode left = new ASTNode("EXPR");
         left.setValue("SUB");
 
-        Node lleft = new Node("EXPR");
+        ASTNode lleft = new ASTNode("EXPR");
         lleft.setValue("SUB");
 
-        Node lright = new Node("INTEGER_LIT");
+        ASTNode lright = new ASTNode("INTEGER_LIT");
         lright.setValue("2");
 
-        Node llleft = new Node("INTEGER_LIT");
+        ASTNode llleft = new ASTNode("INTEGER_LIT");
         llleft.setValue("3");
 
         lleft.setChildren(llleft);
@@ -55,21 +55,21 @@ class ExpressionBalancerTest {
     }
 
     private static AST tree3() {
-        AST tree = new AST(new Node("EXPR"));
+        AST tree = new AST(new ASTNode("EXPR"));
 
-        Node right = new Node("INTEGER_LIT");
+        ASTNode right = new ASTNode("INTEGER_LIT");
         right.setValue("1");
 
-        Node left = new Node("EXPR");
+        ASTNode left = new ASTNode("EXPR");
         left.setValue("SUB");
 
-        Node lleft = new Node("EXPR");
+        ASTNode lleft = new ASTNode("EXPR");
         lleft.setValue("MUL");
 
-        Node lright = new Node("INTEGER_LIT");
+        ASTNode lright = new ASTNode("INTEGER_LIT");
         lright.setValue("2");
 
-        Node llleft = new Node("INTEGER_LIT");
+        ASTNode llleft = new ASTNode("INTEGER_LIT");
         llleft.setValue("3");
 
         lleft.setChildren(llleft);
@@ -85,7 +85,7 @@ class ExpressionBalancerTest {
         AST tree = tree1();
         System.out.println("Before:\n" + tree);
 
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
@@ -97,8 +97,8 @@ class ExpressionBalancerTest {
         AST tree = tree1();
         System.out.println("Before:\n" + tree);
 
-        ExpressionBalancer.flip(tree);
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree).isEqualTo(tree1());
@@ -109,7 +109,7 @@ class ExpressionBalancerTest {
         AST tree = tree2();
         System.out.println("Before:\n" + tree);
 
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
@@ -123,8 +123,8 @@ class ExpressionBalancerTest {
         AST tree = tree2();
         System.out.println("Before:\n" + tree);
 
-        ExpressionBalancer.flip(tree);
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree).isEqualTo(tree2());
@@ -133,10 +133,10 @@ class ExpressionBalancerTest {
     @Test
     void testTree1LeftPrecedence() {
         AST tree = tree1();
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("Before:\n" + tree);
 
-        ExpressionBalancer.leftPrecedence(tree);
+        ASTBalancer.leftPrecedence(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(3);
@@ -146,10 +146,10 @@ class ExpressionBalancerTest {
     @Test
     void testTree2LeftPrecedence() {
         AST tree = tree2();
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("Before:\n" + tree);
 
-        ExpressionBalancer.leftPrecedence(tree);
+        ASTBalancer.leftPrecedence(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(5);
@@ -159,15 +159,15 @@ class ExpressionBalancerTest {
     @Test
     void testTree2OperatorPrecedence() {
         AST tree = tree2();
-        ExpressionBalancer.flip(tree);
-        ExpressionBalancer.leftPrecedence(tree);
+        ASTBalancer.flip(tree);
+        ASTBalancer.leftPrecedence(tree);
         System.out.println("Before:\n" + tree);
 
         AST tree1 = tree2();
-        ExpressionBalancer.flip(tree1);
-        ExpressionBalancer.leftPrecedence(tree1);
+        ASTBalancer.flip(tree1);
+        ASTBalancer.leftPrecedence(tree1);
 
-        ExpressionBalancer.operatorPrecedence(tree);
+        ASTBalancer.operatorPrecedence(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree).isEqualTo(tree1);
@@ -176,13 +176,13 @@ class ExpressionBalancerTest {
     @Test
     void testTree3OperatorPrecedence() {
         AST tree = tree3();
-        ExpressionBalancer.flip(tree);
-        ExpressionBalancer.leftPrecedence(tree);
+        ASTBalancer.flip(tree);
+        ASTBalancer.leftPrecedence(tree);
         System.out.println("Before:\n" + tree);
 
         assertThat(tree.getRoot().getValue()).isEqualTo("MUL");
 
-        ExpressionBalancer.operatorPrecedence(tree);
+        ASTBalancer.operatorPrecedence(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(5);

@@ -1,7 +1,7 @@
 package typechecker;
 
 import parser.ast.AST;
-import parser.ast.Node;
+import parser.ast.ASTNode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,14 +48,14 @@ public class SymbolTable {
         return new SymbolTable(tableOut);
     }
 
-    private static void scanTree(Node root, Map<String, String> table) {
-        for (Node child : root.getChildren()) {
+    private static void scanTree(ASTNode root, Map<String, String> table) {
+        for (ASTNode child : root.getChildren()) {
             scanTree(child, table);
         }
 
         if ("DECLARATION".equals(root.getName())) {
-            Node left = root.getChildren().get(0);
-            Node right = root.getChildren().get(1);
+            ASTNode left = root.getChildren().get(0);
+            ASTNode right = root.getChildren().get(1);
 
             log("Adding Entry " + right.getValue() + " -> " + left.getName());
             String oldEntry = table.put(right.getValue(), left.getName());

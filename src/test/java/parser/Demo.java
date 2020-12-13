@@ -5,8 +5,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
 import parser.ast.AST;
+import parser.ast.ASTBalancer;
 import parser.ast.ASTCompacter;
-import parser.ast.ExpressionBalancer;
 import parser.grammar.Grammar;
 
 import java.io.IOException;
@@ -34,7 +34,7 @@ class Demo {
     void demoClean() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("General.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -46,15 +46,15 @@ class Demo {
     void demoLeftPrecedence() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("General.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
-        ExpressionBalancer.flip(tree);
+        ASTBalancer.flip(tree);
         System.out.println("Before left-precedence:\n" + tree);
-        ExpressionBalancer.leftPrecedence(tree);
+        ASTBalancer.leftPrecedence(tree);
         System.out.println("After left-precedence:\n" + tree);
     }
 
@@ -62,16 +62,16 @@ class Demo {
     void demoOperatorPrecedence() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+        Parser parser = Parser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("General.stups");
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
-        ExpressionBalancer.flip(tree);
-        ExpressionBalancer.leftPrecedence(tree);
+        ASTBalancer.flip(tree);
+        ASTBalancer.leftPrecedence(tree);
         System.out.println("Before operator-precedence:\n" + tree);
-        ExpressionBalancer.operatorPrecedence(tree);
+        ASTBalancer.operatorPrecedence(tree);
         System.out.println("After operator-precedence:\n" + tree);
     }
 }

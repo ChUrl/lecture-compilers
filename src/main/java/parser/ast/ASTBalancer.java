@@ -6,9 +6,9 @@ import java.util.Collections;
 
 import static util.Logger.log;
 
-public final class ExpressionBalancer {
+public final class ASTBalancer {
 
-    private ExpressionBalancer() {}
+    private ASTBalancer() {}
 
     public static void balance(AST tree) {
         flip(tree);
@@ -25,8 +25,8 @@ public final class ExpressionBalancer {
         flip(tree.getRoot());
     }
 
-    private static void flip(Node root) {
-        for (Node child : root.getChildren()) {
+    private static void flip(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             flip(child);
         }
 
@@ -41,12 +41,12 @@ public final class ExpressionBalancer {
     }
 
     // Es wird solange rotiert bis die letzte "Rotation" durchgeführt wurde
-    private static void leftPrecedence(Node root) {
-        for (Node child : root.getChildren()) {
+    private static void leftPrecedence(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             leftPrecedence(child);
         }
 
-        Node expr = getExpr(root);
+        ASTNode expr = getExpr(root);
 
         if (expr == null || root.getChildren().size() != 2 || !root.getValue().isEmpty()) {
             return;
@@ -60,9 +60,9 @@ public final class ExpressionBalancer {
     }
 
     // Die Letzte Rotation ist keine richtige Rotation, dort wird false zurückgegeben
-    private static boolean specialLeftRotate(Node root) {
-        Node left = root.getChildren().get(0);
-        Node right = root.getChildren().get(1);
+    private static boolean specialLeftRotate(ASTNode root) {
+        ASTNode left = root.getChildren().get(0);
+        ASTNode right = root.getChildren().get(1);
 
         // Verhindert Wurzel mit nur einem EXPR-Child (nach oben "hängende" Wurzel)
         if (endOfExpr(right)) {
@@ -72,7 +72,7 @@ public final class ExpressionBalancer {
             return false; // Braucht keine weitere Rotation
         }
 
-        Node insertLeft = new Node(root.getName());
+        ASTNode insertLeft = new ASTNode(root.getName());
         insertLeft.setValue(right.getValue()); // Operation wird linksvererbt
         insertLeft.setChildren(left, right.getChildren().get(0));
 
@@ -82,8 +82,8 @@ public final class ExpressionBalancer {
         return true;
     }
 
-    private static Node getExpr(Node root) {
-        for (Node child : root.getChildren()) {
+    private static ASTNode getExpr(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             if (child.getName().equals("EXPR")) {
                 return child;
             }
@@ -92,7 +92,7 @@ public final class ExpressionBalancer {
         return null;
     }
 
-    private static boolean endOfExpr(Node root) {
+    private static boolean endOfExpr(ASTNode root) {
         return root.getChildren().size() == 1;
     }
 
@@ -108,8 +108,8 @@ public final class ExpressionBalancer {
         operatorPrecedence(tree.getRoot());
     }
 
-    public static void operatorPrecedence(Node root) {
-        for (Node child : root.getChildren()) {
+    public static void operatorPrecedence(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
             operatorPrecedence(child);
         }
 
@@ -118,8 +118,8 @@ public final class ExpressionBalancer {
         }
     }
 
-    private static boolean preceding(Node root) {
-        Node op = getExpr(root);
+    private static boolean preceding(ASTNode root) {
+        ASTNode op = getExpr(root);
 
         if (op == null || !root.getName().equals("EXPR") || root.getValue().isEmpty()) {
             return false;
@@ -134,11 +134,11 @@ public final class ExpressionBalancer {
                || (logHigh.contains(root.getValue()) && logLow.contains(op.getValue()));
     }
 
-    private static void simpleRightRotate(Node root) {
-        Node left = root.getChildren().get(0);
-        Node right = root.getChildren().get(1);
+    private static void simpleRightRotate(ASTNode root) {
+        ASTNode left = root.getChildren().get(0);
+        ASTNode right = root.getChildren().get(1);
 
-        Node insertRight = new Node(root.getName());
+        ASTNode insertRight = new ASTNode(root.getName());
         insertRight.setValue(root.getValue());
         insertRight.setChildren(left.getChildren().get(1), right);
 

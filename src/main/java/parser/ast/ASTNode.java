@@ -6,26 +6,26 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
-public class Node {
+public class ASTNode {
 
     private String name;
     private String value;
-    private List<Node> children = new ArrayList<>();
+    private List<ASTNode> children = new ArrayList<>();
 
-    public Node(String name) {
+    public ASTNode(String name) {
         this.name = name;
         this.value = "";
     }
 
-    public void addChild(Node node) {
-        this.children.add(node);
+    public void addChild(ASTNode ASTNode) {
+        this.children.add(ASTNode);
     }
 
     public boolean hasChildren() {
         return !this.children.isEmpty();
     }
 
-    public List<Node> getChildren() {
+    public List<ASTNode> getChildren() {
         return this.children;
     }
 
@@ -54,6 +54,19 @@ public class Node {
         return buffer.toString();
     }
 
+    public void setChildren(List<ASTNode> children) {
+        this.children = children;
+    }
+
+    public void setChildren(ASTNode... children) {
+        this.children = new ArrayList<>();
+        this.children.addAll(Arrays.asList(children));
+    }
+
+    public String getValue() {
+        return this.value;
+    }
+
     private void print(StringBuilder buffer, String prefix, String childrenPrefix) {
         buffer.append(prefix);
         buffer.append(this.name);
@@ -63,8 +76,8 @@ public class Node {
         }
         buffer.append('\n');
 
-        for (Iterator<Node> it = this.children.listIterator(); it.hasNext(); ) {
-            Node next = it.next();
+        for (Iterator<ASTNode> it = this.children.listIterator(); it.hasNext(); ) {
+            ASTNode next = it.next();
             if (it.hasNext()) {
                 next.print(buffer, childrenPrefix + "├── ", childrenPrefix + "│   ");
             } else {
@@ -75,32 +88,19 @@ public class Node {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof Node) {
-            return this.name.equals(((Node) obj).name)
-                   && this.value.equals(((Node) obj).value)
-                   && this.children.equals(((Node) obj).children);
+        if (obj instanceof ASTNode) {
+            return this.name.equals(((ASTNode) obj).name)
+                   && this.value.equals(((ASTNode) obj).value)
+                   && this.children.equals(((ASTNode) obj).children);
         }
 
         return false;
     }
 
-    public String getValue() {
-        return this.value;
-    }
-
-    public void setChildren(List<Node> children) {
-        this.children = children;
-    }
-
-    public void setChildren(Node... children) {
-        this.children = new ArrayList<>();
-        this.children.addAll(Arrays.asList(children));
-    }
-
     public long size() {
         int s = 0;
 
-        for (Node child : this.children) {
+        for (ASTNode child : this.children) {
             s += child.size();
         }
 
