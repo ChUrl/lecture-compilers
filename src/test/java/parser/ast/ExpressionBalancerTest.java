@@ -54,6 +54,32 @@ class ExpressionBalancerTest {
         return tree;
     }
 
+    private static AST tree3() {
+        AST tree = new AST(new Node("EXPR"));
+
+        Node right = new Node("INTEGER_LIT");
+        right.setValue("1");
+
+        Node left = new Node("EXPR");
+        left.setValue("SUB");
+
+        Node lleft = new Node("EXPR");
+        lleft.setValue("MUL");
+
+        Node lright = new Node("INTEGER_LIT");
+        lright.setValue("2");
+
+        Node llleft = new Node("INTEGER_LIT");
+        llleft.setValue("3");
+
+        lleft.setChildren(llleft);
+        left.setChildren(lleft, lright);
+
+        tree.getRoot().setChildren(left, right);
+
+        return tree;
+    }
+
     @Test
     void testTree1Flip() {
         AST tree = tree1();
@@ -105,7 +131,7 @@ class ExpressionBalancerTest {
     }
 
     @Test
-    void testTree1Rotate() {
+    void testTree1LeftPrecedence() {
         AST tree = tree1();
         ExpressionBalancer.flip(tree);
         System.out.println("Before:\n" + tree);
@@ -118,12 +144,45 @@ class ExpressionBalancerTest {
     }
 
     @Test
-    void testTree2Rotate() {
+    void testTree2LeftPrecedence() {
         AST tree = tree2();
         ExpressionBalancer.flip(tree);
         System.out.println("Before:\n" + tree);
 
         ExpressionBalancer.leftPrecedence(tree);
+        System.out.println("After:\n" + tree);
+
+        assertThat(tree.size()).isEqualTo(5);
+        assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
+    }
+
+    @Test
+    void testTree2OperatorPrecedence() {
+        AST tree = tree2();
+        ExpressionBalancer.flip(tree);
+        ExpressionBalancer.leftPrecedence(tree);
+        System.out.println("Before:\n" + tree);
+
+        AST tree1 = tree2();
+        ExpressionBalancer.flip(tree1);
+        ExpressionBalancer.leftPrecedence(tree1);
+
+        ExpressionBalancer.operatorPrecedence(tree);
+        System.out.println("After:\n" + tree);
+
+        assertThat(tree).isEqualTo(tree1);
+    }
+
+    @Test
+    void testTree3OperatorPrecedence() {
+        AST tree = tree3();
+        ExpressionBalancer.flip(tree);
+        ExpressionBalancer.leftPrecedence(tree);
+        System.out.println("Before:\n" + tree);
+
+        assertThat(tree.getRoot().getValue()).isEqualTo("MUL");
+
+        ExpressionBalancer.operatorPrecedence(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(5);
