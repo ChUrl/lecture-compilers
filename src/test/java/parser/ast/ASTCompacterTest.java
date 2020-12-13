@@ -81,6 +81,6 @@ class ASTCompacterTest {
 
         ASTCompacter.clean(tree, grammar);
 
-        assertThat(tree.size()).isEqualTo(31);
+        assertThat(tree.size()).isEqualTo(29);
     }
 }
