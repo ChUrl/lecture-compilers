@@ -15,21 +15,21 @@ import java.util.List;
 
 import static util.Logger.log;
 
-public class Parser {
+public class StupsParser {
 
     private final ParsingTable parsetable;
 
-    public Parser(ParsingTable parsetable) {
+    public StupsParser(ParsingTable parsetable) {
         this.parsetable = parsetable;
     }
 
-    public static Parser fromGrammar(Path path) throws IOException {
-        return Parser.fromGrammar(Grammar.fromFile(path));
+    public static StupsParser fromGrammar(Path path) throws IOException {
+        return StupsParser.fromGrammar(Grammar.fromFile(path));
     }
 
-    public static Parser fromGrammar(Grammar grammar) {
+    public static StupsParser fromGrammar(Grammar grammar) {
         GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
-        return new Parser(analyzer.getTable());
+        return new StupsParser(analyzer.getTable());
     }
 
     public AST parse(List<? extends Token> token, Vocabulary voc) {

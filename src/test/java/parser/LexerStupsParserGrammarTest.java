@@ -14,7 +14,7 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class LexerParserGrammarTest {
+class LexerStupsParserGrammarTest {
 
     private Lexer initLexer(String program) {
         try {
@@ -31,80 +31,80 @@ class LexerParserGrammarTest {
     @Test
     void testEmptyFile() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("EmptyFile.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void testEmptyMain() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("EmptyMain.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void testGeneralComment() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralComment.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void tesMultiDecl() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("MultipleDeclarations.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void testDeclarationAssignment() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("DeclarationAssignment.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void testExpr() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("Expr.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void testGeneralWhile() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralWhile.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 
     @Test
     void testGeneralIfElse() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Parser parser = Parser.fromGrammar(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(path);
 
         Lexer lex = this.initLexer("GeneralIfElse.stups");
 
-        assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+        assertThat(stupsParser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
     }
 }

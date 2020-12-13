@@ -4,7 +4,7 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.Test;
-import parser.Parser;
+import parser.StupsParser;
 import parser.grammar.Grammar;
 
 import java.io.IOException;
@@ -34,10 +34,10 @@ class ASTCompacterTest {
     void testRemoveEpsilon() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         assertThat(ASTCompacter.removeEpsilon(tree, grammar)).isEqualTo(2);
         System.out.println(tree);
@@ -47,10 +47,10 @@ class ASTCompacterTest {
     void testCompact() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         assertThat(ASTCompacter.compact(tree, grammar)).isEqualTo(14);
         System.out.println(tree);
@@ -60,10 +60,10 @@ class ASTCompacterTest {
     void testRemoveNullable() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
         ASTCompacter.removeEpsilon(tree, grammar);
 
         assertThat(ASTCompacter.removeNullable(tree, grammar)).isEqualTo(2);
@@ -74,10 +74,10 @@ class ASTCompacterTest {
     void testClean() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("GeneralOperator.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
 

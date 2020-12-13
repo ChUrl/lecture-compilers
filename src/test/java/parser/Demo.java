@@ -34,10 +34,10 @@ class Demo {
     void demoClean() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("General.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
     }
@@ -46,10 +46,10 @@ class Demo {
     void demoLeftPrecedence() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("General.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
         ASTBalancer.flip(tree);
@@ -62,10 +62,10 @@ class Demo {
     void demoOperatorPrecedence() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         Lexer lex = this.initLexer("General.stups");
-        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
         ASTBalancer.flip(tree);

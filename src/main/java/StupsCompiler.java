@@ -1,7 +1,7 @@
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
-import parser.Parser;
+import parser.StupsParser;
 import parser.grammar.Grammar;
 
 import java.io.IOException;
@@ -50,9 +50,9 @@ public final class StupsCompiler {
             return;
         }
 
-        Parser parser = Parser.fromGrammar(grammar);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
-        parser.parse(lexer.getAllTokens(), lexer.getVocabulary());
+        stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
 
         System.out.println("Compilation completed.");
     }
