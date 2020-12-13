@@ -1,7 +1,6 @@
 class MyClass {
 
     public static void main(String[] args) {
-        while (1 < 2)
-            i = 1;
+        boolean b = true;
     }
 }

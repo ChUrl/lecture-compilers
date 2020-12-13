@@ -43,7 +43,7 @@ class Demo {
     }
 
     @Test
-    void demoBalance() throws URISyntaxException, IOException {
+    void demoLeftPrecedence() throws URISyntaxException, IOException {
         Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         Grammar grammar = Grammar.fromFile(path);
         LL1Parser parser = LL1Parser.fromGrammar(grammar);
@@ -52,6 +52,26 @@ class Demo {
         AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         ASTCompacter.clean(tree, grammar);
-        ExpressionBalancer.balance(tree);
+        ExpressionBalancer.flip(tree);
+        System.out.println("Before left-precedence:\n" + tree);
+        ExpressionBalancer.leftPrecedence(tree);
+        System.out.println("After left-precedence:\n" + tree);
+    }
+
+    @Test
+    void demoOperatorPrecedence() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        Grammar grammar = Grammar.fromFile(path);
+        LL1Parser parser = LL1Parser.fromGrammar(grammar);
+
+        Lexer lex = this.initLexer("General.stups");
+        AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+
+        ASTCompacter.clean(tree, grammar);
+        ExpressionBalancer.flip(tree);
+        ExpressionBalancer.leftPrecedence(tree);
+        System.out.println("Before operator-precedence:\n" + tree);
+        ExpressionBalancer.operatorPrecedence(tree);
+        System.out.println("After operator-precedence:\n" + tree);
     }
 }
