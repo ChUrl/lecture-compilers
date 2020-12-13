@@ -20,14 +20,15 @@ public final class ASTCompacter {
         do {
             change = compact(tree, grammar)
                      + removeEpsilon(tree, grammar)
-                     + remove(tree)
+                     + removeRedundant(tree)
                      + removeNullable(tree, grammar);
 
             removed += change;
         } while (change != 0);
 
-        rename(tree);
-        moveOperator(tree);
+        renameEXPR(tree);
+        moveOperatorToEXPR(tree);
+        moveIdentifierToASSIGNMENT(tree);
 
         log(tree.toString());
         log("\nCleaned Tree: " + removed + " nodes removed.");
@@ -142,9 +143,9 @@ public final class ASTCompacter {
         return removed + toRemove.size();
     }
 
-    // Löscht epsilon-Nodes
-    public static int remove(AST tree) {
-        int removed = remove(tree.getRoot());
+    // Löscht doppelte Informationen (z.b. IF-child von COND)
+    public static int removeRedundant(AST tree) {
+        int removed = removeRedundant(tree.getRoot());
 
         if (removed != 0) {
             log("Removed " + removed + " nodes.");
@@ -154,18 +155,18 @@ public final class ASTCompacter {
         return removed;
     }
 
-    private static int remove(Node root) {
+    private static int removeRedundant(Node root) {
         int removed = 0;
         Collection<Node> toRemove = new HashSet<>();
 
-        Collection<String> removable = Arrays.asList("IF", "ELSE", "WHILE");
+        Collection<String> removable = Arrays.asList("IF", "ELSE", "WHILE", "ASSIGN");
 
         for (Node child : root.getChildren()) {
             if (removable.contains(child.getName()) && !child.hasChildren()) {
                 log("Removing " + root.getName() + " -> " + child.getName());
                 toRemove.add(child);
             } else {
-                removed += remove(child);
+                removed += removeRedundant(child);
             }
         }
 
@@ -176,12 +177,12 @@ public final class ASTCompacter {
 
     // Umbenennungen
     // EXPR_2 -> EXPR, EXPR_F -> EXPR
-    private static void rename(AST tree) {
-        rename(tree.getRoot());
+    private static void renameEXPR(AST tree) {
+        renameEXPR(tree.getRoot());
         log("-".repeat(100));
     }
 
-    private static void rename(Node root) {
+    private static void renameEXPR(Node root) {
         String newName = switch (root.getName()) {
             case "EXPR_2", "EXPR_F" -> "EXPR";
             default -> root.getName();
@@ -194,19 +195,20 @@ public final class ASTCompacter {
         root.setName(newName);
 
         for (Node child : root.getChildren()) {
-            rename(child);
+            renameEXPR(child);
         }
     }
 
+    // TODO: Move Regeln zusammenfassen mit actions?
     // EXPR bekommt die Operation als Value anstatt als Child
-    public static void moveOperator(AST tree) {
-        moveOperator(tree.getRoot());
+    public static void moveOperatorToEXPR(AST tree) {
+        moveOperatorToEXPR(tree.getRoot());
         log("-".repeat(100));
     }
 
-    private static void moveOperator(Node root) {
+    private static void moveOperatorToEXPR(Node root) {
         for (Node child : root.getChildren()) {
-            moveOperator(child);
+            moveOperatorToEXPR(child);
         }
 
         Node op = getOp(root);
@@ -231,6 +233,38 @@ public final class ASTCompacter {
 
             if (op != null) {
                 return op;
+            }
+        }
+
+        return null;
+    }
+
+    // Assignment bekommt den Identifier als Value anstatt als Child
+    public static void moveIdentifierToASSIGNMENT(AST tree) {
+        moveIdentifierToASSIGNMENT(tree.getRoot());
+        log("-".repeat(100));
+    }
+
+    private static void moveIdentifierToASSIGNMENT(Node root) {
+        for (Node child : root.getChildren()) {
+            moveIdentifierToASSIGNMENT(child);
+        }
+
+        Node id = getId(root);
+
+        if (id == null || !"ASSIGNMENT".equals(root.getName())) {
+            return;
+        }
+
+        log("Moving identifier " + id.getValue() + " to " + root.getName());
+        root.setValue(id.getValue());
+        root.getChildren().remove(id);
+    }
+
+    private static Node getId(Node root) {
+        for (Node child : root.getChildren()) {
+            if (child.getName().equals("IDENTIFIER")) {
+                return child;
             }
         }
 
