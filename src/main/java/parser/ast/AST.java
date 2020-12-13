@@ -1,5 +1,7 @@
 package parser.ast;
 
+import parser.grammar.Grammar;
+
 import java.util.Objects;
 
 public class AST {
@@ -16,6 +18,11 @@ public class AST {
 
     public long size() {
         return this.root.size();
+    }
+
+    public void preprocess(Grammar grammar) {
+        ASTCompacter.clean(this, grammar);
+        ExpressionBalancer.balance(this);
     }
 
     @Override
