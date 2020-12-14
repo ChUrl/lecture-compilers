@@ -53,6 +53,12 @@ public final class TypeChecker {
             ASTNode centerChild = root.getChildren().get(1);
 
             nodeTable.put(root, nodeTable.get(centerChild));
+        } else if ("IDENTIFIER".equals(root.getName())) {
+            // Nodedtable Eintrag fuer Identifier
+
+            String identifierType = table.getSymbolType(root.getValue());
+
+            nodeTable.put(root, identifierType);
         }
 
         if ("ASSIGNMENT".equals(root.getName())) {
