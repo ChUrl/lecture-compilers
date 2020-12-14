@@ -8,6 +8,7 @@ import parser.ast.AST;
 import parser.ast.ASTBalancer;
 import parser.ast.ASTCompacter;
 import parser.grammar.Grammar;
+import typechecker.TypeChecker;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -73,5 +74,19 @@ class Demo {
         System.out.println("Before operator-precedence:\n" + tree);
         ASTBalancer.operatorPrecedence(tree);
         System.out.println("After operator-precedence:\n" + tree);
+    }
+
+    @Test
+    void demoTypeCheck() throws URISyntaxException, IOException {
+        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        Grammar grammar = Grammar.fromFile(path);
+        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
+
+        Lexer lex = this.initLexer("General.stups");
+        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+
+        tree.postprocess(grammar);
+
+        TypeChecker.validate(tree);
     }
 }

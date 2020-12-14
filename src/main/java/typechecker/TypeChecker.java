@@ -66,7 +66,7 @@ public final class TypeChecker {
         ASTNode literalNode = root.getChildren().get(0);
         String literalType = nodeTable.get(literalNode);
 
-        log("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalNode.toString().trim());
+        log("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType);
 
         if (!literalType.equals(identifierType)) {
             throw new AssignmentTypeMismatchException("Trying to assign " + literalType + " to a " + identifierType + " variable.");
