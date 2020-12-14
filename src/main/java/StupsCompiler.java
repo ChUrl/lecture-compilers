@@ -35,11 +35,21 @@ public final class StupsCompiler {
 
         Lexer lexer;
         try {
+            // Relativer Pfad
+
             Path programPath = Paths.get(System.getProperty("user.dir") + "/" + filename);
             lexer = new StupsLexer(CharStreams.fromPath(programPath));
         } catch (IOException e) {
-            System.out.println("Das Programm konnte nicht gelesen werden.");
-            return;
+
+            try {
+                // Absoluter Pfad
+
+                Path programPath = Paths.get(filename);
+                lexer = new StupsLexer(CharStreams.fromPath(programPath));
+            } catch (IOException ee) {
+                System.out.println("Das Programm konnte nicht gelesen werden.");
+                return;
+            }
         }
 
         Grammar grammar;
