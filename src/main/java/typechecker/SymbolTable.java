@@ -3,7 +3,9 @@ package typechecker;
 import parser.ast.AST;
 import parser.ast.ASTNode;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static util.Logger.log;
@@ -11,11 +13,13 @@ import static util.Logger.log;
 public class SymbolTable {
 
     private final Map<String, String> symbolTable;
-    private final Map<String, String> methodTable;
+    private final Map<String, String> methodReturnTable;
+    private final Map<String, List<String>> methodArgumentTable;
 
     public SymbolTable(Map<String, String> symbolTable) {
         this.symbolTable = symbolTable;
 
+        // Enthält die Return-Types der Operatoren
         final Map<String, String> methodTable = new HashMap<>();
 
         methodTable.put("ADD", "INTEGER_TYPE");
@@ -35,7 +39,28 @@ public class SymbolTable {
         methodTable.put("EQUAL", "BOOLEAN_TYPE");
         methodTable.put("NOT_EQUAL", "BOOLEAN_TYPE");
 
-        this.methodTable = methodTable;
+        this.methodReturnTable = methodTable;
+
+        final Map<String, List<String>> argumentTable = new HashMap<>();
+
+        argumentTable.put("ADD", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("SUB", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("MUL", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("DIV", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("MOD", Arrays.asList("INTEGER_TYPE"));
+
+        argumentTable.put("AND", Arrays.asList("BOOLEAN_TYPE"));
+        argumentTable.put("OR", Arrays.asList("BOOLEAN_TYPE"));
+        argumentTable.put("NOT", Arrays.asList("BOOLEAN_TYPE"));
+
+        argumentTable.put("LESS", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("LESS_EQUAL", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("GREATER", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("GREATER_EQUAL", Arrays.asList("INTEGER_TYPE"));
+        argumentTable.put("EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE"));
+        argumentTable.put("NOT_EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE"));
+
+        this.methodArgumentTable = argumentTable;
     }
 
     public static SymbolTable fromAST(AST tree) {
@@ -71,8 +96,12 @@ public class SymbolTable {
         return this.symbolTable.get(sym);
     }
 
-    public String getMethodType(String meth) {
-        return this.methodTable.get(meth);
+    public String getMethodReturnType(String meth) {
+        return this.methodReturnTable.get(meth);
+    }
+
+    public List<String> getMethodArgumentType(String meth) {
+        return this.methodArgumentTable.get(meth);
     }
 
     public int getSymbolCount() {
