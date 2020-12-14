@@ -86,6 +86,7 @@ class Demo {
         AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
 
         tree.postprocess(grammar);
+        System.out.println("After Postprocessing:" + tree);
 
         TypeChecker.validate(tree);
     }

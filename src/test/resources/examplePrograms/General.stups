@@ -1,6 +1,8 @@
-class MyClass {
-
+class C {
     public static void main(String[] args) {
-        boolean x = false && true;
+        int a = 1;
+        int b = 1;
+
+        int c = (a + b) * 3 / (1 - 2);
     }
 }
