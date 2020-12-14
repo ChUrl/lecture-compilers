@@ -2,10 +2,11 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import parser.StupsParser;
+import parser.ast.AST;
 import parser.grammar.Grammar;
+import typechecker.TypeChecker;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -43,16 +44,20 @@ public final class StupsCompiler {
 
         Grammar grammar;
         try {
-            Path grammarFile = Paths.get(StupsCompiler.class.getResource("Grammar.grammar").toURI());
+            Path grammarFile = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
             grammar = Grammar.fromFile(grammarFile);
-        } catch (IOException | URISyntaxException e) {
+        } catch (IOException e) {
             System.out.println("Die Grammatik konnte nicht geöffnet werden.");
             return;
         }
 
         StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
-        stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
+        AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
+
+        tree.postprocess(grammar);
+
+        TypeChecker.validate(tree);
 
         System.out.println("Compilation completed.");
     }
