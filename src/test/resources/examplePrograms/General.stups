@@ -1,6 +1,6 @@
 class MyClass {
 
     public static void main(String[] args) {
-        boolean b = true || (1 < 2) && (5 / 4) == 2 && !((1 / 5) == 2 + 1) || (-1 - -5) / 2 == 2 && true == false;
+        boolean x = false && true;
     }
 }

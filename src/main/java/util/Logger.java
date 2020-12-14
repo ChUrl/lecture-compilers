@@ -3,7 +3,7 @@ package util;
 // Maximal professioneller Logger
 public final class Logger {
 
-    private static final boolean enabled = true;
+    private static final boolean enabled = false;
 
     private Logger() {}
 
