@@ -11,15 +11,15 @@ class ASTBalancerTest {
     //|   └── INTEGER_LIT: 2
     //└── INTEGER_LIT: 1
     private static AST tree1() {
-        AST tree = new AST(new ASTNode("EXPR"));
+        AST tree = new AST(new ASTNode("EXPR", 1));
 
-        ASTNode right = new ASTNode("INTEGER_LIT");
+        ASTNode right = new ASTNode("INTEGER_LIT", 1);
         right.setValue("1");
 
-        ASTNode left = new ASTNode("EXPR");
+        ASTNode left = new ASTNode("EXPR", 1);
         left.setValue("SUB");
 
-        ASTNode lleft = new ASTNode("INTEGER_LIT");
+        ASTNode lleft = new ASTNode("INTEGER_LIT", 1);
         lleft.setValue("2");
         left.setChildren(lleft);
 
@@ -29,21 +29,21 @@ class ASTBalancerTest {
     }
 
     private static AST tree2() {
-        AST tree = new AST(new ASTNode("EXPR"));
+        AST tree = new AST(new ASTNode("EXPR", 1));
 
-        ASTNode right = new ASTNode("INTEGER_LIT");
+        ASTNode right = new ASTNode("INTEGER_LIT", 1);
         right.setValue("1");
 
-        ASTNode left = new ASTNode("EXPR");
+        ASTNode left = new ASTNode("EXPR", 1);
         left.setValue("SUB");
 
-        ASTNode lleft = new ASTNode("EXPR");
+        ASTNode lleft = new ASTNode("EXPR", 1);
         lleft.setValue("SUB");
 
-        ASTNode lright = new ASTNode("INTEGER_LIT");
+        ASTNode lright = new ASTNode("INTEGER_LIT", 1);
         lright.setValue("2");
 
-        ASTNode llleft = new ASTNode("INTEGER_LIT");
+        ASTNode llleft = new ASTNode("INTEGER_LIT", 1);
         llleft.setValue("3");
 
         lleft.setChildren(llleft);
@@ -55,21 +55,21 @@ class ASTBalancerTest {
     }
 
     private static AST tree3() {
-        AST tree = new AST(new ASTNode("EXPR"));
+        AST tree = new AST(new ASTNode("EXPR", 1));
 
-        ASTNode right = new ASTNode("INTEGER_LIT");
+        ASTNode right = new ASTNode("INTEGER_LIT", 1);
         right.setValue("1");
 
-        ASTNode left = new ASTNode("EXPR");
+        ASTNode left = new ASTNode("EXPR", 1);
         left.setValue("SUB");
 
-        ASTNode lleft = new ASTNode("EXPR");
+        ASTNode lleft = new ASTNode("EXPR", 1);
         lleft.setValue("MUL");
 
-        ASTNode lright = new ASTNode("INTEGER_LIT");
+        ASTNode lright = new ASTNode("INTEGER_LIT", 1);
         lright.setValue("2");
 
-        ASTNode llleft = new ASTNode("INTEGER_LIT");
+        ASTNode llleft = new ASTNode("INTEGER_LIT", 1);
         llleft.setValue("3");
 
         lleft.setChildren(llleft);
