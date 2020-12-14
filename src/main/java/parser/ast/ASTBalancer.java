@@ -1,12 +1,46 @@
 package parser.ast;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static util.Logger.log;
 
 public final class ASTBalancer {
+
+    private static final Map<String, Integer> priority;
+
+    // 0 - Unary: -, +, !
+    // 1 - Multiplicative: *, /, %
+    // 2 - Additive: +, -
+    // 3 - Comparative: <, <=, >, >=
+    // 4 - Equality: ==, !=
+    // 5 - Logical AND: &&
+    // 6 - Logical OR: ||
+    static {
+        priority = new HashMap<>();
+
+        priority.put("NOT", 0);
+
+        priority.put("MUL", 1);
+        priority.put("DIV", 1);
+        priority.put("MOD", 1);
+
+        priority.put("ADD", 2);
+        priority.put("SUB", 2);
+
+        priority.put("LESS", 3);
+        priority.put("LESS_EQUAL", 3);
+        priority.put("GREATER", 3);
+        priority.put("GREATER_EQUAL", 3);
+
+        priority.put("EQUAL", 4);
+        priority.put("NOT_EQUAL", 4);
+
+        priority.put("AND", 5);
+
+        priority.put("OR", 6);
+    }
 
     private ASTBalancer() {}
 
@@ -84,7 +118,7 @@ public final class ASTBalancer {
 
     private static ASTNode getExpr(ASTNode root) {
         for (ASTNode child : root.getChildren()) {
-            if (child.getName().equals("EXPR")) {
+            if ("EXPR".equals(child.getName())) {
                 return child;
             }
         }
@@ -96,47 +130,46 @@ public final class ASTBalancer {
         return root.getChildren().size() == 1;
     }
 
-    // 0 - Unary: -, +, !
-    // 1 - Multiplicative: *, /, %
-    // 2 - Additive: +, -
-    // 3 - Comparative: <, <=, >, >=
-    // 4 - Equality: ==, !=
-    // 5 - Logical AND: &&
-    // 6 - Logical OR: ||
     public static void operatorPrecedence(AST tree) {
         log("Right-rotating expressions for operator-precedence");
-        operatorPrecedence(tree.getRoot());
+
+        boolean changed;
+
+        do {
+            changed = operatorPrecedence(tree.getRoot());
+        } while (changed);
     }
 
-    public static void operatorPrecedence(ASTNode root) {
+    public static boolean operatorPrecedence(ASTNode root) {
+        boolean changed = false;
+
         for (ASTNode child : root.getChildren()) {
-            operatorPrecedence(child);
+            changed = changed || operatorPrecedence(child);
+
+            if (preceding(root, child)) {
+                simpleRightRotate(root);
+                changed = true;
+            }
         }
 
-        if (preceding(root)) {
-            simpleRightRotate(root);
-        }
+        return changed;
     }
 
-    private static boolean preceding(ASTNode root) {
-        ASTNode op = getExpr(root);
-
-        if (op == null || !root.getName().equals("EXPR") || root.getValue().isEmpty()) {
+    private static boolean preceding(ASTNode parent, ASTNode child) {
+        if (!"EXPR".equals(parent.getName()) || parent.getValue().isEmpty()
+            || !"EXPR".equals(child.getName()) || child.getValue().isEmpty()) {
             return false;
         }
 
-        Collection<String> arithHigh = Arrays.asList("MUL", "DIV", "MOD");
-        Collection<String> arithLow = Arrays.asList("ADD", "SUB");
-        Collection<String> logHigh = Arrays.asList("AND");
-        Collection<String> logLow = Arrays.asList("OR");
-
-        return (arithHigh.contains(root.getValue()) && arithLow.contains(op.getValue()))
-               || (logHigh.contains(root.getValue()) && logLow.contains(op.getValue()));
+        // Less equals higher
+        return priority.get(parent.getValue()) < priority.get(child.getValue());
     }
 
     private static void simpleRightRotate(ASTNode root) {
         ASTNode left = root.getChildren().get(0);
         ASTNode right = root.getChildren().get(1);
+
+        log("Right-Rotating " + root.getName() + ": " + root.getValue());
 
         ASTNode insertRight = new ASTNode(root.getName());
         insertRight.setValue(root.getValue());
