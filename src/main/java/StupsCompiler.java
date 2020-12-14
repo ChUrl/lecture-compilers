@@ -64,9 +64,7 @@ public final class StupsCompiler {
         StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
-
         tree.postprocess(grammar);
-
         TypeChecker.validate(tree);
 
         System.out.println("Compilation completed.");
