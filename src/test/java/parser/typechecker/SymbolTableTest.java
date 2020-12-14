@@ -42,7 +42,7 @@ class SymbolTableTest {
 
         Lexer lex = this.initLexer("SingleSymbol.stups");
         AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-        tree.preprocess(grammar);
+        tree.postprocess(grammar);
 
         SymbolTable table = SymbolTable.fromAST(tree);
 
@@ -58,7 +58,7 @@ class SymbolTableTest {
 
         Lexer lex = this.initLexer("MultipleSymbol.stups");
         AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-        tree.preprocess(grammar);
+        tree.postprocess(grammar);
 
         SymbolTable table = SymbolTable.fromAST(tree);
 
@@ -79,7 +79,7 @@ class SymbolTableTest {
 
         Lexer lex = this.initLexer("ExistingSymbol.stups");
         AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-        tree.preprocess(grammar);
+        tree.postprocess(grammar);
 
         assertThatThrownBy(() -> SymbolTable.fromAST(tree)).isInstanceOf(SymbolAlreadyDefinedException.class);
     }
