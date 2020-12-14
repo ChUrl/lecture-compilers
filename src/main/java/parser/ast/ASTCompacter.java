@@ -224,6 +224,7 @@ public final class ASTCompacter {
         root.getChildren().remove(op);
     }
 
+    // Jede Expression hat maximal 1x Operator
     private static ASTNode getOp(ASTNode root) {
         for (ASTNode child : root.getChildren()) {
             ASTNode op = switch (child.getName()) {
@@ -263,13 +264,16 @@ public final class ASTCompacter {
         root.getChildren().remove(id);
     }
 
+    // Assignments koennen >1 Identifier haben: Wenn ja, nimm den 2.
     private static ASTNode getId(ASTNode root) {
+        ASTNode childOut = null;
+
         for (ASTNode child : root.getChildren()) {
-            if (child.getName().equals("IDENTIFIER")) {
-                return child;
+            if ("IDENTIFIER".equals(child.getName())) {
+                childOut = child;
             }
         }
 
-        return null;
+        return childOut;
     }
 }
