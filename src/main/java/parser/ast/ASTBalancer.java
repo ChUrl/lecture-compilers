@@ -51,6 +51,8 @@ public final class ASTBalancer {
 
         log(tree.toString());
         log("-".repeat(100));
+
+        System.out.println("- Tree balancing successful.");
     }
 
     // Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen
@@ -106,7 +108,7 @@ public final class ASTBalancer {
             return false; // Braucht keine weitere Rotation
         }
 
-        ASTNode insertLeft = new ASTNode(root.getName());
+        ASTNode insertLeft = new ASTNode(root.getName(), root.getLine());
         insertLeft.setValue(right.getValue()); // Operation wird linksvererbt
         insertLeft.setChildren(left, right.getChildren().get(0));
 
@@ -171,7 +173,7 @@ public final class ASTBalancer {
 
         log("Right-Rotating " + root.getName() + ": " + root.getValue());
 
-        ASTNode insertRight = new ASTNode(root.getName());
+        ASTNode insertRight = new ASTNode(root.getName(), root.getLine());
         insertRight.setValue(root.getValue());
         insertRight.setChildren(left.getChildren().get(1), right);
 

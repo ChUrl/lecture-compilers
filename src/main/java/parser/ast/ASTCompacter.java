@@ -33,6 +33,8 @@ public final class ASTCompacter {
         log(tree.toString());
         log("\nCleaned Tree: " + removed + " nodes removed.");
         log("-".repeat(100));
+
+        System.out.println("- Tree compression successful.");
     }
 
     // Entfernt [compact]-able Nodes (Reicht Werte nach oben)

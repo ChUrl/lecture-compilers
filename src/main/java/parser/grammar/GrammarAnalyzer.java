@@ -35,6 +35,8 @@ public class GrammarAnalyzer {
         this.follow = this.initFollow();
 
         this.table = this.initParseTable();
+
+        System.out.println("\n- Grammar analysis successful.");
     }
 
     private Map<String, Set<String>> initFirst() {
@@ -278,11 +280,6 @@ public class GrammarAnalyzer {
         return sym.isBlank()
                || sym.equals(this.grammar.getEpsilonSymbol())
                || this.first.get(sym).contains(this.grammar.getEpsilonSymbol());
-    }
-
-    public boolean allNullable(String rightside) {
-        return rightside.isBlank()
-               || Arrays.stream(rightside.split(" ")).allMatch(this::nullable);
     }
 
     public boolean allNullable(String[] split) {

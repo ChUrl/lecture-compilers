@@ -25,6 +25,8 @@ public final class TypeChecker {
         log("Typevalidation:");
         validate(tree.getRoot(), table, nodeTable);
         log("-".repeat(100));
+
+        System.out.println("- Typechecking successful.\n");
     }
 
     private static void validate(ASTNode root, SymbolTable table, Map<ASTNode, String> nodeTable) {
@@ -69,6 +71,8 @@ public final class TypeChecker {
         log("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType);
 
         if (!literalType.equals(identifierType)) {
+            System.out.println("Line " + root.getLine() + " Typeerror: Can't assign [" + literalNode.getValue() + "] to [" + identifier + "]: " + identifierType);
+
             throw new AssignmentTypeMismatchException("Trying to assign " + literalType + " to a " + identifierType + " variable.");
         }
     }
@@ -79,13 +83,23 @@ public final class TypeChecker {
 
         log("Validating Expression: " + root.getValue());
 
-        if (root.getChildren().size() != 1 && "NOT".equals(op)) {
+        if (!root.hasChildren()) {
+            // Keine Kinder
+
+            System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] without arguments");
+
+            throw new OperatorUsageException("Versuche Operator " + op + " ohne Argumente aufzurufen.");
+        } else if (root.getChildren().size() != 1 && "NOT".equals(op)) {
             // Unärer Operator mit  != 1 Child
             // SUB, ADD müssen nicht geprüft werden, da diese doppelt belegt sind mit ihrem binären Gegenstück
+
+            System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] with more than 1 argument");
 
             throw new OperatorUsageException("Versuche unären Operator " + op + " mit mehreren Argument aufzurufen.");
         } else if (root.getChildren().size() == 1 && !unary.contains(op)) {
             // Binärer Operator mit 1 Child
+
+            System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] with only 1 argument");
 
             throw new OperatorUsageException("Versuche binären Operator " + op + " mit einem Argument aufzurufen.");
         }
@@ -99,6 +113,8 @@ public final class TypeChecker {
             if (!requiredType.contains(childReturnType)) {
                 // Child returned Typ, welcher nicht im SymbolTable als Argumenttyp steht
                 // Der NodeTable enthält auch Literale, diese müssen also nicht einzeln behandelt werden
+
+                System.out.println("Line " + root.getLine() + " Typeerror: Can't use [" + op + "] with argument of type [" + nodeTable.get(child) + "]");
 
                 throw new OperatorTypeMismatchException("Versuche Operator " + op + " mit Argument vom Typ " + nodeTable.get(child) + " aufzurufen.");
             }
