@@ -8,12 +8,14 @@ import java.util.Objects;
 
 public class ASTNode {
 
+    private final int line;
     private String name;
     private String value;
     private List<ASTNode> children = new ArrayList<>();
 
-    public ASTNode(String name) {
+    public ASTNode(String name, int line) {
         this.name = name;
+        this.line = line;
         this.value = "";
     }
 
@@ -29,6 +31,15 @@ public class ASTNode {
         return this.children;
     }
 
+    public void setChildren(List<ASTNode> children) {
+        this.children = children;
+    }
+
+    public void setChildren(ASTNode... children) {
+        this.children = new ArrayList<>();
+        this.children.addAll(Arrays.asList(children));
+    }
+
     public String getName() {
         return this.name;
     }
@@ -37,13 +48,21 @@ public class ASTNode {
         this.name = name;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.name, this.value, this.children, this.line);
     }
 
     @Override
-    public int hashCode() {
-        return Objects.hash(this.name, this.value, this.children);
+    public boolean equals(Object obj) {
+        if (obj instanceof ASTNode) {
+            return this.name.equals(((ASTNode) obj).name)
+                   && this.value.equals(((ASTNode) obj).value)
+                   && this.children.equals(((ASTNode) obj).children)
+                   && this.line == ((ASTNode) obj).line;
+        }
+
+        return false;
     }
 
     // toString() und print() von hier: https://stackoverflow.com/a/8948691
@@ -54,17 +73,12 @@ public class ASTNode {
         return buffer.toString();
     }
 
-    public void setChildren(List<ASTNode> children) {
-        this.children = children;
-    }
-
-    public void setChildren(ASTNode... children) {
-        this.children = new ArrayList<>();
-        this.children.addAll(Arrays.asList(children));
-    }
-
     public String getValue() {
         return this.value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 
     private void print(StringBuilder buffer, String prefix, String childrenPrefix) {
@@ -86,17 +100,6 @@ public class ASTNode {
         }
     }
 
-    @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof ASTNode) {
-            return this.name.equals(((ASTNode) obj).name)
-                   && this.value.equals(((ASTNode) obj).value)
-                   && this.children.equals(((ASTNode) obj).children);
-        }
-
-        return false;
-    }
-
     public long size() {
         int s = 0;
 
@@ -105,5 +108,9 @@ public class ASTNode {
         }
 
         return s + 1;
+    }
+
+    public int getLine() {
+        return this.line;
     }
 }
