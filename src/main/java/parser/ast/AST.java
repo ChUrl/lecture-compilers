@@ -20,7 +20,7 @@ public class AST {
         return this.root.size();
     }
 
-    public void preprocess(Grammar grammar) {
+    public void postprocess(Grammar grammar) {
         ASTCompacter.clean(this, grammar);
         ASTBalancer.balance(this);
     }
