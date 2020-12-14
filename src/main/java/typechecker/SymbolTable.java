@@ -86,7 +86,7 @@ public class SymbolTable {
             String oldEntry = table.put(right.getValue(), left.getName());
 
             if (oldEntry != null) {
-                System.out.println("Typfehler - Symbol bereits definiert: " + right.getValue());
+                System.out.println("Line " + root.getLine() + " Symbolerror: [" + right.getValue() + "] already defined");
                 throw new SymbolAlreadyDefinedException("Das Symbol " + right.getValue() + " wurde bereits deklariert.");
             }
         }
