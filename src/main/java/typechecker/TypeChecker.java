@@ -14,13 +14,14 @@ import static util.Logger.log;
 public final class TypeChecker {
 
     private static final Collection<String> lit = Arrays.asList("INTEGER_LIT", "STRING_LIT", "BOOLEAN_LIT");
+    private static final Collection<String> unary = Arrays.asList("ADD", "SUB", "NOT");
 
     private TypeChecker() {}
 
     // Wirft exception bei typeerror, returned nix
     public static void validate(AST tree) {
-        SymbolTable table = SymbolTable.fromAST(tree);
-        Map<ASTNode, String> nodeTable = new HashMap<>();
+        final TypeTable table = TypeTable.fromAST(tree);
+        final Map<ASTNode, String> nodeTable = new HashMap<>();
 
         log("Typevalidation:");
         validate(tree.getRoot(), table, nodeTable);
@@ -29,7 +30,7 @@ public final class TypeChecker {
         System.out.println("- Typechecking successful.\n");
     }
 
-    private static void validate(ASTNode root, SymbolTable table, Map<ASTNode, String> nodeTable) {
+    private static void validate(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
         for (ASTNode child : root.getChildren()) {
             validate(child, table, nodeTable);
         }
@@ -37,42 +38,42 @@ public final class TypeChecker {
         if (lit.contains(root.getName())) {
             // NodeTable Eintrag für Literal hinzufügen
 
-            String literalType = getLiteralType(root.getName());
+            final String literalType = getLiteralType(root.getName());
 
             nodeTable.put(root, literalType);
             return;
-        } else if ("EXPR".equals(root.getName())) {
+        } else if ("expr".equals(root.getName())) {
             // NodeTable Eintrag für Expression hinzufügen
 
-            String exprType = table.getMethodReturnType(root.getValue());
+            final String exprType = table.getMethodReturnType(root.getValue());
 
             nodeTable.put(root, exprType);
-        } else if ("PAR_EXPR".equals(root.getName())) {
+        } else if ("par_expr".equals(root.getName())) {
             // Nodetable Eintrag für Klammern
 
-            ASTNode centerChild = root.getChildren().get(1);
+            final ASTNode centerChild = root.getChildren().get(1);
 
             nodeTable.put(root, nodeTable.get(centerChild));
         } else if ("IDENTIFIER".equals(root.getName())) {
             // Nodedtable Eintrag fuer Identifier
 
-            String identifierType = table.getSymbolType(root.getValue());
+            final String identifierType = table.getSymbolType(root.getValue());
 
             nodeTable.put(root, identifierType);
         }
 
-        if ("ASSIGNMENT".equals(root.getName())) {
+        if ("assignment".equals(root.getName())) {
             validateAssignment(root, table, nodeTable);
-        } else if ("EXPR".equals(root.getName())) {
+        } else if ("expr".equals(root.getName())) {
             validateExpression(root, table, nodeTable);
         }
     }
 
-    private static void validateAssignment(ASTNode root, SymbolTable table, Map<ASTNode, String> nodeTable) {
-        String identifier = root.getValue();
-        String identifierType = table.getSymbolType(identifier);
-        ASTNode literalNode = root.getChildren().get(0);
-        String literalType = nodeTable.get(literalNode);
+    private static void validateAssignment(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
+        final String identifier = root.getValue();
+        final String identifierType = table.getSymbolType(identifier);
+        final ASTNode literalNode = root.getChildren().get(0);
+        final String literalType = nodeTable.get(literalNode);
 
         log("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType);
 
@@ -83,9 +84,8 @@ public final class TypeChecker {
         }
     }
 
-    private static void validateExpression(ASTNode root, SymbolTable table, Map<ASTNode, String> nodeTable) {
-        Collection<String> unary = Arrays.asList("ADD", "SUB", "NOT");
-        String op = root.getValue();
+    private static void validateExpression(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
+        final String op = root.getValue();
 
         log("Validating Expression: " + root.getValue());
 
@@ -110,11 +110,11 @@ public final class TypeChecker {
             throw new OperatorUsageException("Versuche binären Operator " + op + " mit einem Argument aufzurufen.");
         }
 
-        List<String> requiredType = table.getMethodArgumentType(op);
+        final List<String> requiredType = table.getMethodArgumentType(op);
         for (ASTNode child : root.getChildren()) {
             // Jedes Child muss korrekten Typ zurückgeben
 
-            String childReturnType = nodeTable.get(child);
+            final String childReturnType = nodeTable.get(child);
 
             if (!requiredType.contains(childReturnType)) {
                 // Child returned Typ, welcher nicht im SymbolTable als Argumenttyp steht

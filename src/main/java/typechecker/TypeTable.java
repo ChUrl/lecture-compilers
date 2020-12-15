@@ -10,13 +10,13 @@ import java.util.Map;
 
 import static util.Logger.log;
 
-public class SymbolTable {
+public class TypeTable {
 
     private final Map<String, String> symbolTable;
     private final Map<String, String> methodReturnTable;
     private final Map<String, List<String>> methodArgumentTable;
 
-    public SymbolTable(Map<String, String> symbolTable) {
+    public TypeTable(Map<String, String> symbolTable) {
         this.symbolTable = symbolTable;
 
         // Enthält die Return-Types der Operatoren
@@ -63,14 +63,14 @@ public class SymbolTable {
         this.methodArgumentTable = argumentTable;
     }
 
-    public static SymbolTable fromAST(AST tree) {
+    public static TypeTable fromAST(AST tree) {
         final Map<String, String> tableOut = new HashMap<>();
 
-        log("Creating SymbolTable");
+        log("Creating TypeTable");
         scanTree(tree.getRoot(), tableOut);
         log("-".repeat(100));
 
-        return new SymbolTable(tableOut);
+        return new TypeTable(tableOut);
     }
 
     private static void scanTree(ASTNode root, Map<String, String> table) {
@@ -78,16 +78,15 @@ public class SymbolTable {
             scanTree(child, table);
         }
 
-        if ("DECLARATION".equals(root.getName())) {
-            ASTNode left = root.getChildren().get(0);
-            ASTNode right = root.getChildren().get(1);
+        if ("declaration".equals(root.getName())) {
+            final ASTNode child = root.getChildren().get(0);
 
-            log("Adding Entry " + right.getValue() + " -> " + left.getName());
-            String oldEntry = table.put(right.getValue(), left.getName());
+            log("Adding Entry " + child.getValue() + " -> " + root.getValue());
+            final String oldEntry = table.put(child.getValue(), root.getValue());
 
             if (oldEntry != null) {
-                System.out.println("Line " + root.getLine() + " Symbolerror: [" + right.getValue() + "] already defined");
-                throw new SymbolAlreadyDefinedException("Das Symbol " + right.getValue() + " wurde bereits deklariert.");
+                System.out.println("Line " + root.getLine() + " Symbolerror: [" + child.getValue() + "] already defined");
+                throw new SymbolAlreadyDefinedException("Das Symbol " + child.getValue() + " wurde bereits deklariert.");
             }
         }
     }
