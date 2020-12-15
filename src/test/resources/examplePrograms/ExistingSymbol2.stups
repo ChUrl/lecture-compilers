@@ -1,0 +1,9 @@
+class SingleSymbol {
+    public static void main(String[] args) {
+        int i = 0;
+        i = 1;
+
+        if (i < 2)
+            int i = 5;
+    }
+}
