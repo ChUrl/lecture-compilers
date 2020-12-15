@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import parser.ParsingTable;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,8 +41,9 @@ class GrammarAnalyzerTest {
         rules.add(new GrammarRule("S", "i", "E", "t", "S"));
         rules.add(new GrammarRule("E", "b"));
 
-        grammar0 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null,
-                               null, null, null, rules);
+        grammar0 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol,
+                               Collections.emptyMap(), Collections.emptyMap(),
+                               Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), rules);
     }
 
     @BeforeAll
@@ -71,8 +73,9 @@ class GrammarAnalyzerTest {
         rules.add(new GrammarRule("F", "(", "E", ")"));
         rules.add(new GrammarRule("F", "id"));
 
-        grammar1 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null,
-                               null, null, null, rules);
+        grammar1 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol,
+                               Collections.emptyMap(), Collections.emptyMap(),
+                               Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), rules);
     }
 
     @BeforeAll
@@ -105,8 +108,9 @@ class GrammarAnalyzerTest {
         rules.add(new GrammarRule("X", "Y"));
         rules.add(new GrammarRule("X", "a"));
 
-        grammar2 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null,
-                               null, null, null, rules);
+        grammar2 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol,
+                               Collections.emptyMap(), Collections.emptyMap(),
+                               Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap(), rules);
     }
 
     @Test

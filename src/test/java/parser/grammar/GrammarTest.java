@@ -13,7 +13,7 @@ class GrammarTest {
 
     private static Path getPath(String name) {
         try {
-            return Paths.get(GrammarTest.class.getClass().getClassLoader().getResource("exampleGrammars/" + name).toURI());
+            return Paths.get(GrammarTest.class.getClassLoader().getResource("exampleGrammars/" + name).toURI());
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
