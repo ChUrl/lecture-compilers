@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class ASTNode {
 
@@ -68,7 +69,7 @@ public class ASTNode {
     // toString() und print() von hier: https://stackoverflow.com/a/8948691
     @Override
     public String toString() {
-        StringBuilder buffer = new StringBuilder(50);
+        final StringBuilder buffer = new StringBuilder(50);
         this.print(buffer, "", "");
         return buffer.toString();
     }
@@ -90,8 +91,8 @@ public class ASTNode {
         }
         buffer.append('\n');
 
-        for (Iterator<ASTNode> it = this.children.listIterator(); it.hasNext(); ) {
-            ASTNode next = it.next();
+        for (final Iterator<ASTNode> it = this.children.listIterator(); it.hasNext(); ) {
+            final ASTNode next = it.next();
             if (it.hasNext()) {
                 next.print(buffer, childrenPrefix + "├── ", childrenPrefix + "│   ");
             } else {
@@ -101,16 +102,21 @@ public class ASTNode {
     }
 
     public long size() {
-        int s = 0;
-
-        for (ASTNode child : this.children) {
-            s += child.size();
-        }
-
-        return s + 1;
+        return 1 + this.children.stream().mapToLong(ASTNode::size).sum();
     }
 
     public int getLine() {
         return this.line;
+    }
+
+    public ASTNode deepCopy() {
+        final ASTNode newNode = new ASTNode(this.name, this.line);
+
+        newNode.value = this.value;
+        newNode.children = this.children.stream()
+                                        .map(ASTNode::deepCopy)
+                                        .collect(Collectors.toList());
+
+        return newNode;
     }
 }

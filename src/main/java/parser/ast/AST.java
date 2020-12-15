@@ -25,6 +25,10 @@ public class AST {
         ASTBalancer.balance(this);
     }
 
+    public AST deepCopy() {
+        return new AST(this.root.deepCopy());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof AST) {
