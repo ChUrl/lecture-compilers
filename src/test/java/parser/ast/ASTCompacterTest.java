@@ -3,6 +3,7 @@ package parser.ast;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import parser.StupsParser;
 import parser.grammar.Grammar;
@@ -18,11 +19,22 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ASTCompacterTest {
 
-    private Lexer initLexer(String program) {
+    private static Grammar grammar;
+    private static StupsParser parser;
+
+    @BeforeAll
+    static void init() throws IOException, URISyntaxException {
+        final Path path = Paths.get(ASTCompacterTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        grammar = Grammar.fromFile(path);
+        parser = StupsParser.fromGrammar(grammar);
+    }
+
+    private static AST getTree(String program) {
         try {
-            final Path path = Paths.get(this.getClass().getClassLoader().getResource("examplePrograms/" + program).toURI());
+            final Path path = Paths.get(ASTCompacterTest.class.getClassLoader().getResource("examplePrograms/" + program).toURI());
             final String programCode = Files.readString(path, StandardCharsets.US_ASCII);
-            return new StupsLexer(CharStreams.fromString(programCode));
+            final Lexer lex = new StupsLexer(CharStreams.fromString(programCode));
+            return parser.parse(lex.getAllTokens(), lex.getVocabulary());
         } catch (Exception ignore) {
             ignore.printStackTrace();
         }
@@ -31,65 +43,39 @@ class ASTCompacterTest {
     }
 
     @Test
-    void testDeleteChildren() throws URISyntaxException, IOException {
-        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        final Grammar grammar = Grammar.fromFile(path);
-        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
-
-        final Lexer lex = this.initLexer("GeneralOperator.stups");
-        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-
+    void testDeleteChildren() {
+        final AST tree = getTree("GeneralOperator.stups");
         final long before = tree.size();
 
         ASTCompacter.deleteChildren(tree, grammar);
 
         assertThat(before - tree.size()).isEqualTo(3);
-        System.out.println(tree);
     }
 
     @Test
-    void testPromote() throws URISyntaxException, IOException {
-        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        final Grammar grammar = Grammar.fromFile(path);
-        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
-
-        final Lexer lex = this.initLexer("GeneralOperator.stups");
-        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-
+    void testPromote() {
+        final AST tree = getTree("GeneralOperator.stups");
         final long before = tree.size();
 
         ASTCompacter.promote(tree, grammar);
 
         assertThat(before - tree.size()).isEqualTo(14);
-        System.out.println(tree);
     }
 
     @Test
-    void testDeleteEmpty() throws URISyntaxException, IOException {
-        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        final Grammar grammar = Grammar.fromFile(path);
-        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
-
-        final Lexer lex = this.initLexer("GeneralOperator.stups");
-        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+    void testDeleteEmpty() {
+        final AST tree = getTree("GeneralOperator.stups");
         ASTCompacter.deleteChildren(tree, grammar);
-
         final long before = tree.size();
 
         ASTCompacter.deleteIfEmpty(tree, grammar);
 
         assertThat(before - tree.size()).isEqualTo(2);
-        System.out.println(tree);
     }
 
     @Test
-    void testClean() throws URISyntaxException, IOException {
-        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        final Grammar grammar = Grammar.fromFile(path);
-        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
-
-        final Lexer lex = this.initLexer("GeneralOperator.stups");
-        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+    void testClean() {
+        final AST tree = getTree("GeneralOperator.stups");
 
         ASTCompacter.clean(tree, grammar);
 

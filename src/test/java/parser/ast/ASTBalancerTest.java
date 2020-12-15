@@ -83,10 +83,8 @@ class ASTBalancerTest {
     @Test
     void testTree1Flip() {
         final AST tree = tree1();
-        System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
         assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("expr");
@@ -95,11 +93,9 @@ class ASTBalancerTest {
     @Test
     void testTree1Flip2x() {
         final AST tree = tree1();
-        System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
         ASTBalancer.flip(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree).isEqualTo(tree1());
     }
@@ -107,10 +103,8 @@ class ASTBalancerTest {
     @Test
     void testTree2Flip() {
         final AST tree = tree2();
-        System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
         assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("expr");
@@ -121,11 +115,9 @@ class ASTBalancerTest {
     @Test
     void testTree2Flip2x() {
         final AST tree = tree2();
-        System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
         ASTBalancer.flip(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree).isEqualTo(tree2());
     }
@@ -134,10 +126,8 @@ class ASTBalancerTest {
     void testTree1LeftPrecedence() {
         final AST tree = tree1();
         ASTBalancer.flip(tree);
-        System.out.println("Before:\n" + tree);
 
         ASTBalancer.leftPrecedence(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(3);
         assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
@@ -147,10 +137,8 @@ class ASTBalancerTest {
     void testTree2LeftPrecedence() {
         final AST tree = tree2();
         ASTBalancer.flip(tree);
-        System.out.println("Before:\n" + tree);
 
         ASTBalancer.leftPrecedence(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(5);
         assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
@@ -161,14 +149,12 @@ class ASTBalancerTest {
         final AST tree = tree2();
         ASTBalancer.flip(tree);
         ASTBalancer.leftPrecedence(tree);
-        System.out.println("Before:\n" + tree);
 
         final AST tree1 = tree2();
         ASTBalancer.flip(tree1);
         ASTBalancer.leftPrecedence(tree1);
 
         ASTBalancer.operatorPrecedence(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree).isEqualTo(tree1);
     }
@@ -178,12 +164,10 @@ class ASTBalancerTest {
         final AST tree = tree3();
         ASTBalancer.flip(tree);
         ASTBalancer.leftPrecedence(tree);
-        System.out.println("Before:\n" + tree);
 
         assertThat(tree.getRoot().getValue()).isEqualTo("MUL");
 
         ASTBalancer.operatorPrecedence(tree);
-        System.out.println("After:\n" + tree);
 
         assertThat(tree.size()).isEqualTo(5);
         assertThat(tree.getRoot().getValue()).isEqualTo("SUB");

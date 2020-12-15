@@ -11,9 +11,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class GrammarTest {
 
-    private Path getPath(String name) {
+    private static Path getPath(String name) {
         try {
-            return Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/" + name).toURI());
+            return Paths.get(GrammarTest.class.getClass().getClassLoader().getResource("exampleGrammars/" + name).toURI());
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
@@ -23,7 +23,7 @@ class GrammarTest {
 
     @Test
     void testSimpleGrammar0() throws IOException {
-        final Path path = this.getPath("SimpleGrammar0.grammar");
+        final Path path = getPath("SimpleGrammar0.grammar");
 
         final Grammar grammar = Grammar.fromFile(path);
         assert grammar != null;
@@ -39,12 +39,10 @@ class GrammarTest {
 
     @Test
     void testSimpleGrammar1() throws IOException {
-        final Path path = this.getPath("SimpleGrammar1.grammar");
+        final Path path = getPath("SimpleGrammar1.grammar");
 
         final Grammar grammar = Grammar.fromFile(path);
         assert grammar != null;
-
-        System.out.println(grammar.getRules());
 
         assertThat(grammar.getEpsilonSymbol()).isEqualTo("epsilon");
         assertThat(grammar.getStartSymbol()).isEqualTo("E");

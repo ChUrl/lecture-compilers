@@ -11,7 +11,6 @@ class ASTTest {
         final ASTNode root = new ASTNode("Wurzel", 1);
 
         final AST tree = new AST(root);
-        System.out.println(tree);
 
         assertThat(tree).hasToString("Wurzel\n");
     }
@@ -26,7 +25,6 @@ class ASTTest {
         root.addChild(childB);
 
         final AST tree = new AST(root);
-        System.out.println(tree);
 
         assertThat(tree).hasToString("Wurzel\n├── A\n└── B\n");
     }
@@ -41,7 +39,6 @@ class ASTTest {
         childA.addChild(childB);
 
         final AST tree = new AST(root);
-        System.out.println(tree);
 
         assertThat(tree).hasToString("Wurzel\n└── A\n    └── B\n");
     }
