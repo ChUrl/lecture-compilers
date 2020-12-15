@@ -1,14 +1,21 @@
-START: S
-EPS: epsilon
+START: s
+EPS: eps
 
-// Structures:
-NTERM: VAL TYPE
-NTERM: OP UNARY ARITH_OP LOGIC_OP COMPARE_OP
-NTERM: S CLASS_CNT BLOCK_CNT
-NTERM: STATEMENT STMT PRINT
-NTERM: DECLARATION ASSIGNMENT
-NTERM: PAR_EXPR EXPR EXPR_2 EXPR_F
-NTERM: LOOP COND COND_ELSE SINGLE_OR_BRACED
+// START, EPS, NTERM, TERM are reserved
+
+// Some Grammar-Symbols have to be named this way:
+// assignment, declaration (for TypeTable creation)
+// IDENTIFIER, NOT, ADD, SUB (for TypeChecking)
+// expr, par_expr, assignment (for TypeChecking)
+
+// Nonterminals:
+NTERM: val type
+NTERM: op unary arith_op logic_op compare_op
+NTERM: s class_cnt block_cnt
+NTERM: statement stmt print
+NTERM: declaration assignment
+NTERM: par_expr expr expr_2 expr_f
+NTERM: loop cond cond_else single_or_braced
 
 // Token:
 TERM: CLASS PUBLIC STATIC
@@ -23,49 +30,67 @@ TERM: L_BRACE R_BRACE L_BRACKET R_BRACKET L_PAREN R_PAREN SEMICOLON COMMA DOT
 TERM: INTEGER_LIT STRING_LIT BOOLEAN_LIT
 TERM: IDENTIFIER IDENTIFIER_MAIN
 
-// Actions: compact - Value hochreichen
-//          nullable - Kann entfernt werden, wenn keine value und keine children
+// Actions: promote - Information "hochreichen": Ersetzt Node mit Child, wenn es nur ein Child gibt
+//           - val[promote] :: --val--INTEGER_LIT: 5 => --INTEGER_LIT: 5
+
+//          delifempty - Kann Node löschen, wenn dieser keinen Inhalt hat, normalerweise bei eps
+//           - block_cnt[delifempty] :: --block_cnt => --
+
+//          delchild= - Entfernt bestimmte Child-Nodes eines Parents
+//           - cond[delchild=IF] :: --cond--IF => --cond
+//           - assignment[delchild=ASSIGN] :: --assignment--ASSIGN => --assignment
+
+//          valtoval= - Verschiebt eine Child-Value in die Parent-Value und entfernt das Child
+//           - assignment[valtoval=IDENTIFIER] :: --assignment--IDENTIFIER: a => --assignment: a
+
+//          nametoval= - Verschiebt einen Child-Name in die Parent-Value und entfernt das Child
+//           - expr_2[nametoval=ADD] :: --expr_2--ADD => --expr_2: ADD
+
+//          renameto= - Führt Umbenennung eines Nodes durch
+//           - expr_2[renameto=expr] :: --expr_2: ADD => --expr: ADD
 
 // General -----------------------------------------------------------------------------------------
 
-VAL[compact] -> INTEGER_LIT | STRING_LIT | BOOLEAN_LIT | IDENTIFIER
-TYPE[compact] -> INTEGER_TYPE | STRING_TYPE | BOOLEAN_TYPE
+val[promote] -> INTEGER_LIT | STRING_LIT | BOOLEAN_LIT | IDENTIFIER
+type[promote] -> INTEGER_TYPE | STRING_TYPE | BOOLEAN_TYPE
 
-OP[compact] -> ARITH_OP | LOGIC_OP | COMPARE_OP
-UNARY[compact] -> ADD | SUB | NOT
-ARITH_OP[compact] -> ADD | SUB | MUL | DIV | MOD
-LOGIC_OP[compact] -> AND | OR | NOT
-COMPARE_OP[compact] -> LESS | LESS_EQUAL | GREATER | GREATER_EQUAL | EQUAL | NOT_EQUAL
+// OP-List: ADD,SUB,MUL,DIV,MOD,AND,OR,NOT,LESS,LESS_EQUAL,GREATER,GREATER_EQUAL,EQUAL,NOT_EQUAL
+op[promote] -> arith_op | logic_op | compare_op
+unary[promote] -> ADD | SUB | NOT
+arith_op[promote] -> ADD | SUB | MUL | DIV | MOD
+logic_op[promote] -> AND | OR | NOT
+compare_op[promote] -> LESS | LESS_EQUAL | GREATER | GREATER_EQUAL | EQUAL | NOT_EQUAL
 
 // -------------------------------------------------------------------------------------------------
 
-// class IDENTIFIER { CLASS_CNT }
-S[compact] -> CLASS IDENTIFIER L_BRACE CLASS_CNT R_BRACE | EPS
+// START -> class IDENTIFIER { class_cnt }
+s[promote] -> CLASS IDENTIFIER L_BRACE class_cnt R_BRACE | eps
 
-// public static void main(String[] args) { BLOCK_CNT }
-CLASS_CNT -> PUBLIC STATIC VOID_TYPE IDENTIFIER_MAIN L_PAREN STRING_TYPE L_BRACKET R_BRACKET IDENTIFIER R_PAREN L_BRACE BLOCK_CNT R_BRACE
-CLASS_CNT[compact nullable] -> EPS
+// class_cnt -> public static void main(String[] args) { block_cnt }
+class_cnt[promote delifempty] -> PUBLIC STATIC VOID_TYPE IDENTIFIER_MAIN L_PAREN STRING_TYPE L_BRACKET R_BRACKET IDENTIFIER R_PAREN L_BRACE block_cnt R_BRACE | eps
 
-// Stuff in {}
-BLOCK_CNT[compact nullable] -> STATEMENT BLOCK_CNT | L_BRACE BLOCK_CNT R_BRACE | EPS
+// block_ccnt -> stuff in {} | list of statements
+block_cnt[promote delifempty] -> statement block_cnt | L_BRACE block_cnt R_BRACE | eps
 
-STATEMENT -> STMT SEMICOLON
-STATEMENT[compact] -> LOOP | COND
-STMT[compact] -> PRINT | DECLARATION | ASSIGNMENT
-PRINT -> PRINTLN PAR_EXPR
+// statement -> stuff ending with ; | loop | condition
+statement[promote] -> stmt SEMICOLON | loop | cond
+stmt[promote] -> print | declaration | assignment
+print -> PRINTLN par_expr
 
-// Declaration with Assignment: TYPE IDENTIFIER = LITERAL;
-DECLARATION -> TYPE ASSIGNMENT
-ASSIGNMENT -> IDENTIFIER ASSIGN EXPR
+// declaration -> type IDENTIFIER = expr;
+declaration[nametoval=INTEGER_TYPE,BOOLEAN_TYPE,STRING_TYPE] -> type assignment
+assignment[delchild=ASSIGN valtoval=IDENTIFIER] -> IDENTIFIER ASSIGN expr
 
-// Stuff that returns something
-PAR_EXPR -> L_PAREN EXPR R_PAREN
-EXPR[compact] -> EXPR_F EXPR_2
-EXPR_2[compact nullable] -> OP EXPR_F EXPR_2 | EPS
-EXPR_F[compact] -> UNARY EXPR_F | PAR_EXPR | VAL
+// par_expr -> ( expr )
+par_expr -> L_PAREN expr R_PAREN
+
+// expr -> expression that returns something | literal
+expr[promote nametoval=ADD,SUB,MUL,DIV,MOD,AND,OR,NOT,LESS,LESS_EQUAL,GREATER,GREATER_EQUAL,EQUAL,NOT_EQUAL] -> expr_f expr_2
+expr_2[promote delifempty renameto=expr] -> op expr_f expr_2 | eps
+expr_f[promote renameto=expr] -> unary expr_f | par_expr | val
 
 // Control-Flow
-SINGLE_OR_BRACED -> L_BRACE BLOCK_CNT R_BRACE | STMT SEMICOLON
-LOOP -> WHILE PAR_EXPR SINGLE_OR_BRACED
-COND -> IF PAR_EXPR SINGLE_OR_BRACED COND_ELSE
-COND_ELSE[nullable] -> ELSE SINGLE_OR_BRACED | EPS
+loop[delchild=WHILE] -> WHILE par_expr single_or_braced
+cond[delchild=IF] -> IF par_expr single_or_braced cond_else
+cond_else[delifempty delchild=ELSE] -> ELSE single_or_braced | eps
+single_or_braced -> L_BRACE block_cnt R_BRACE | stmt SEMICOLON
