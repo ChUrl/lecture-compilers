@@ -82,7 +82,7 @@ public final class ASTBalancer {
             leftPrecedence(child);
         }
 
-        ASTNode expr = getExpr(root);
+        final ASTNode expr = getExpr(root);
 
         if (expr == null || root.getChildren().size() != 2 || !root.getValue().isEmpty()) {
             return;
@@ -97,8 +97,10 @@ public final class ASTBalancer {
 
     // Die Letzte Rotation ist keine richtige Rotation, dort wird false zurückgegeben
     private static boolean specialLeftRotate(ASTNode root) {
-        ASTNode left = root.getChildren().get(0);
-        ASTNode right = root.getChildren().get(1);
+        log("Special-Left-Rotation around " + root.getName());
+
+        final ASTNode left = root.getChildren().get(0);
+        final ASTNode right = root.getChildren().get(1);
 
         // Verhindert Wurzel mit nur einem EXPR-Child (nach oben "hängende" Wurzel)
         if (endOfExpr(right)) {
@@ -108,7 +110,7 @@ public final class ASTBalancer {
             return false; // Braucht keine weitere Rotation
         }
 
-        ASTNode insertLeft = new ASTNode(root.getName(), root.getLine());
+        final ASTNode insertLeft = new ASTNode(root.getName(), root.getLine());
         insertLeft.setValue(right.getValue()); // Operation wird linksvererbt
         insertLeft.setChildren(left, right.getChildren().get(0));
 
@@ -118,9 +120,10 @@ public final class ASTBalancer {
         return true;
     }
 
+    // Findet die 1te (linkeste) expr
     private static ASTNode getExpr(ASTNode root) {
         for (ASTNode child : root.getChildren()) {
-            if ("EXPR".equals(child.getName())) {
+            if ("expr".equals(child.getName())) {
                 return child;
             }
         }
@@ -158,8 +161,8 @@ public final class ASTBalancer {
     }
 
     private static boolean preceding(ASTNode parent, ASTNode child) {
-        if (!"EXPR".equals(parent.getName()) || parent.getValue().isEmpty()
-            || !"EXPR".equals(child.getName()) || child.getValue().isEmpty()) {
+        if (!"expr".equals(parent.getName()) || parent.getValue().isEmpty()
+            || !"expr".equals(child.getName()) || child.getValue().isEmpty()) {
             return false;
         }
 
@@ -168,12 +171,12 @@ public final class ASTBalancer {
     }
 
     private static void simpleRightRotate(ASTNode root) {
-        ASTNode left = root.getChildren().get(0);
-        ASTNode right = root.getChildren().get(1);
+        log("Right-Rotation around " + root.getName() + ": " + root.getValue());
 
-        log("Right-Rotating " + root.getName() + ": " + root.getValue());
+        final ASTNode left = root.getChildren().get(0);
+        final ASTNode right = root.getChildren().get(1);
 
-        ASTNode insertRight = new ASTNode(root.getName(), root.getLine());
+        final ASTNode insertRight = new ASTNode(root.getName(), root.getLine());
         insertRight.setValue(root.getValue());
         insertRight.setChildren(left.getChildren().get(1), right);
 
