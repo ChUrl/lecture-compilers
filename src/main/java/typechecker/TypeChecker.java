@@ -23,11 +23,13 @@ public final class TypeChecker {
         final TypeTable table = TypeTable.fromAST(tree);
         final Map<ASTNode, String> nodeTable = new HashMap<>();
 
+        System.out.println(" - Validating syntax-tree...");
+
         log("Typevalidation:");
         validate(tree.getRoot(), table, nodeTable);
         log("-".repeat(100));
 
-        System.out.println("- Typechecking successful.\n");
+        System.out.println("Typechecking successful.");
     }
 
     private static void validate(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {

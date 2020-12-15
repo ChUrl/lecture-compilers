@@ -67,7 +67,7 @@ public final class StupsCompiler {
         tree.postprocess(grammar);
         TypeChecker.validate(tree);
 
-        System.out.println("Compilation completed.");
+        System.out.println("\nCompilation completed.");
     }
 
     private static void liveness(String filename) {

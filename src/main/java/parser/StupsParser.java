@@ -7,8 +7,6 @@ import parser.ast.ASTNode;
 import parser.grammar.Grammar;
 import parser.grammar.GrammarAnalyzer;
 
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
@@ -24,16 +22,13 @@ public class StupsParser {
         this.parsetable = parsetable;
     }
 
-    public static StupsParser fromGrammar(Path path) throws IOException {
-        return StupsParser.fromGrammar(Grammar.fromFile(path));
-    }
-
     public static StupsParser fromGrammar(Grammar grammar) {
         final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
         return new StupsParser(analyzer.getTable());
     }
 
     public AST parse(List<? extends Token> token, Vocabulary voc) {
+        System.out.println(" - Parsing program...");
         final ASTNode root = new ASTNode(this.parsetable.getStartSymbol(), 0);
         final AST tree = new AST(root);
         final Deque<ASTNode> stack = new ArrayDeque<>();
@@ -118,7 +113,7 @@ public class StupsParser {
         log("\nParsed AST:\n" + tree);
         log("-".repeat(100) + "\n");
 
-        System.out.println("- Parsing successful.");
+        System.out.println("Parsing successful.");
 
         return tree;
     }

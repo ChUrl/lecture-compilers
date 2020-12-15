@@ -31,12 +31,14 @@ public class GrammarAnalyzer {
         log("Analyzing Grammar:\n");
 
         // Es muss zwingend in der Reihenfolge [Nullable < First < Follow < Table] initialisiert werden
+        System.out.println(" - Initializing first-set...");
         this.first = this.initFirst();
+        System.out.println(" - Initializing follow-set...");
         this.follow = this.initFollow();
-
+        System.out.println(" - Initializing parse-table...");
         this.table = this.initParseTable();
 
-        System.out.println("\n- Grammar analysis successful.");
+        System.out.println("Grammar analysis successful.");
     }
 
     private Map<String, Set<String>> initFirst() {

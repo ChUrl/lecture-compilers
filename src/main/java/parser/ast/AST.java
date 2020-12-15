@@ -23,6 +23,7 @@ public class AST {
     public void postprocess(Grammar grammar) {
         ASTCompacter.clean(this, grammar);
         ASTBalancer.balance(this);
+        System.out.println("Tree processing successful.");
     }
 
     public AST deepCopy() {

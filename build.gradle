@@ -9,6 +9,16 @@ version '1.0-SNAPSHOT'
 sourceCompatibility = '14'
 mainClassName = 'StupsCompiler'
 
+jar {
+    manifest {
+        attributes "Main-Class": "$mainClassName"
+    }
+
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
 generateGrammarSource {
     outputDirectory = file("src/main/java/lexer")
 }

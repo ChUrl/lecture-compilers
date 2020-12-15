@@ -63,6 +63,7 @@ public class Grammar {
     }
 
     public static Grammar fromFile(Path path) throws IOException {
+        System.out.println(" - Reading parser-grammar...");
         List<String> lines = Files.readAllLines(path);
 
         lines = lines.stream()
@@ -182,6 +183,7 @@ public class Grammar {
 
             log("\n" + actions);
             log("-".repeat(100));
+            System.out.println("Grammar parsed successfully.");
 
             return new Grammar(terminals, nonterminals,
                                startSymbol, epsilonSymbol,

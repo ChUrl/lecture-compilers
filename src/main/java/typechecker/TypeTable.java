@@ -54,6 +54,7 @@ public class TypeTable {
     }
 
     public static TypeTable fromAST(AST tree) {
+        System.out.println(" - Building TypeTable...");
         final Map<String, String> tableOut = new HashMap<>();
 
         log("Creating TypeTable");

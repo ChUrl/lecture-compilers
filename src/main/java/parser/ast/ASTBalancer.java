@@ -52,7 +52,7 @@ public final class ASTBalancer {
         log(tree.toString());
         log("-".repeat(100));
 
-        System.out.println("- Tree balancing successful.");
+        System.out.println(" - Balancing syntax-tree...");
     }
 
     // Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen

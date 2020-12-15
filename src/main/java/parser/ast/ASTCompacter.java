@@ -23,7 +23,7 @@ public final class ASTCompacter {
 
         log("\nCleaned Tree:\n" + tree);
         log("-".repeat(100));
-        System.out.println("- Tree compression successful.");
+        System.out.println(" - Compressing syntax-tree...");
     }
 
     // Entfernt [promote]-able Nodes (Reicht Werte nach oben)
