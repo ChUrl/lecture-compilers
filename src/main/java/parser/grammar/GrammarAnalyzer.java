@@ -91,11 +91,11 @@ public class GrammarAnalyzer {
                                 // ...and epsilon is in all of first(Y1) ... first(Yi-1).
 
                                 // Because a != epsilon
-                                Set<String> firstYiNoEps = firstOut.get(split[i]).stream()
-                                                                   .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
-                                                                   .collect(Collectors.toSet());
+                                final Set<String> firstYiNoEps = firstOut.get(split[i]).stream()
+                                                                         .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                                                         .collect(Collectors.toSet());
 
-                                boolean changeNow = firstOut.get(leftside).addAll(firstYiNoEps);
+                                final boolean changeNow = firstOut.get(leftside).addAll(firstYiNoEps);
                                 change = change || changeNow;
 
                                 logIfTrue(changeNow, "First: Added " + firstYiNoEps + " to " + leftside + " (All before are nullable)");
@@ -104,7 +104,7 @@ public class GrammarAnalyzer {
                             if (i == split.length - 1 && allNullable.test(split)) {
                                 // 2. (b) If epsilon is in first(Y1) ... first(Yk), then add epsilon to first(X).
 
-                                boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                                final boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
                                 change = change || changeNow;
 
                                 logIfTrue(changeNow, "First: Added " + this.grammar.getEpsilonSymbol() + " to " + leftside + " (All are nullable)");
@@ -115,7 +115,7 @@ public class GrammarAnalyzer {
                     if (rightside.equals(this.grammar.getEpsilonSymbol())) {
                         // 3. If X -> epsilon is a production, then add epsilon to first(X).
 
-                        boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                        final boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
                         change = change || changeNow;
 
                         logIfTrue(changeNow, "First: Added " + this.grammar.getEpsilonSymbol() + " to " + leftside + " (X -> EPS exists)");
@@ -177,7 +177,7 @@ public class GrammarAnalyzer {
                                                                      .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
                                                                      .collect(Collectors.toSet());
 
-                                boolean changeNow = followOut.get(split[i - 1]).addAll(firstXkNoEps);
+                                final boolean changeNow = followOut.get(split[i - 1]).addAll(firstXkNoEps);
                                 change = change || changeNow;
 
                                 logIfTrue(changeNow, "Follow: Added " + firstXkNoEps + " to " + split[i - 1] + " (Dazwischen nullable)");
@@ -190,7 +190,7 @@ public class GrammarAnalyzer {
 
                         if (this.allNullable(sub)) {
 
-                            boolean changeNow = followOut.get(split[i - 1]).addAll(followOut.get(leftside));
+                            final boolean changeNow = followOut.get(split[i - 1]).addAll(followOut.get(leftside));
                             change = change || changeNow;
 
                             logIfTrue(changeNow, "Follow: Added " + leftside + " to " + split[i - 1] + " (Dahinter nullable)");
@@ -200,7 +200,7 @@ public class GrammarAnalyzer {
                     if (this.grammar.getNonterminals().contains(split[split.length - 1])) {
                         // 3. (a) If there is a production A -> aB, then everything in follow(A) is in follow(B).
 
-                        boolean changeNow = followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
+                        final boolean changeNow = followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
                         change = change || changeNow;
 
                         logIfTrue(changeNow, "Follow: Added " + followOut.get(leftside) + " to " + split[split.length - 1] + " (Ende der Regel)");
@@ -217,7 +217,7 @@ public class GrammarAnalyzer {
     }
 
     private ParsingTable initParseTable() {
-        Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
+        final Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
 
         log("Parsetable Aufstellen:");
 
@@ -231,7 +231,7 @@ public class GrammarAnalyzer {
                 for (String sym : firstRightside) {
                     // 1. For each terminal t in first(a), add A -> a to table[A, t]
 
-                    String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+                    final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
                     log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in first of " + rightside + ")");
                     logNullable("Overwritten " + prev + "!\n", prev);
@@ -249,7 +249,7 @@ public class GrammarAnalyzer {
                     for (String sym : followLeftside) {
                         // ...for each terminal b in follow(A), add A -> a to table[A, b].
 
-                        String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
+                        final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
                         log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in follow of " + leftside + ")");
                         logNullable("Overwritten " + prev + "!\n", prev);
@@ -258,7 +258,7 @@ public class GrammarAnalyzer {
                     if (followLeftside.contains("$")) {
                         // If epsilon is in first(a) and $ is in follow(A), add A -> a to table[A, $].
 
-                        String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
+                        final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
 
                         log("Add " + rightside + " to cell (" + leftside + ", $) (epsilon in first of " + rightside + " and $ in follow of " + leftside + ")");
                         logNullable("Overwritten " + prev + "!\n", prev);
@@ -305,7 +305,7 @@ public class GrammarAnalyzer {
             if (this.allNullable(sub)) {
                 // X1 ... Xi-1 are nullable, so first(X1 ... Xn) contains first(Xi)
 
-                Set<String> firstXiNoEps;
+                final Set<String> firstXiNoEps;
                 if (split.length == 1 && split[0].equals(this.grammar.getEpsilonSymbol())) {
                     // Stream collect has to be evaluated, doesn't work on empty stream
 

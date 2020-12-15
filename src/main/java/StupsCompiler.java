@@ -37,14 +37,14 @@ public final class StupsCompiler {
         try {
             // Relativer Pfad
 
-            Path programPath = Paths.get(System.getProperty("user.dir") + "/" + filename);
+            final Path programPath = Paths.get(System.getProperty("user.dir") + "/" + filename);
             lexer = new StupsLexer(CharStreams.fromPath(programPath));
         } catch (IOException e) {
 
             try {
                 // Absoluter Pfad
 
-                Path programPath = Paths.get(filename);
+                final Path programPath = Paths.get(filename);
                 lexer = new StupsLexer(CharStreams.fromPath(programPath));
             } catch (IOException ee) {
                 System.out.println("Das Programm konnte nicht gelesen werden.");
@@ -52,18 +52,18 @@ public final class StupsCompiler {
             }
         }
 
-        Grammar grammar;
+        final Grammar grammar;
         try {
-            Path grammarFile = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
+            final Path grammarFile = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
             grammar = Grammar.fromFile(grammarFile);
         } catch (IOException e) {
             System.out.println("Die Grammatik konnte nicht geöffnet werden.");
             return;
         }
 
-        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
+        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
-        AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
+        final AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
         tree.postprocess(grammar);
         TypeChecker.validate(tree);
 

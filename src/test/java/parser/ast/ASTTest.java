@@ -8,9 +8,9 @@ class ASTTest {
 
     @Test
     void testOneNode() {
-        ASTNode root = new ASTNode("Wurzel", 1);
+        final ASTNode root = new ASTNode("Wurzel", 1);
 
-        AST tree = new AST(root);
+        final AST tree = new AST(root);
         System.out.println(tree);
 
         assertThat(tree).hasToString("Wurzel\n");
@@ -18,14 +18,14 @@ class ASTTest {
 
     @Test
     void testThreeNodesBinary() {
-        ASTNode root = new ASTNode("Wurzel", 1);
-        ASTNode childA = new ASTNode("A", 1);
-        ASTNode childB = new ASTNode("B", 1);
+        final ASTNode root = new ASTNode("Wurzel", 1);
+        final ASTNode childA = new ASTNode("A", 1);
+        final ASTNode childB = new ASTNode("B", 1);
 
         root.addChild(childA);
         root.addChild(childB);
 
-        AST tree = new AST(root);
+        final AST tree = new AST(root);
         System.out.println(tree);
 
         assertThat(tree).hasToString("Wurzel\n├── A\n└── B\n");
@@ -33,14 +33,14 @@ class ASTTest {
 
     @Test
     void testThreeNodesLinear() {
-        ASTNode root = new ASTNode("Wurzel", 1);
-        ASTNode childA = new ASTNode("A", 1);
-        ASTNode childB = new ASTNode("B", 1);
+        final ASTNode root = new ASTNode("Wurzel", 1);
+        final ASTNode childA = new ASTNode("A", 1);
+        final ASTNode childB = new ASTNode("B", 1);
 
         root.addChild(childA);
         childA.addChild(childB);
 
-        AST tree = new AST(root);
+        final AST tree = new AST(root);
         System.out.println(tree);
 
         assertThat(tree).hasToString("Wurzel\n└── A\n    └── B\n");

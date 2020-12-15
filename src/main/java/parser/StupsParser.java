@@ -29,14 +29,14 @@ public class StupsParser {
     }
 
     public static StupsParser fromGrammar(Grammar grammar) {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
         return new StupsParser(analyzer.getTable());
     }
 
     public AST parse(List<? extends Token> token, Vocabulary voc) {
-        ASTNode root = new ASTNode(this.parsetable.getStartSymbol(), 0);
-        AST tree = new AST(root);
-        Deque<ASTNode> stack = new ArrayDeque<>();
+        final ASTNode root = new ASTNode(this.parsetable.getStartSymbol(), 0);
+        final AST tree = new AST(root);
+        final Deque<ASTNode> stack = new ArrayDeque<>();
         stack.push(root);
 
         int inputPosition = 0;
@@ -92,16 +92,16 @@ public class StupsParser {
                 // Hier wird auch der AST aufgebaut
 
                 log("Used: " + top + " -> " + prod);
-                ASTNode pop = stack.pop();
+                final ASTNode pop = stack.pop();
 
                 final String[] split = prod.split(" ");
 
                 for (int i = split.length - 1; i >= 0; i--) {
-                    ASTNode node = new ASTNode(split[i], currentLine);
+                    final ASTNode node = new ASTNode(split[i], currentLine);
 
                     if (inputPosition + i < token.size()) {
                         // Die Schleife geht in der Eingabe weiter
-                        Token currentTok = token.get(inputPosition + i);
+                        final Token currentTok = token.get(inputPosition + i);
 
                         // Die Token mit semantischem Inhalt auswählen
                         if ("IDENTIFIER".equals(split[i]) || split[i].endsWith("_LIT")) {
@@ -124,10 +124,10 @@ public class StupsParser {
     }
 
     private void printSourceLine(int line, List<? extends Token> token) {
-        Optional<String> srcLine = token.stream()
-                                        .filter(tok -> tok.getLine() == line)
-                                        .map(Token::getText)
-                                        .reduce((s1, s2) -> s1 + " " + s2);
+        final Optional<String> srcLine = token.stream()
+                                              .filter(tok -> tok.getLine() == line)
+                                              .map(Token::getText)
+                                              .reduce((s1, s2) -> s1 + " " + s2);
 
         srcLine.ifPresent(s -> System.out.println("  :: " + s));
     }

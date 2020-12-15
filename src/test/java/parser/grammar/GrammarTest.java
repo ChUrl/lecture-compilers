@@ -23,9 +23,9 @@ class GrammarTest {
 
     @Test
     void testSimpleGrammar0() throws IOException {
-        Path path = this.getPath("SimpleGrammar0.grammar");
+        final Path path = this.getPath("SimpleGrammar0.grammar");
 
-        Grammar grammar = Grammar.fromFile(path);
+        final Grammar grammar = Grammar.fromFile(path);
         assert grammar != null;
 
         assertThat(grammar.getEpsilonSymbol()).isEqualTo("epsilon");
@@ -39,9 +39,9 @@ class GrammarTest {
 
     @Test
     void testSimpleGrammar1() throws IOException {
-        Path path = this.getPath("SimpleGrammar1.grammar");
+        final Path path = this.getPath("SimpleGrammar1.grammar");
 
-        Grammar grammar = Grammar.fromFile(path);
+        final Grammar grammar = Grammar.fromFile(path);
         assert grammar != null;
 
         System.out.println(grammar.getRules());
