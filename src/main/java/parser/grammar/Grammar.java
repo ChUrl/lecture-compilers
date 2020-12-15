@@ -1,16 +1,26 @@
 package parser.grammar;
 
+import parser.ast.ASTNode;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static parser.grammar.GrammarActions.COMPACT;
-import static parser.grammar.GrammarActions.NULLABLE;
+import static parser.grammar.GrammarAction.DELCHILD;
+import static parser.grammar.GrammarAction.DELIFEMPTY;
+import static parser.grammar.GrammarAction.NAMETOVAL;
+import static parser.grammar.GrammarAction.PROMOTE;
+import static parser.grammar.GrammarAction.RENAMETO;
+import static parser.grammar.GrammarAction.VALTOVAL;
+import static parser.grammar.GrammarAction.values;
 import static util.Logger.log;
 
 public class Grammar {
@@ -21,21 +31,31 @@ public class Grammar {
     private final String epsilonSymbol;
 
     // Actions
-    private final Set<String> compact;
-    private final Set<String> nullable;
+    private final Map<GrammarAction, Set<String>> actions;
+    private final Map<String, String> renameMappings;
+    private final Map<String, List<String>> nameToValMappings;
+    private final Map<String, List<String>> valToValMappings;
+    private final Map<String, List<String>> delChildMappings;
 
     private final Set<GrammarRule> rules;
 
     public Grammar(Set<String> terminals, Set<String> nonterminals,
                    String startSymbol, String epsilonSymbol,
-                   Set<String> compact, Set<String> nullable,
+                   Map<GrammarAction, Set<String>> actions,
+                   Map<String, String> renameMappings,
+                   Map<String, List<String>> nameToValMappings,
+                   Map<String, List<String>> valToValMappings,
+                   Map<String, List<String>> delChildMappings,
                    Set<GrammarRule> rules) {
         this.terminals = terminals;
         this.nonterminals = nonterminals;
         this.startSymbol = startSymbol;
         this.epsilonSymbol = epsilonSymbol;
-        this.compact = compact;
-        this.nullable = nullable;
+        this.actions = actions;
+        this.renameMappings = renameMappings;
+        this.nameToValMappings = nameToValMappings;
+        this.valToValMappings = valToValMappings;
+        this.delChildMappings = delChildMappings;
         this.rules = rules;
     }
 
@@ -48,20 +68,35 @@ public class Grammar {
                      .collect(Collectors.toUnmodifiableList());
 
         try {
+            // Grammar
             String startSymbol = "";
             String epsilonSymbol = "";
-            Set<String> terminals = new HashSet<>();
-            Set<String> nonterminals = new HashSet<>();
+            final Set<String> terminals = new HashSet<>();
+            final Set<String> nonterminals = new HashSet<>();
+            final Set<GrammarRule> rules = new HashSet<>();
 
-            Set<String> compact = new HashSet<>();
-            Set<String> nullable = new HashSet<>();
-            Set<GrammarRule> rules = new HashSet<>();
+            // Actions
+            final Map<GrammarAction, Set<String>> actions = new EnumMap<>(GrammarAction.class);
+            final Map<String, String> renameMappings = new HashMap<>();
+            final Map<String, List<String>> nameToValMappings = new HashMap<>();
+            final Map<String, List<String>> valToValMappings = new HashMap<>();
+            final Map<String, List<String>> delChildMappings = new HashMap<>();
+
+            for (GrammarAction action : GrammarAction.values()) {
+                actions.put(action, new HashSet<>());
+            }
+
+            // Init for validity check
+            final Set<String> actionSet = Arrays.stream(values())
+                                                .map(Enum::toString)
+                                                .collect(Collectors.toUnmodifiableSet());
 
             log("Parsing Grammar from File:");
             for (String line : lines) {
 
                 log("Parsed: " + line);
 
+                // Parse Keywords
                 if (line.startsWith("START:")) {
 
                     startSymbol = line.split(" ")[1];
@@ -75,67 +110,83 @@ public class Grammar {
 
                     nonterminals.addAll(Arrays.stream(line.split(" ")).skip(1).collect(Collectors.toSet()));
                 } else {
-                    // "S[] -> E T2 | EPS" wird zu leftside = "S[]" und rightside = "E T2 | epsilon"
-                    String[] split = line.replaceAll("EPS", epsilonSymbol)
-                                         .split("->");
+                    // Parse Grammar Rules + Actions
 
+                    // "S[...] -> E T2 | EPS" wird zu leftside = "S[...]" und rightside = "E T2 | eps"
+                    final String[] split = line.replaceAll("EPS", epsilonSymbol)
+                                               .split("->");
                     String leftside = split[0].trim();
-                    String rightside = split[1].trim();
+                    final String rightside = split[1].trim();
 
-                    if (leftside.indexOf('[') >= 0) {
-                        // Handle actions if they exist
+                    if (leftside.indexOf('[') >= 0 && leftside.indexOf(']') >= 0) {
+                        // Handle actions if they are given
 
-                        int open = leftside.indexOf('[');
-                        int close = leftside.indexOf(']');
+                        final int open = leftside.indexOf('[');
+                        final int close = leftside.indexOf(']');
 
-                        // Aus "S[C R]" wird flags = {"C", "R"} extrahiert
-                        String[] flags = leftside.substring(open + 1, close).split(" ");
-                        List<String> flagList = Arrays.stream(flags)
-                                                      .map(String::trim)
-                                                      .filter(flag -> !flag.isEmpty())
-                                                      .collect(Collectors.toList());
+                        // Aus "S[C R=...]" wird flags = {"C", "R=..."}
+                        final String[] flags = leftside.substring(open + 1, close).split(" ");
+                        final Set<String> flagSet = Arrays.stream(flags)
+                                                          .map(String::trim)
+                                                          .filter(flag -> !flag.isEmpty())
+                                                          .collect(Collectors.toUnmodifiableSet());
 
                         // Check for action validity
-                        List<String> enumActions = Arrays.stream(GrammarActions.values())
-                                                         .map(action -> action.toString().toLowerCase())
-                                                         .collect(Collectors.toList());
-                        for (String flag : flagList) {
-                            if (!enumActions.contains(flag)) {
-                                throw new GrammarParseException("Falsche Action in Grammatik");
+                        for (String flag : flagSet) {
+                            if (!actionSet.contains(flag.split("=")[0].toUpperCase())) {
+                                throw new GrammarParseException("Invalid Action: " + flag);
                             }
                         }
 
-                        // "S[C R]" wird zu "S"
+                        // "S[C R=...]" wird zu "S"
                         leftside = leftside.substring(0, open).trim();
 
-                        // Register action
-                        if (flagList.contains(COMPACT.toString().toLowerCase())) {
-                            compact.add(leftside.trim());
-                            log("Registered compact: " + leftside.trim());
-                        }
-                        if (flagList.contains(NULLABLE.toString().toLowerCase())) {
-                            nullable.add(leftside.trim());
-                            log("Registered nullable: " + leftside.trim());
+                        // Register actions, flagSet = {"C", "R=..."}
+                        for (String flag : flagSet) {
+                            final String[] flagSplit = flag.split("=");
+                            final GrammarAction action = GrammarAction.valueOf(flagSplit[0].toUpperCase());
+
+                            actions.get(action).add(leftside.trim());
+                            log("Registered " + flag + ": " + leftside.trim());
+
+                            if (flagSplit.length > 1) {
+                                // Handle Action with arguments
+
+                                // "R=A,B,C" -> argSplit = {"A", "B", "C"}
+                                final int argStart = flag.indexOf('=');
+                                final String[] argSplit = flag.substring(argStart + 1).split(",");
+
+                                switch (action) {
+                                    case DELCHILD -> delChildMappings.put(leftside, Arrays.asList(argSplit));
+                                    case VALTOVAL -> valToValMappings.put(leftside, Arrays.asList(argSplit));
+                                    case NAMETOVAL -> nameToValMappings.put(leftside, Arrays.asList(argSplit));
+                                    case RENAMETO -> renameMappings.put(leftside, argSplit[0]);
+                                }
+                            }
                         }
                     }
 
                     // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
-                    String[] prods = rightside.split("\\|");
+                    final String[] prods = rightside.split("\\|");
 
                     for (String prod : prods) {
-                        GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
+                        final GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
                         rules.add(rule);
 
                     }
                 }
             }
 
-            log("\n" + compact);
+            log("\n" + actions);
             log("-".repeat(100));
 
             return new Grammar(terminals, nonterminals,
                                startSymbol, epsilonSymbol,
-                               compact, nullable,
+                               actions,
+                               renameMappings,
+                               nameToValMappings,
+                               valToValMappings,
+                               delChildMappings,
                                rules);
         } catch (Exception e) {
             log("Die Grammatik kann nicht gelesen werden!");
@@ -179,11 +230,90 @@ public class Grammar {
                          .collect(Collectors.toUnmodifiableSet());
     }
 
-    public boolean hasCompact(String leftside) {
-        return this.compact != null && this.compact.contains(leftside);
+    // Actions ---------------------------------------------------------------------------------------------------------
+
+    /**
+     * Es wird nicht root promoted, sondern roots einziges Kind.
+     * Checkt auch auf Anzahl der Kinder.
+     */
+    public boolean canPromoteChild(ASTNode root) {
+        return this.canPromoteChild(root.getName())
+               && root.getChildren().size() == 1
+               && root.getValue().isEmpty();
     }
 
-    public boolean hasNullable(String leftside) {
-        return this.nullable != null && this.nullable.contains(leftside);
+    private boolean canPromoteChild(String sym) {
+        return this.actions.get(PROMOTE).contains(sym);
+    }
+
+
+    /**
+     * Checkt auch auf Anzahl der Kinder und vorhandene Value.
+     */
+    public boolean canDeleteIfEmpty(ASTNode root) {
+        return this.canDeleteIfEmpty(root.getName())
+               && root.getValue().isEmpty()
+               && !root.hasChildren();
+    }
+
+    public boolean canDeleteIfEmpty(String sym) {
+        return this.actions.get(DELIFEMPTY).contains(sym);
+    }
+
+
+    /**
+     * Checkt auch auf Anzahl der Kinder.
+     * Epsilon-Knoten werden immer gelöscht.
+     */
+    public boolean canDeleteChild(ASTNode parent, ASTNode child) {
+        return this.canDeleteChild(parent.getName(), child.getName())
+               && !child.hasChildren();
+    }
+
+    public boolean canDeleteChild(String parent, String child) {
+        return (this.actions.get(DELCHILD).contains(parent)
+                && this.delChildMappings.get(parent).contains(child))
+               || (child.equals(this.epsilonSymbol));
+    }
+
+
+    public boolean canBeRenamed(ASTNode root) {
+        return this.canBeRenamed(root.getName());
+    }
+
+    public boolean canBeRenamed(String sym) {
+        return this.actions.get(RENAMETO).contains(sym);
+    }
+
+    public String getNewName(ASTNode root) {
+        return this.getNewName(root.getName());
+    }
+
+    public String getNewName(String sym) {
+        return this.renameMappings.get(sym);
+    }
+
+
+    public boolean hasValToVal(ASTNode parent, ASTNode child) {
+        return this.hasValToVal(parent.getName(), child.getName());
+    }
+
+    public boolean hasValToVal(String parent, String child) {
+        return this.actions.get(VALTOVAL).contains(parent)
+               && this.valToValMappings.get(parent).contains(child);
+    }
+
+
+    /**
+     * Checkt auch auf bereits existierende Values.
+     */
+    public boolean canMoveNameToVal(ASTNode parent, ASTNode child) {
+        return this.canMoveNameToVal(parent.getName(), child.getName())
+               && parent.getValue().isEmpty();
+    }
+
+    public boolean canMoveNameToVal(String parent, String child) {
+        return this.actions.get(NAMETOVAL).contains(parent)
+               && this.nameToValMappings.get(parent).contains(child);
     }
 }
