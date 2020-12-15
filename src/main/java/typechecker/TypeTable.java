@@ -4,6 +4,7 @@ import parser.ast.AST;
 import parser.ast.ASTNode;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,50 +18,39 @@ public class TypeTable {
     private final Map<String, List<String>> methodArgumentTable;
 
     public TypeTable(Map<String, String> symbolTable) {
-        this.symbolTable = symbolTable;
+        this.symbolTable = Collections.unmodifiableMap(symbolTable);
 
         // Enthält die Return-Types der Operatoren
-        final Map<String, String> methodTable = new HashMap<>();
 
-        methodTable.put("ADD", "INTEGER_TYPE");
-        methodTable.put("SUB", "INTEGER_TYPE");
-        methodTable.put("MUL", "INTEGER_TYPE");
-        methodTable.put("DIV", "INTEGER_TYPE");
-        methodTable.put("MOD", "INTEGER_TYPE");
+        this.methodReturnTable = Map.ofEntries(Map.entry("ADD", "INTEGER_TYPE"),
+                                               Map.entry("SUB", "INTEGER_TYPE"),
+                                               Map.entry("MUL", "INTEGER_TYPE"),
+                                               Map.entry("DIV", "INTEGER_TYPE"),
+                                               Map.entry("MOD", "INTEGER_TYPE"),
+                                               Map.entry("NOT", "BOOLEAN_TYPE"),
+                                               Map.entry("AND", "BOOLEAN_TYPE"),
+                                               Map.entry("OR", "BOOLEAN_TYPE"),
+                                               Map.entry("LESS", "BOOLEAN_TYPE"),
+                                               Map.entry("LESS_EQUAL", "BOOLEAN_TYPE"),
+                                               Map.entry("GREATER", "BOOLEAN_TYPE"),
+                                               Map.entry("GREATER_EQUAL", "BOOLEAN_TYPE"),
+                                               Map.entry("EQUAL", "BOOLEAN_TYPE"),
+                                               Map.entry("NOT_EQUAL", "BOOLEAN_TYPE"));
 
-        methodTable.put("NOT", "BOOLEAN_TYPE");
-        methodTable.put("AND", "BOOLEAN_TYPE");
-        methodTable.put("OR", "BOOLEAN_TYPE");
-
-        methodTable.put("LESS", "BOOLEAN_TYPE");
-        methodTable.put("LESS_EQUAL", "BOOLEAN_TYPE");
-        methodTable.put("GREATER", "BOOLEAN_TYPE");
-        methodTable.put("GREATER_EQUAL", "BOOLEAN_TYPE");
-        methodTable.put("EQUAL", "BOOLEAN_TYPE");
-        methodTable.put("NOT_EQUAL", "BOOLEAN_TYPE");
-
-        this.methodReturnTable = methodTable;
-
-        final Map<String, List<String>> argumentTable = new HashMap<>();
-
-        argumentTable.put("ADD", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("SUB", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("MUL", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("DIV", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("MOD", Arrays.asList("INTEGER_TYPE"));
-
-        argumentTable.put("AND", Arrays.asList("BOOLEAN_TYPE"));
-        argumentTable.put("OR", Arrays.asList("BOOLEAN_TYPE"));
-        argumentTable.put("NOT", Arrays.asList("BOOLEAN_TYPE"));
-
-        argumentTable.put("LESS", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("LESS_EQUAL", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("GREATER", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("GREATER_EQUAL", Arrays.asList("INTEGER_TYPE"));
-        argumentTable.put("EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE"));
-        argumentTable.put("NOT_EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE"));
-
-        this.methodArgumentTable = argumentTable;
+        this.methodArgumentTable = Map.ofEntries(Map.entry("ADD", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("SUB", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("MUL", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("DIV", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("MOD", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("AND", Arrays.asList("BOOLEAN_TYPE")),
+                                                 Map.entry("OR", Arrays.asList("BOOLEAN_TYPE")),
+                                                 Map.entry("NOT", Arrays.asList("BOOLEAN_TYPE")),
+                                                 Map.entry("LESS", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("LESS_EQUAL", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("GREATER", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("GREATER_EQUAL", Arrays.asList("INTEGER_TYPE")),
+                                                 Map.entry("EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE")),
+                                                 Map.entry("NOT_EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE")));
     }
 
     public static TypeTable fromAST(AST tree) {

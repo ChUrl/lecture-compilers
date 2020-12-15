@@ -4,6 +4,7 @@ import parser.grammar.Grammar;
 import parser.grammar.GrammarAnalyzer;
 
 import java.util.AbstractMap.SimpleEntry;
+import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
@@ -19,11 +20,11 @@ public class ParsingTable {
 
     public ParsingTable(Grammar grammar, Map<Entry<String, String>, String> parsetable) {
         this.grammar = grammar;
-        this.parsetable = parsetable;
+        this.parsetable = Collections.unmodifiableMap(parsetable);
     }
 
     public static ParsingTable fromGrammar(Grammar grammar) {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
         return analyzer.getTable();
     }
 
@@ -49,16 +50,16 @@ public class ParsingTable {
 
     @Override
     public String toString() {
-        StringBuilder output = new StringBuilder();
-        Formatter format = new Formatter(output);
+        final StringBuilder output = new StringBuilder();
+        final Formatter format = new Formatter(output);
 
-        List<String> inputSymbols = this.parsetable.keySet().stream()
-                                                   .map(Entry::getValue)
-                                                   .distinct()
-                                                   .collect(Collectors.toList());
+        final List<String> inputSymbols = this.parsetable.keySet().stream()
+                                                         .map(Entry::getValue)
+                                                         .distinct()
+                                                         .collect(Collectors.toList());
 
-        // Determine margins
-        Map<String, Integer> margins = new HashMap<>();
+        // Determine margins (column-sizes)
+        final Map<String, Integer> margins = new HashMap<>();
         margins.put("NTERM", 0);
         for (String terminal : inputSymbols) {
             margins.put(terminal, 0);
@@ -69,17 +70,16 @@ public class ParsingTable {
             margins.put("NTERM", Math.max(margins.get("NTERM"), nonterminal.length()));
 
             for (String terminal : inputSymbols) {
-                String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
+                final String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
 
-                int length;
+                final int length;
                 if (prod == null) {
                     length = 0;
                 } else {
                     length = prod.length();
                 }
 
-                margins.put(terminal, Math.max(margins.get(terminal), length));
-                margins.put(terminal, Math.max(margins.get(terminal), terminal.length()));
+                margins.put(terminal, Math.max(margins.get(terminal), Math.max(length, terminal.length())));
             }
         }
 
@@ -103,7 +103,7 @@ public class ParsingTable {
             format.format("%-Xs| ".replaceAll("X", String.valueOf(margins.get("NTERM"))), nonterminal);
 
             for (String terminal : inputSymbols) {
-                String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
+                final String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
                 format.format("%-Xs ".replaceAll("X", String.valueOf(margins.get(terminal))), prod == null ? " ".repeat(9) : prod);
             }
             output.append("|\n");

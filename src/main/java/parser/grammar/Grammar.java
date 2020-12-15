@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -47,16 +48,18 @@ public class Grammar {
                    Map<String, List<String>> valToValMappings,
                    Map<String, List<String>> delChildMappings,
                    Set<GrammarRule> rules) {
-        this.terminals = terminals;
-        this.nonterminals = nonterminals;
+
+        this.terminals = Collections.unmodifiableSet(terminals);
+        this.nonterminals = Collections.unmodifiableSet(nonterminals);
+        this.rules = Collections.unmodifiableSet(rules);
         this.startSymbol = startSymbol;
         this.epsilonSymbol = epsilonSymbol;
-        this.actions = actions;
-        this.renameMappings = renameMappings;
-        this.nameToValMappings = nameToValMappings;
-        this.valToValMappings = valToValMappings;
-        this.delChildMappings = delChildMappings;
-        this.rules = rules;
+
+        this.actions = Collections.unmodifiableMap(actions);
+        this.renameMappings = Collections.unmodifiableMap(renameMappings);
+        this.nameToValMappings = Collections.unmodifiableMap(nameToValMappings);
+        this.valToValMappings = Collections.unmodifiableMap(valToValMappings);
+        this.delChildMappings = Collections.unmodifiableMap(delChildMappings);
     }
 
     public static Grammar fromFile(Path path) throws IOException {
