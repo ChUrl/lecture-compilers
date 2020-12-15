@@ -124,7 +124,17 @@ public final class TypeChecker {
 
                 throw new OperatorTypeMismatchException("Versuche Operator " + op + " mit Argument vom Typ " + nodeTable.get(child) + " aufzurufen.");
             }
+        }
 
+        if ("EQUAL".equals(op) || "NOT_EQUAL".equals(op)) {
+            final ASTNode left = root.getChildren().get(0);
+            final ASTNode right = root.getChildren().get(1);
+
+            if (!nodeTable.get(left).equals(nodeTable.get(right))) {
+                System.out.println("Line " + root.getLine() + " Typeerror: Can't use [" + op + "] with arguments of type [" + nodeTable.get(left) + "] and [" + nodeTable.get(right) + "]");
+
+                throw new OperatorTypeMismatchException("Versuche Operator" + op + " mit Argumenten ungleichen Types zu verwenden.");
+            }
         }
     }
 
