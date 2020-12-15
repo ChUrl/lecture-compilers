@@ -6,20 +6,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class ASTBalancerTest {
 
-    //EXPR
-    //├── EXPR: SUB
+    //expr
+    //├── expr: SUB
     //|   └── INTEGER_LIT: 2
     //└── INTEGER_LIT: 1
     private static AST tree1() {
-        AST tree = new AST(new ASTNode("EXPR", 1));
+        final AST tree = new AST(new ASTNode("epxr", 1));
 
-        ASTNode right = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode right = new ASTNode("INTEGER_LIT", 1);
         right.setValue("1");
 
-        ASTNode left = new ASTNode("EXPR", 1);
+        final ASTNode left = new ASTNode("expr", 1);
         left.setValue("SUB");
 
-        ASTNode lleft = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode lleft = new ASTNode("INTEGER_LIT", 1);
         lleft.setValue("2");
         left.setChildren(lleft);
 
@@ -29,21 +29,21 @@ class ASTBalancerTest {
     }
 
     private static AST tree2() {
-        AST tree = new AST(new ASTNode("EXPR", 1));
+        final AST tree = new AST(new ASTNode("expr", 1));
 
-        ASTNode right = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode right = new ASTNode("INTEGER_LIT", 1);
         right.setValue("1");
 
-        ASTNode left = new ASTNode("EXPR", 1);
+        final ASTNode left = new ASTNode("expr", 1);
         left.setValue("SUB");
 
-        ASTNode lleft = new ASTNode("EXPR", 1);
+        final ASTNode lleft = new ASTNode("expr", 1);
         lleft.setValue("SUB");
 
-        ASTNode lright = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode lright = new ASTNode("INTEGER_LIT", 1);
         lright.setValue("2");
 
-        ASTNode llleft = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode llleft = new ASTNode("INTEGER_LIT", 1);
         llleft.setValue("3");
 
         lleft.setChildren(llleft);
@@ -55,21 +55,21 @@ class ASTBalancerTest {
     }
 
     private static AST tree3() {
-        AST tree = new AST(new ASTNode("EXPR", 1));
+        final AST tree = new AST(new ASTNode("expr", 1));
 
-        ASTNode right = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode right = new ASTNode("INTEGER_LIT", 1);
         right.setValue("1");
 
-        ASTNode left = new ASTNode("EXPR", 1);
+        final ASTNode left = new ASTNode("expr", 1);
         left.setValue("SUB");
 
-        ASTNode lleft = new ASTNode("EXPR", 1);
+        final ASTNode lleft = new ASTNode("expr", 1);
         lleft.setValue("MUL");
 
-        ASTNode lright = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode lright = new ASTNode("INTEGER_LIT", 1);
         lright.setValue("2");
 
-        ASTNode llleft = new ASTNode("INTEGER_LIT", 1);
+        final ASTNode llleft = new ASTNode("INTEGER_LIT", 1);
         llleft.setValue("3");
 
         lleft.setChildren(llleft);
@@ -82,19 +82,19 @@ class ASTBalancerTest {
 
     @Test
     void testTree1Flip() {
-        AST tree = tree1();
+        final AST tree = tree1();
         System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
-        assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("EXPR");
+        assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("expr");
     }
 
     @Test
     void testTree1Flip2x() {
-        AST tree = tree1();
+        final AST tree = tree1();
         System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
@@ -106,21 +106,21 @@ class ASTBalancerTest {
 
     @Test
     void testTree2Flip() {
-        AST tree = tree2();
+        final AST tree = tree2();
         System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
         System.out.println("After:\n" + tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
-        assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("EXPR");
+        assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("expr");
         assertThat(tree.getRoot().getChildren().get(1).getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
-        assertThat(tree.getRoot().getChildren().get(1).getChildren().get(1).getName()).isEqualTo("EXPR");
+        assertThat(tree.getRoot().getChildren().get(1).getChildren().get(1).getName()).isEqualTo("expr");
     }
 
     @Test
     void testTree2Flip2x() {
-        AST tree = tree2();
+        final AST tree = tree2();
         System.out.println("Before:\n" + tree);
 
         ASTBalancer.flip(tree);
@@ -132,7 +132,7 @@ class ASTBalancerTest {
 
     @Test
     void testTree1LeftPrecedence() {
-        AST tree = tree1();
+        final AST tree = tree1();
         ASTBalancer.flip(tree);
         System.out.println("Before:\n" + tree);
 
@@ -145,7 +145,7 @@ class ASTBalancerTest {
 
     @Test
     void testTree2LeftPrecedence() {
-        AST tree = tree2();
+        final AST tree = tree2();
         ASTBalancer.flip(tree);
         System.out.println("Before:\n" + tree);
 
@@ -158,12 +158,12 @@ class ASTBalancerTest {
 
     @Test
     void testTree2OperatorPrecedence() {
-        AST tree = tree2();
+        final AST tree = tree2();
         ASTBalancer.flip(tree);
         ASTBalancer.leftPrecedence(tree);
         System.out.println("Before:\n" + tree);
 
-        AST tree1 = tree2();
+        final AST tree1 = tree2();
         ASTBalancer.flip(tree1);
         ASTBalancer.leftPrecedence(tree1);
 
@@ -175,7 +175,7 @@ class ASTBalancerTest {
 
     @Test
     void testTree3OperatorPrecedence() {
-        AST tree = tree3();
+        final AST tree = tree3();
         ASTBalancer.flip(tree);
         ASTBalancer.leftPrecedence(tree);
         System.out.println("Before:\n" + tree);
