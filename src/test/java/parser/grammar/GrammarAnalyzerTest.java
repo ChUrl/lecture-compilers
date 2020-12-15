@@ -24,23 +24,24 @@ class GrammarAnalyzerTest {
          E -> b
          */
 
-        Set<String> nonterminals;
-        String[] narray = {"S", "E"};
+        final Set<String> nonterminals;
+        final String[] narray = {"S", "E"};
         nonterminals = new HashSet<>(Arrays.asList(narray));
 
-        Set<String> terminals;
-        String[] tarray = {"a", "b", "e", "i", "t"};
+        final Set<String> terminals;
+        final String[] tarray = {"a", "b", "e", "i", "t"};
         terminals = new HashSet<>(Arrays.asList(tarray));
 
-        String startSymbol = "S";
-        String epsilonSymbol = "epsilon";
+        final String startSymbol = "S";
+        final String epsilonSymbol = "epsilon";
 
-        Set<GrammarRule> rules = new HashSet<>();
+        final Set<GrammarRule> rules = new HashSet<>();
         rules.add(new GrammarRule("S", "a"));
         rules.add(new GrammarRule("S", "i", "E", "t", "S"));
         rules.add(new GrammarRule("E", "b"));
 
-        grammar0 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null, rules);
+        grammar0 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null,
+                               null, null, null, rules);
     }
 
     @BeforeAll
@@ -49,18 +50,18 @@ class GrammarAnalyzerTest {
          Folie 4b/32
          */
 
-        Set<String> nonterminals;
-        String[] narray = {"E", "T", "E2", "T2", "F"};
+        final Set<String> nonterminals;
+        final String[] narray = {"E", "T", "E2", "T2", "F"};
         nonterminals = new HashSet<>(Arrays.asList(narray));
 
-        Set<String> terminals;
-        String[] tarray = {"id", "+", "*", "(", ")"};
+        final Set<String> terminals;
+        final String[] tarray = {"id", "+", "*", "(", ")"};
         terminals = new HashSet<>(Arrays.asList(tarray));
 
-        String startSymbol = "E";
-        String epsilonSymbol = "epsilon";
+        final String startSymbol = "E";
+        final String epsilonSymbol = "epsilon";
 
-        Set<GrammarRule> rules = new HashSet<>();
+        final Set<GrammarRule> rules = new HashSet<>();
         rules.add(new GrammarRule("E", "T", "E2"));
         rules.add(new GrammarRule("E2", "+", "T", "E2"));
         rules.add(new GrammarRule("E2", epsilonSymbol));
@@ -70,7 +71,8 @@ class GrammarAnalyzerTest {
         rules.add(new GrammarRule("F", "(", "E", ")"));
         rules.add(new GrammarRule("F", "id"));
 
-        grammar1 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null, rules);
+        grammar1 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null,
+                               null, null, null, rules);
     }
 
     @BeforeAll
@@ -84,18 +86,18 @@ class GrammarAnalyzerTest {
          X -> a
          */
 
-        Set<String> nonterminals;
-        String[] narray = {"X", "Y", "Z"};
+        final Set<String> nonterminals;
+        final String[] narray = {"X", "Y", "Z"};
         nonterminals = new HashSet<>(Arrays.asList(narray));
 
-        Set<String> terminals;
-        String[] tarray = {"a", "c", "d"};
+        final Set<String> terminals;
+        final String[] tarray = {"a", "c", "d"};
         terminals = new HashSet<>(Arrays.asList(tarray));
 
-        String startSymbol = "Z";
-        String epsilonSymbol = "epsilon";
+        final String startSymbol = "Z";
+        final String epsilonSymbol = "epsilon";
 
-        Set<GrammarRule> rules = new HashSet<>();
+        final Set<GrammarRule> rules = new HashSet<>();
         rules.add(new GrammarRule("Z", "d"));
         rules.add(new GrammarRule("Z", "X", "Y", "Z"));
         rules.add(new GrammarRule("Y", epsilonSymbol));
@@ -103,12 +105,13 @@ class GrammarAnalyzerTest {
         rules.add(new GrammarRule("X", "Y"));
         rules.add(new GrammarRule("X", "a"));
 
-        grammar2 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null, rules);
+        grammar2 = new Grammar(terminals, nonterminals, startSymbol, epsilonSymbol, null, null,
+                               null, null, null, rules);
     }
 
     @Test
     void testFirstGrammar0() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
 
         assertThat(analyzer.getFirst().get("S")).containsOnly("i", "a");
         assertThat(analyzer.getFirst().get("E")).containsOnly("b");
@@ -116,7 +119,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar1() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
 
         assertThat(analyzer.getFirst().get("E")).containsOnly("id", "(");
         assertThat(analyzer.getFirst().get("E2")).containsOnly("+", grammar1.getEpsilonSymbol());
@@ -127,7 +130,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar2() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
 
         assertThat(analyzer.getFirst().get("X")).containsOnly("c", "a", grammar2.getEpsilonSymbol());
         assertThat(analyzer.getFirst().get("Y")).containsOnly("c", grammar2.getEpsilonSymbol());
@@ -136,7 +139,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar0() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
 
         assertThat(analyzer.getFollow().get("S")).containsOnly("$");
         assertThat(analyzer.getFollow().get("E")).containsOnly("t");
@@ -144,7 +147,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar1() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
 
         assertThat(analyzer.getFollow().get("E")).containsOnly(")", "$");
         assertThat(analyzer.getFollow().get("E2")).containsOnly(")", "$");
@@ -155,7 +158,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar2() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
 
         assertThat(analyzer.getFollow().get("X")).containsOnly("a", "c", "d");
         assertThat(analyzer.getFollow().get("Y")).containsOnly("a", "c", "d");
@@ -164,8 +167,8 @@ class GrammarAnalyzerTest {
 
     @Test
     void testTableGrammar1() {
-        GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
-        ParsingTable table = analyzer.getTable();
+        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        final ParsingTable table = analyzer.getTable();
 
         assertThat(table.get("E", "id")).isEqualTo("T E2");
         assertThat(table.get("E", "(")).isEqualTo("T E2");

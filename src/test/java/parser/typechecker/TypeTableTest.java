@@ -8,7 +8,7 @@ import parser.StupsParser;
 import parser.ast.AST;
 import parser.grammar.Grammar;
 import typechecker.SymbolAlreadyDefinedException;
-import typechecker.SymbolTable;
+import typechecker.TypeTable;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,12 +20,12 @@ import java.nio.file.Paths;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class SymbolTableTest {
+class TypeTableTest {
 
     private Lexer initLexer(String program) {
         try {
-            Path path = Paths.get(this.getClass().getClassLoader().getResource("examplePrograms/" + program).toURI());
-            String programCode = Files.readString(path, StandardCharsets.US_ASCII);
+            final Path path = Paths.get(this.getClass().getClassLoader().getResource("examplePrograms/" + program).toURI());
+            final String programCode = Files.readString(path, StandardCharsets.US_ASCII);
             return new StupsLexer(CharStreams.fromString(programCode));
         } catch (Exception ignore) {
             ignore.printStackTrace();
@@ -36,15 +36,15 @@ class SymbolTableTest {
 
     @Test
     void testSingleSymbol() throws URISyntaxException, IOException {
-        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Grammar grammar = Grammar.fromFile(path);
-        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
+        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Grammar grammar = Grammar.fromFile(path);
+        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
-        Lexer lex = this.initLexer("SingleSymbol.stups");
-        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+        final Lexer lex = this.initLexer("SingleSymbol.stups");
+        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
         tree.postprocess(grammar);
 
-        SymbolTable table = SymbolTable.fromAST(tree);
+        final TypeTable table = TypeTable.fromAST(tree);
 
         assertThat(table.getSymbolType("i")).isEqualTo("INTEGER_TYPE");
         assertThat(table.getSymbolCount()).isEqualTo(1);
@@ -52,15 +52,15 @@ class SymbolTableTest {
 
     @Test
     void testMultipleSymbol() throws URISyntaxException, IOException {
-        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Grammar grammar = Grammar.fromFile(path);
-        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
+        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Grammar grammar = Grammar.fromFile(path);
+        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
-        Lexer lex = this.initLexer("MultipleSymbol.stups");
-        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+        final Lexer lex = this.initLexer("MultipleSymbol.stups");
+        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
         tree.postprocess(grammar);
 
-        SymbolTable table = SymbolTable.fromAST(tree);
+        final TypeTable table = TypeTable.fromAST(tree);
 
         assertThat(table.getSymbolType("i")).isEqualTo("INTEGER_TYPE");
         assertThat(table.getSymbolType("ii")).isEqualTo("INTEGER_TYPE");
@@ -73,14 +73,14 @@ class SymbolTableTest {
 
     @Test
     void testExistingSymbol() throws URISyntaxException, IOException {
-        Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
-        Grammar grammar = Grammar.fromFile(path);
-        StupsParser stupsParser = StupsParser.fromGrammar(grammar);
+        final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Grammar grammar = Grammar.fromFile(path);
+        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
-        Lexer lex = this.initLexer("ExistingSymbol.stups");
-        AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+        final Lexer lex = this.initLexer("ExistingSymbol.stups");
+        final AST tree = stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
         tree.postprocess(grammar);
 
-        assertThatThrownBy(() -> SymbolTable.fromAST(tree)).isInstanceOf(SymbolAlreadyDefinedException.class);
+        assertThatThrownBy(() -> TypeTable.fromAST(tree)).isInstanceOf(SymbolAlreadyDefinedException.class);
     }
 }
