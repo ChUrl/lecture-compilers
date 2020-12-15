@@ -32,6 +32,7 @@ public final class StupsCompiler {
 
     private static void compile(String filename) {
         System.out.println("Beginning compilation.");
+        final long begin = System.nanoTime();
 
         Lexer lexer;
         try {
@@ -67,7 +68,8 @@ public final class StupsCompiler {
         tree.postprocess(grammar);
         TypeChecker.validate(tree);
 
-        System.out.println("\nCompilation completed.");
+        final long end = System.nanoTime();
+        System.out.printf("%nCompilation completed in %dms.%n", (end - begin) / 1_000_000);
     }
 
     private static void liveness(String filename) {
