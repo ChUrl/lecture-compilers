@@ -1,8 +1,0 @@
-START: stmt
-EPS: epsilon
-TERM: expr if else then other
-NTERM: stmt matched open
-
-stmt -> matched | open
-matched -> if expr then matched else matched | other
-open -> if expr then stmt | if expr then matched else open
