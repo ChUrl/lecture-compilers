@@ -49,7 +49,8 @@ class LexerGrammarParserTest {
                             "DeclarationAssignment.stups",
                             "Expr.stups",
                             "GeneralWhile.stups",
-                            "GeneralIfElse.stups"})
+                            "GeneralIfElse.stups",
+                            "Println.stups"})
     void testCorrectPrograms(String prog) {
         final Lexer lex = getLexer(prog);
 

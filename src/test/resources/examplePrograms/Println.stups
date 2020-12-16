@@ -1,0 +1,15 @@
+class MyClass {
+    public static void main(String[] args) {
+        int x = 1;
+        String y = "Hey";
+        boolean z = false;
+
+        System.out.println("Hey");
+        System.out.println(true);
+        System.out.println(5);
+
+        System.out.println(x);
+        System.out.println(y);
+        System.out.println(z);
+    }
+}
