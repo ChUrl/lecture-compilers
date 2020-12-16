@@ -1,0 +1,5 @@
+class MyClass {
+    public static void mainmain(String[] args) {
+        int i = 1;
+    }
+}

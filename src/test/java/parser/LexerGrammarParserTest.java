@@ -16,6 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class LexerGrammarParserTest {
 
@@ -49,9 +50,26 @@ class LexerGrammarParserTest {
                             "Expr.stups",
                             "GeneralWhile.stups",
                             "GeneralIfElse.stups"})
-    void testVariousPrograms(String prog) {
+    void testCorrectPrograms(String prog) {
         final Lexer lex = getLexer(prog);
 
         assertThat(parser.parse(lex.getAllTokens(), lex.getVocabulary())).isNotNull();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"FailingSemicolon.stups",
+                            "FailingMissingBrace.stups",
+                            "FailingMissingBrace2.stups",
+                            "FailingMissingMain.stups",
+                            "FailingMissingMain2.stups",
+                            "FailingEmptyParExpr.stups",
+                            "FailingEmptyParExpr2.stups",
+                            "FailingWrongStatement.stups",
+                            "FailingWrongStatement2.stups",
+                            "FailingWrongStatement3.stups"})
+    void testIncorrectPrograms(String prog) {
+        final Lexer lex = getLexer(prog);
+
+        assertThatThrownBy(() -> parser.parse(lex.getAllTokens(), lex.getVocabulary())).isInstanceOf(ParseException.class);
     }
 }

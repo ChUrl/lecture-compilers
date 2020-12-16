@@ -95,7 +95,10 @@ class TypeCheckerTest {
                             "boolean b = 1 >;",
                             "boolean b = >= 1;",
                             "boolean b = 1 ==;",
-                            "boolean b = 1 !=;"})
+                            "boolean b = 1 !=;",
+                            "boolean b = !;",
+                            "boolean b = <;",
+                            "boolean b = true !false;"})
     void testBinaryOperatorIncorrect(String expr) {
         assertThatThrownBy(() -> TypeChecker.validate(this.getTree(expr))).isInstanceOfAny(OperatorUsageException.class,
                                                                                            ParseException.class);
