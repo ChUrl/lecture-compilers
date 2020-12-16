@@ -2,12 +2,17 @@ plugins {
     id 'java'
     id 'application'
     id 'antlr'
+    id 'jacoco'
 }
 
 group 'de.churl'
-version '1.0-SNAPSHOT'
+version '1.0'
 sourceCompatibility = '14'
 mainClassName = 'StupsCompiler'
+
+jacocoTestReport {
+    dependsOn test // tests are required to run before generating the report
+}
 
 jar {
     manifest {
@@ -37,4 +42,5 @@ dependencies {
 
 test {
     useJUnitPlatform()
+    finalizedBy jacocoTestReport
 }
