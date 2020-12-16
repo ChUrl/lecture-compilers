@@ -241,10 +241,6 @@ public class GrammarAnalyzer {
 
                 final Set<String> followLeftside = this.follow(leftside);
 
-                //                log(leftside + " -> " + rightside);
-                //                log("First: " + firstRightside);
-                //                log("Follow: " + followLeftside + "\n");
-
                 if (firstRightside.contains(this.grammar.getEpsilonSymbol())) {
                     // 2. If epsilon in first(a), then...
 

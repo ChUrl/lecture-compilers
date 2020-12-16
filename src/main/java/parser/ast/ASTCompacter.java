@@ -4,7 +4,6 @@ import parser.grammar.Grammar;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 import static util.Logger.log;
 
@@ -153,7 +152,7 @@ public final class ASTCompacter {
     }
 
     private static void valueToValue(ASTNode root, Grammar grammar) {
-        final Set<ASTNode> toRemove = new HashSet<>();
+        final Collection<ASTNode> toRemove = new HashSet<>();
 
         for (ASTNode child : root.getChildren()) {
             valueToValue(child, grammar);

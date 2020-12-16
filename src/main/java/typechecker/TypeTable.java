@@ -37,18 +37,18 @@ public class TypeTable {
                                                Map.entry("EQUAL", "BOOLEAN_TYPE"),
                                                Map.entry("NOT_EQUAL", "BOOLEAN_TYPE"));
 
-        this.methodArgumentTable = Map.ofEntries(Map.entry("ADD", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("SUB", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("MUL", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("DIV", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("MOD", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("AND", Arrays.asList("BOOLEAN_TYPE")),
-                                                 Map.entry("OR", Arrays.asList("BOOLEAN_TYPE")),
-                                                 Map.entry("NOT", Arrays.asList("BOOLEAN_TYPE")),
-                                                 Map.entry("LESS", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("LESS_EQUAL", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("GREATER", Arrays.asList("INTEGER_TYPE")),
-                                                 Map.entry("GREATER_EQUAL", Arrays.asList("INTEGER_TYPE")),
+        this.methodArgumentTable = Map.ofEntries(Map.entry("ADD", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("SUB", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("MUL", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("DIV", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("MOD", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("AND", Collections.singletonList("BOOLEAN_TYPE")),
+                                                 Map.entry("OR", Collections.singletonList("BOOLEAN_TYPE")),
+                                                 Map.entry("NOT", Collections.singletonList("BOOLEAN_TYPE")),
+                                                 Map.entry("LESS", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("LESS_EQUAL", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("GREATER", Collections.singletonList("INTEGER_TYPE")),
+                                                 Map.entry("GREATER_EQUAL", Collections.singletonList("INTEGER_TYPE")),
                                                  Map.entry("EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE")),
                                                  Map.entry("NOT_EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE")));
     }
@@ -64,7 +64,7 @@ public class TypeTable {
         return new TypeTable(tableOut);
     }
 
-    private static void scanTree(ASTNode root, Map<String, String> table) {
+    private static void scanTree(ASTNode root, Map<? super String, String> table) {
         for (ASTNode child : root.getChildren()) {
             scanTree(child, table);
         }

@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static parser.grammar.GrammarAction.DELCHILD;
@@ -26,6 +27,8 @@ import static util.Logger.log;
 
 public class Grammar {
 
+    private static final Pattern EPS = Pattern.compile("EPS");
+    private static final Pattern ARROW = Pattern.compile("->");
     private final Set<String> terminals;
     private final Set<String> nonterminals;
     private final String startSymbol;
@@ -86,7 +89,7 @@ public class Grammar {
             final Map<String, List<String>> valToValMappings = new HashMap<>();
             final Map<String, List<String>> delChildMappings = new HashMap<>();
 
-            for (GrammarAction action : GrammarAction.values()) {
+            for (GrammarAction action : values()) {
                 actions.put(action, new HashSet<>());
             }
 
@@ -117,8 +120,7 @@ public class Grammar {
                     // Parse Grammar Rules + Actions
 
                     // "S[...] -> E T2 | EPS" wird zu leftside = "S[...]" und rightside = "E T2 | eps"
-                    final String[] split = line.replaceAll("EPS", epsilonSymbol)
-                                               .split("->");
+                    final String[] split = ARROW.split(EPS.matcher(line).replaceAll(epsilonSymbol));
                     String leftside = split[0].trim();
                     final String rightside = split[1].trim();
 

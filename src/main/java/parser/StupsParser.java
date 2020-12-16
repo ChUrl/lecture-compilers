@@ -8,6 +8,7 @@ import parser.grammar.Grammar;
 import parser.grammar.GrammarAnalyzer;
 
 import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
@@ -25,6 +26,15 @@ public class StupsParser {
     public static StupsParser fromGrammar(Grammar grammar) {
         final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
         return new StupsParser(analyzer.getTable());
+    }
+
+    private static void printSourceLine(int line, Collection<? extends Token> token) {
+        final Optional<String> srcLine = token.stream()
+                                              .filter(tok -> tok.getLine() == line)
+                                              .map(Token::getText)
+                                              .reduce((s1, s2) -> s1 + " " + s2);
+
+        srcLine.ifPresent(s -> System.out.println("  :: " + s));
     }
 
     public AST parse(List<? extends Token> token, Vocabulary voc) {
@@ -72,14 +82,14 @@ public class StupsParser {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
 
                 System.out.println("\nLine " + currentLine + " Syntaxerror: Expected " + top + " but found " + currentTokenSym);
-                this.printSourceLine(currentLine, token);
+                StupsParser.printSourceLine(currentLine, token);
 
                 throw new ParseException("Invalid terminal on stack: " + top, tree);
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
                 System.out.println("\nLine " + currentLine + " Syntaxerror: Didn't expect " + currentTokenSym);
-                this.printSourceLine(currentLine, token);
+                StupsParser.printSourceLine(currentLine, token);
 
                 throw new ParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
             } else {
@@ -116,14 +126,5 @@ public class StupsParser {
         System.out.println("Parsing successful.");
 
         return tree;
-    }
-
-    private void printSourceLine(int line, List<? extends Token> token) {
-        final Optional<String> srcLine = token.stream()
-                                              .filter(tok -> tok.getLine() == line)
-                                              .map(Token::getText)
-                                              .reduce((s1, s2) -> s1 + " " + s2);
-
-        srcLine.ifPresent(s -> System.out.println("  :: " + s));
     }
 }

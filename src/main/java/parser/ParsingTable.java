@@ -1,7 +1,6 @@
 package parser;
 
 import parser.grammar.Grammar;
-import parser.grammar.GrammarAnalyzer;
 
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Collections;
@@ -11,21 +10,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ParsingTable {
 
+    private static final Pattern X = Pattern.compile("X");
     private final Grammar grammar;
     private final Map<Entry<String, String>, String> parsetable;
 
     public ParsingTable(Grammar grammar, Map<Entry<String, String>, String> parsetable) {
         this.grammar = grammar;
         this.parsetable = Collections.unmodifiableMap(parsetable);
-    }
-
-    public static ParsingTable fromGrammar(Grammar grammar) {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
-        return analyzer.getTable();
     }
 
     public String get(String nonterminal, String terminal) {
@@ -86,7 +82,7 @@ public class ParsingTable {
         output.append(" ".repeat(margins.get("NTERM")))
               .append("| ");
         for (String terminal : inputSymbols) {
-            format.format("%-Xs ".replaceAll("X", String.valueOf(margins.get(terminal))), terminal);
+            format.format(X.matcher("%-Xs ").replaceAll(String.valueOf(margins.get(terminal))), terminal);
         }
         output.append("|\n");
 
@@ -100,11 +96,11 @@ public class ParsingTable {
               .append("\n");
 
         for (String nonterminal : this.grammar.getNonterminals()) {
-            format.format("%-Xs| ".replaceAll("X", String.valueOf(margins.get("NTERM"))), nonterminal);
+            format.format(X.matcher("%-Xs| ").replaceAll(String.valueOf(margins.get("NTERM"))), nonterminal);
 
             for (String terminal : inputSymbols) {
                 final String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
-                format.format("%-Xs ".replaceAll("X", String.valueOf(margins.get(terminal))), prod == null ? " ".repeat(9) : prod);
+                format.format(X.matcher("%-Xs ").replaceAll(String.valueOf(margins.get(terminal))), prod == null ? " ".repeat(9) : prod);
             }
             output.append("|\n");
         }
