@@ -1,3 +1,4 @@
+import codegen.CodeGenerator;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
@@ -7,6 +8,7 @@ import parser.grammar.Grammar;
 import typechecker.TypeChecker;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -34,6 +36,7 @@ public final class StupsCompiler {
         System.out.println("Beginning compilation.");
         final long begin = System.nanoTime();
 
+        // File opening + Lexing
         Lexer lexer;
         try {
             // Relativer Pfad
@@ -53,6 +56,7 @@ public final class StupsCompiler {
             }
         }
 
+        // Grammar parsing from file
         final Grammar grammar;
         try {
             final Path grammarFile = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
@@ -62,11 +66,34 @@ public final class StupsCompiler {
             return;
         }
 
+        // Parser from Grammar
         final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
+        // Parsing + Typechecking of program
         final AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
         tree.postprocess(grammar);
         TypeChecker.validate(tree);
+
+        // Codegeneration + Output
+        final String outputName = filename.replaceFirst("stups", "j");
+        final CodeGenerator generator = CodeGenerator.fromAST(tree);
+        final StringBuilder jasmin = generator.generateCode(tree, filename);
+        try {
+            final Path outputFile = Paths.get(System.getProperty("user.dir") + "/" + outputName);
+            Files.writeString(outputFile, jasmin.toString());
+        } catch (IOException e) {
+            System.out.println("Datei konnte nicht geschrieben werden.");
+            return;
+        }
+
+        // Calling Jasmin
+        final ProcessBuilder assemble = new ProcessBuilder("java", "-jar", "jasmin.jar", outputName);
+        try {
+            assemble.start();
+        } catch (IOException e) {
+            System.out.println(outputName + " konnte nicht von Jasmin übersetzt werden.");
+            return;
+        }
 
         final long end = System.nanoTime();
         System.out.printf("%nCompilation completed in %dms.%n", (end - begin) / 1_000_000);
