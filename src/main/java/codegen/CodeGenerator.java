@@ -12,6 +12,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Map.entry;
+
 public final class CodeGenerator {
 
     private static final Map<String, Method> nodeMap;
@@ -21,9 +23,11 @@ public final class CodeGenerator {
         try {
             final Class<?> gen = CodeGenerator.class;
             map = Map.ofEntries(
-                    Map.entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class, StringBuilder.class)),
-                    Map.entry("expr", gen.getDeclaredMethod("expr", ASTNode.class, StringBuilder.class)),
-                    Map.entry("INTEGER_LIT", gen.getDeclaredMethod("integer_lit", ASTNode.class, StringBuilder.class))
+                    entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class, StringBuilder.class)),
+                    entry("expr", gen.getDeclaredMethod("expr", ASTNode.class, StringBuilder.class)),
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("literal", ASTNode.class, StringBuilder.class)),
+                    entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class, StringBuilder.class)),
+                    entry("print", gen.getDeclaredMethod("println", ASTNode.class, StringBuilder.class))
             );
         } catch (NoSuchMethodException e) {
             map = null;
@@ -48,10 +52,12 @@ public final class CodeGenerator {
         while (!stack.isEmpty()) {
             final ASTNode current = stack.pop();
 
-            if ("assignment".equals(current.getName())) {
+            if ("declaration".equals(current.getName())) {
                 varCount++;
-                varMap.put(current.getValue(), varCount);
-                Logger.log("Found local variable " + current.getValue() + ", assigned to slot " + varCount + ".");
+                varMap.put(current.getChildren().get(0).getValue(), varCount);
+                Logger.log("New local " + current.getValue() + " variable "
+                           + current.getChildren().get(0).getValue()
+                           + " assigned to slot " + varCount + ".");
             }
 
             current.getChildren().forEach(stack::push);
@@ -64,15 +70,15 @@ public final class CodeGenerator {
         System.out.println(" - Generating Jasmin Assembler...");
         final String clazz = ast.getRoot().getChildren().get(1).getValue();
 
-        jasmin.append(".bytecode 49.0\n")
+        jasmin.append(".bytecode 55.0\n")
               .append(".source ").append(source).append("\n")
               .append(".class public ").append(clazz).append("\n")
-              .append(".super java/lang/Object\n\n");
+              .append(".super java/lang/Object\n");
 
         System.out.println("Code-generation successfull.");
     }
 
-    private static void generateInit(StringBuilder jasmin) {
+    private static void generateConstructor(StringBuilder jasmin) {
         jasmin.append(".method public <init>()V\n")
               .append("\t.limit stack 1\n")
               .append("\t.limit locals 1\n")
@@ -89,7 +95,7 @@ public final class CodeGenerator {
         final StringBuilder jasmin = new StringBuilder();
 
         generateHeader(ast, source, jasmin);
-        generateInit(jasmin);
+        generateConstructor(jasmin);
         this.generateMain(ast, jasmin);
 
         Logger.log("Jasmin Assembler:\n" + jasmin);
@@ -97,12 +103,17 @@ public final class CodeGenerator {
         return jasmin;
     }
 
+    // TODO: Indentation
+    // TODO: Stack size
     private void generateMain(AST ast, StringBuilder jasmin) {
-        jasmin.append(".method public static main([Ljava/lang/String;)V\n");
+        jasmin.append(".method public static main([Ljava/lang/String;)V\n")
+              .append(".limit stack 10\n")
+              .append(".limit locals ").append(this.varMap.size() + 1).append("\n");
 
-        this.generateNode(ast.getRoot(), jasmin);
+        this.generateNode(ast.getRoot().getChildren().get(3).getChildren().get(11), jasmin); // Skip crap
 
-        jasmin.append(".end method\n");
+        jasmin.append("return\n")
+              .append(".end method\n");
 
         Logger.log("Generated Jasmin Main.\n");
     }
@@ -122,7 +133,7 @@ public final class CodeGenerator {
     private void assign(ASTNode node, StringBuilder jasmin) {
         this.generateNode(node.getChildren().get(0), jasmin);
 
-        jasmin.append("istore ")
+        jasmin.append("istore ") //!: Type dependant
               .append(this.varMap.get(node.getValue()))
               .append("\n");
     }
@@ -131,8 +142,8 @@ public final class CodeGenerator {
         this.generateNode(node.getChildren().get(0), jasmin);
         this.generateNode(node.getChildren().get(1), jasmin);
 
-        final String inst = switch (node.getValue()) {
-            case "ADD" -> "iadd";
+        final String inst = switch (node.getValue()) { //!: Type dependant
+            case "ADD" -> "iadd"; // Integer addition
             default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
         };
 
@@ -140,9 +151,27 @@ public final class CodeGenerator {
               .append("\n");
     }
 
-    private void integer_lit(ASTNode node, StringBuilder jasmin) {
-        jasmin.append("ldc ")
+    // Leafs
+
+    private void literal(ASTNode node, StringBuilder jasmin) {
+        jasmin.append("bipush ") //!: Type dependant
               .append(node.getValue())
               .append("\n");
+    }
+
+    private void identifier(ASTNode node, StringBuilder jasmin) {
+        Logger.log(node.getName() + ": " + node.getValue() + " => iload");
+
+        jasmin.append("iload ") //!: Type dependent
+              .append(this.varMap.get(node.getValue()))
+              .append("\n");
+    }
+
+    private void println(ASTNode node, StringBuilder jasmin) {
+        jasmin.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
+
+        this.generateNode(node.getChildren().get(1).getChildren().get(1), jasmin);
+
+        jasmin.append("invokevirtual java/io/PrintStream/println(I)V\n"); //!: Type dependent
     }
 }
