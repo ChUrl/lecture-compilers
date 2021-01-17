@@ -1,7 +1,6 @@
 package parser.ast;
 
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
 import static util.Logger.log;
@@ -10,6 +9,7 @@ public final class ASTBalancer {
 
     private static final Map<String, Integer> priority;
 
+    //!: Operatorpräzedenz
     // 0 - Unary: -, +, !
     // 1 - Multiplicative: *, /, %
     // 2 - Additive: +, -
@@ -18,28 +18,20 @@ public final class ASTBalancer {
     // 5 - Logical AND: &&
     // 6 - Logical OR: ||
     static {
-        priority = new HashMap<>();
-
-        priority.put("NOT", 0);
-
-        priority.put("MUL", 1);
-        priority.put("DIV", 1);
-        priority.put("MOD", 1);
-
-        priority.put("ADD", 2);
-        priority.put("SUB", 2);
-
-        priority.put("LESS", 3);
-        priority.put("LESS_EQUAL", 3);
-        priority.put("GREATER", 3);
-        priority.put("GREATER_EQUAL", 3);
-
-        priority.put("EQUAL", 4);
-        priority.put("NOT_EQUAL", 4);
-
-        priority.put("AND", 5);
-
-        priority.put("OR", 6);
+        priority = Map.ofEntries(Map.entry("NOT", 0),
+                                 Map.entry("MUL", 1),
+                                 Map.entry("DIV", 1),
+                                 Map.entry("MOD", 1),
+                                 Map.entry("ADD", 2),
+                                 Map.entry("SUB", 2),
+                                 Map.entry("LESS", 3),
+                                 Map.entry("LESS_EQUAL", 3),
+                                 Map.entry("GREATER", 3),
+                                 Map.entry("GREATER_EQUAL", 3),
+                                 Map.entry("EQUAL", 4),
+                                 Map.entry("NOT_EQUAL", 4),
+                                 Map.entry("AND", 5),
+                                 Map.entry("OR", 6));
     }
 
     private ASTBalancer() {}
