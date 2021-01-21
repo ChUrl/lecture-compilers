@@ -76,8 +76,7 @@ public final class StupsCompiler {
 
         // Codegeneration + Output
         final String outputName = filename.replaceFirst("stups", "j");
-        final CodeGenerator generator = CodeGenerator.fromAST(tree);
-        final StringBuilder jasmin = generator.generateCode(tree, filename);
+        final StringBuilder jasmin = CodeGenerator.generateCode(tree, filename);
         try {
             final Path outputFile = Paths.get(System.getProperty("user.dir") + "/" + outputName);
             Files.writeString(outputFile, jasmin.toString());

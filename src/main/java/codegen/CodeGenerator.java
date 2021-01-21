@@ -23,11 +23,11 @@ public final class CodeGenerator {
         try {
             final Class<?> gen = CodeGenerator.class;
             map = Map.ofEntries(
-                    entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class, StringBuilder.class)),
-                    entry("expr", gen.getDeclaredMethod("expr", ASTNode.class, StringBuilder.class)),
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("literal", ASTNode.class, StringBuilder.class)),
-                    entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class, StringBuilder.class)),
-                    entry("print", gen.getDeclaredMethod("println", ASTNode.class, StringBuilder.class))
+                    entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class, StringBuilder.class, Map.class)),
+                    entry("expr", gen.getDeclaredMethod("expr", ASTNode.class, StringBuilder.class, Map.class)),
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("literal", ASTNode.class, StringBuilder.class, Map.class)),
+                    entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class, StringBuilder.class, Map.class)),
+                    entry("print", gen.getDeclaredMethod("println", ASTNode.class, StringBuilder.class, Map.class))
             );
         } catch (NoSuchMethodException e) {
             map = null;
@@ -36,13 +36,9 @@ public final class CodeGenerator {
         nodeMap = map;
     }
 
-    private final Map<String, Integer> varMap;
+    private CodeGenerator() {}
 
-    private CodeGenerator(Map<String, Integer> varMap) {
-        this.varMap = Collections.unmodifiableMap(varMap);
-    }
-
-    public static CodeGenerator fromAST(AST tree) {
+    private static Map<String, Integer> varMapFromAST(AST tree) {
         final Map<String, Integer> varMap = new HashMap<>();
 
         // Assign variables to map
@@ -63,7 +59,7 @@ public final class CodeGenerator {
             current.getChildren().forEach(stack::push);
         }
 
-        return new CodeGenerator(varMap);
+        return Collections.unmodifiableMap(varMap);
     }
 
     private static void generateHeader(AST ast, String source, StringBuilder jasmin) {
@@ -91,26 +87,27 @@ public final class CodeGenerator {
         Logger.log("Generated Jasmin Init.");
     }
 
-    public StringBuilder generateCode(AST ast, String source) {
+    public static StringBuilder generateCode(AST ast, String source) {
         final StringBuilder jasmin = new StringBuilder();
+        final Map<String, Integer> varMap = varMapFromAST(ast);
 
         generateHeader(ast, source, jasmin);
         generateConstructor(jasmin);
-        this.generateMain(ast, jasmin);
+        generateMain(ast, jasmin, varMap);
 
         Logger.log("Jasmin Assembler:\n" + jasmin);
 
         return jasmin;
     }
 
-    // TODO: Indentation
+    // TODO: Indentation?
     // TODO: Stack size
-    private void generateMain(AST ast, StringBuilder jasmin) {
+    private static void generateMain(AST ast, StringBuilder jasmin, Map<String, Integer> varMap) {
         jasmin.append(".method public static main([Ljava/lang/String;)V\n")
               .append(".limit stack 10\n")
-              .append(".limit locals ").append(this.varMap.size() + 1).append("\n");
+              .append(".limit locals ").append(varMap.size() + 1).append("\n");
 
-        this.generateNode(ast.getRoot().getChildren().get(3).getChildren().get(11), jasmin); // Skip crap
+        generateNode(ast.getRoot().getChildren().get(3).getChildren().get(11), jasmin, varMap); // Skip crap
 
         jasmin.append("return\n")
               .append(".end method\n");
@@ -118,32 +115,37 @@ public final class CodeGenerator {
         Logger.log("Generated Jasmin Main.\n");
     }
 
-    private void generateNode(ASTNode node, StringBuilder jasmin) {
+    private static void generateNode(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
         if (nodeMap.containsKey(node.getName())) {
             try {
-                nodeMap.get(node.getName()).invoke(this, node, jasmin);
+                nodeMap.get(node.getName()).invoke(null, node, jasmin, varMap);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         } else {
-            node.getChildren().forEach(child -> this.generateNode(child, jasmin));
+            node.getChildren().forEach(child -> generateNode(child, jasmin, varMap));
         }
     }
 
-    private void assign(ASTNode node, StringBuilder jasmin) {
-        this.generateNode(node.getChildren().get(0), jasmin);
+    private static void assign(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+        generateNode(node.getChildren().get(0), jasmin, varMap);
 
         jasmin.append("istore ") //!: Type dependant
-              .append(this.varMap.get(node.getValue()))
+              .append(varMap.get(node.getValue()))
               .append("\n");
     }
 
-    private void expr(ASTNode node, StringBuilder jasmin) {
-        this.generateNode(node.getChildren().get(0), jasmin);
-        this.generateNode(node.getChildren().get(1), jasmin);
+    // TODO: Unary operators
+    private static void expr(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+        generateNode(node.getChildren().get(0), jasmin, varMap);
+        generateNode(node.getChildren().get(1), jasmin, varMap);
 
         final String inst = switch (node.getValue()) { //!: Type dependant
-            case "ADD" -> "iadd"; // Integer addition
+            case "ADD" -> "iadd"; // Integer
+            case "SUB" -> "isub";
+            case "MUL" -> "imul";
+            case "DIV" -> "idiv";
+            case "MOD" -> "irem"; // Remainder operator
             default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
         };
 
@@ -153,24 +155,24 @@ public final class CodeGenerator {
 
     // Leafs
 
-    private void literal(ASTNode node, StringBuilder jasmin) {
+    private static void literal(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
         jasmin.append("bipush ") //!: Type dependant
               .append(node.getValue())
               .append("\n");
     }
 
-    private void identifier(ASTNode node, StringBuilder jasmin) {
+    private static void identifier(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
         Logger.log(node.getName() + ": " + node.getValue() + " => iload");
 
         jasmin.append("iload ") //!: Type dependent
-              .append(this.varMap.get(node.getValue()))
+              .append(varMap.get(node.getValue()))
               .append("\n");
     }
 
-    private void println(ASTNode node, StringBuilder jasmin) {
+    private static void println(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
         jasmin.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
 
-        this.generateNode(node.getChildren().get(1).getChildren().get(1), jasmin);
+        generateNode(node.getChildren().get(1).getChildren().get(1), jasmin, varMap);
 
         jasmin.append("invokevirtual java/io/PrintStream/println(I)V\n"); //!: Type dependent
     }
