@@ -18,8 +18,9 @@ public final class TypeChecker {
 
     private TypeChecker() {}
 
-    // Wirft exception bei typeerror, returned nix
-    public static void validate(AST tree) {
+    // TODO: nodeTable?
+    // Wirft exception bei typeerror, return nodeTable?
+    public static Map<ASTNode, String> validate(AST tree) {
         final TypeTable table = TypeTable.fromAST(tree);
         final Map<ASTNode, String> nodeTable = new HashMap<>();
 
@@ -30,6 +31,7 @@ public final class TypeChecker {
         log("-".repeat(100));
 
         System.out.println("Typechecking successful.");
+        return nodeTable;
     }
 
     private static void validate(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
