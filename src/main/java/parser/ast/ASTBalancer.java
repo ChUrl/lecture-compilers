@@ -2,12 +2,14 @@ package parser.ast;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static util.Logger.log;
 
 public final class ASTBalancer {
 
     private static final Map<String, Integer> priority;
+    private static final Set<String> unary;
 
     //!: Operatorpräzedenz
     // 0 - Unary: -, +, !
@@ -32,6 +34,8 @@ public final class ASTBalancer {
                                  Map.entry("NOT_EQUAL", 4),
                                  Map.entry("AND", 5),
                                  Map.entry("OR", 6));
+
+        unary = Set.of("NOT", "ADD", "SUB");
     }
 
     private ASTBalancer() {}
@@ -90,6 +94,7 @@ public final class ASTBalancer {
     // Die Letzte Rotation ist keine richtige Rotation, dort wird false zurückgegeben
     private static boolean specialLeftRotate(ASTNode root) {
         log("Special-Left-Rotation around " + root.getName());
+        log(root.toString());
 
         final ASTNode left = root.getChildren().get(0);
         final ASTNode right = root.getChildren().get(1);
@@ -158,12 +163,20 @@ public final class ASTBalancer {
             return false;
         }
 
+        // Unary operators have the highest precedence
+        if (child.getChildren().size() == 1 && unary.contains(child.getValue())) {
+            return false;
+        }
+
         // Less equals higher
-        return priority.get(parent.getValue()) < priority.get(child.getValue());
+        {
+            return priority.get(parent.getValue()) < priority.get(child.getValue());
+        }
     }
 
     private static void simpleRightRotate(ASTNode root) {
         log("Right-Rotation around " + root.getName() + ": " + root.getValue());
+        log(root.toString());
 
         final ASTNode left = root.getChildren().get(0);
         final ASTNode right = root.getChildren().get(1);
