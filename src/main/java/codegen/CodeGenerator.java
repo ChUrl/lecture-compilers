@@ -102,6 +102,8 @@ public final class CodeGenerator {
 
     // TODO: Indentation?
     // TODO: Stack size
+    // TODO: Typen
+    // TODO: Variablengröße
     private static void generateMain(AST ast, StringBuilder jasmin, Map<String, Integer> varMap) {
         jasmin.append(".method public static main([Ljava/lang/String;)V\n")
               .append(".limit stack 10\n")
@@ -135,19 +137,35 @@ public final class CodeGenerator {
               .append("\n");
     }
 
-    // TODO: Unary operators
     private static void expr(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
-        generateNode(node.getChildren().get(0), jasmin, varMap);
-        generateNode(node.getChildren().get(1), jasmin, varMap);
+        String inst = "";
 
-        final String inst = switch (node.getValue()) { //!: Type dependant
-            case "ADD" -> "iadd"; // Integer
-            case "SUB" -> "isub";
-            case "MUL" -> "imul";
-            case "DIV" -> "idiv";
-            case "MOD" -> "irem"; // Remainder operator
-            default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
-        };
+        if (node.getChildren().size() == 1) {
+            // Unary operator
+
+            generateNode(node.getChildren().get(0), jasmin, varMap);
+
+            inst = switch(node.getValue()) { //!: Type dependant
+                case "ADD" -> "";
+                case "SUB" -> "ldc -1\nimul";
+                // case "NOT" -> ...
+                default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
+            };
+        } else if (node.getChildren().size() == 2) {
+            // Binary operator
+
+            generateNode(node.getChildren().get(0), jasmin, varMap);
+            generateNode(node.getChildren().get(1), jasmin, varMap);
+
+            inst = switch (node.getValue()) { //!: Type dependant
+                case "ADD" -> "iadd"; // Integer
+                case "SUB" -> "isub";
+                case "MUL" -> "imul";
+                case "DIV" -> "idiv";
+                case "MOD" -> "irem"; // Remainder operator
+                default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
+            };
+        }
 
         jasmin.append(inst)
               .append("\n");
