@@ -38,15 +38,16 @@ class CodeGeneratorTest {
         stupsGrammar = grammar;
     }
 
-    private static String buildProg(String expr) {
-        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = " + expr + ";\n\t\tSystem.out.println(i);\n\t}\n}";
+    private static AST lexParseProgram(String prog) {
+        final Lexer lex = new StupsLexer(CharStreams.fromString(prog));
+
+        final AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        tree.postprocess(stupsGrammar);
+
+        return tree;
     }
 
-    private static StupsLexer getLexer(String program) {
-        return new StupsLexer(CharStreams.fromString(program));
-    }
-
-    private static void writeByteCode(String src) {
+    private static void codegenToFile(String src) {
         try {
             final Path outputFile = Paths.get(System.getProperty("user.dir") + "/TestOutput.j");
             Files.writeString(outputFile, src);
@@ -55,8 +56,8 @@ class CodeGeneratorTest {
         }
     }
 
-    private static void compile(String src) {
-        writeByteCode(src);
+    private static void compileJasmin(String src) {
+        codegenToFile(src);
         final ProcessBuilder assemble = new ProcessBuilder("java", "-jar", "jasmin.jar", "TestOutput.j");
         try {
             final Process p = assemble.start();
@@ -66,7 +67,7 @@ class CodeGeneratorTest {
         }
     }
 
-    private static String execute() {
+    private static String executeCompiledProgram() {
         final ProcessBuilder execute = new ProcessBuilder("java", "TestOutput");
         StringBuilder out = null;
 
@@ -86,13 +87,31 @@ class CodeGeneratorTest {
         return out.toString().replaceFirst("\n", "");
     }
 
-    private static AST getTree(String prog) {
-        final Lexer lex = getLexer(prog);
+    private static String buildArithmeticProg(String expr) {
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
+               + expr
+               + ";\n\t\tSystem.out.println(i);\n\t}\n}";
+    }
 
-        final AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
-        tree.postprocess(stupsGrammar);
+    private static String buildIfElseProgram(String expr, String condition, String ifBlock, String elseBlock) {
+        String elseBlc = "else {\n\t\t\t" + elseBlock + ";\n\t\t}";
+        if (elseBlock == null) {
+            elseBlc = "";
+        }
 
-        return tree;
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
+               + expr
+               + ";\n\t\tif ("
+               + condition
+               + ") {\n\t\t\t"
+               + ifBlock
+               + ";\n\t\t} " + elseBlc + "\n\t\tSystem.out.println(i);\n\t}\n}";
+    }
+
+    private static String buildLogicProgram(String expr) {
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tboolean b = "
+               + expr
+               + ";\n\t\tSystem.out.println(b);\n\t}\n}";
     }
 
     private static Stream<Arguments> compileArithmeticProgramsArgs() {
@@ -124,14 +143,87 @@ class CodeGeneratorTest {
         );
     }
 
+    private static Stream<Arguments> compileIfElseProgramsArgs() {
+        return Stream.of(
+                Arguments.of("10", "i == 10", "i = 1", "i = -1", 1),
+                Arguments.of("5", "i == 10", "i = 1", "i = -1", -1),
+                Arguments.of("10", "i != 10", "i = 1", "i = -1", -1),
+                Arguments.of("5", "i != 10", "i = 1", "i = -1", 1),
+                Arguments.of("10", "i == 10", "i = 2 * 5 - 3 * 2;\ni = i + 1", "i = -1", 5),
+                Arguments.of("10", "i != 10", "i = 1", "i = (-1 * 3 - 3) / 3 + 2; i = i + 1", 1),
+                Arguments.of("10", "i != 10", "i = i", "i = i", 10),
+                Arguments.of("10", "i != 10", "i = 1", null, 10),
+                Arguments.of("10", "i == 10", "i = 1", null, 1)
+        );
+    }
+
+    private static Stream<Arguments> compileLogicProgramsArgs() {
+        return Stream.of(
+                Arguments.of("true || false", true),
+                Arguments.of("false || false", false),
+                Arguments.of("true && false", false),
+                Arguments.of("!(true && false)", true),
+                Arguments.of("true && !false", true),
+                Arguments.of("(5 < 4) || false", false),
+                Arguments.of("5 > 4 && 4 < 5", true),
+                Arguments.of("5 == 5 && !(5 != 5)", true),
+                Arguments.of("true == true", true),
+                Arguments.of("false == false", true),
+                Arguments.of("(1 < 2) == (3 < 4)", true),
+                Arguments.of("1 >= 1", true),
+                Arguments.of("true && 5 < 6", true),
+                Arguments.of("!true", false),
+                Arguments.of("!false", true),
+                Arguments.of("true && (true || false)", true),
+                Arguments.of("false || true && false", false),
+                Arguments.of("(((5 < 4) == false) == true) == true", true),
+                Arguments.of("(false == false) && (true == !false) && true", true),
+                Arguments.of("true && true && true && false", false),
+                Arguments.of("false || false || false || true", true),
+                Arguments.of("true && false || false && true || (5 < 6 == false)", false),
+                Arguments.of("false || 5 < 6 == false", false)
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("compileArithmeticProgramsArgs")
-    void compileArithmeticPrograms(String prog, int result) {
-        final AST tree = getTree(buildProg(prog));
+    void compileArithmeticProgramsTest(String prog, int result) {
+        final String program = buildArithmeticProg(prog);
+        System.out.println(program);
+
+        final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
 
-        compile(srcProg.toString());
-        assertThat(Integer.parseInt(execute())).isEqualTo(result);
+        compileJasmin(srcProg.toString());
+        assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("compileIfElseProgramsArgs")
+    void compileIfElseProgramsTest(String expr, String condition, String ifBlock, String elseBlock, int result) {
+        final String program = buildIfElseProgram(expr, condition, ifBlock, elseBlock);
+        System.out.println(program);
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
+
+        compileJasmin(srcProg.toString());
+        assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("compileLogicProgramsArgs")
+    void compileLogicProgramsTest(String expr, boolean result) {
+        final String program = buildLogicProgram(expr);
+        System.out.println(program);
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
+
+        compileJasmin(srcProg.toString());
+        assertThat(Boolean.parseBoolean(executeCompiledProgram())).isEqualTo(result);
     }
 }
