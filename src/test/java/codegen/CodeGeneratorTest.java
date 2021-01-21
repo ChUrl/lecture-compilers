@@ -116,7 +116,6 @@ class CodeGeneratorTest {
                 Arguments.of("6 % 2", 0), // 15
                 Arguments.of("6 % 4", 2),
                 Arguments.of("(6 % 4 + 2) * 6 / 3 * (2 + 4) - 1", 47),
-                Arguments.of("24100000 / 10000", 2410),
                 Arguments.of("5 - 2 * 3", -1),
                 Arguments.of("5 - 2 * 3 + 6 / 2 * 3 + 1 / 1 - 5 * 8 / 2 * 1 + 7 / 6", -10), // 20
                 Arguments.of("5 + 5 * 2 - (1 + 2 + 3) - (1 + 2) / 3", 8),
