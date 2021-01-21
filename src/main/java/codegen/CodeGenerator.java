@@ -23,11 +23,12 @@ public final class CodeGenerator {
         try {
             final Class<?> gen = CodeGenerator.class;
             map = Map.ofEntries(
-                    entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class, StringBuilder.class, Map.class)),
-                    entry("expr", gen.getDeclaredMethod("expr", ASTNode.class, StringBuilder.class, Map.class)),
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("literal", ASTNode.class, StringBuilder.class, Map.class)),
-                    entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class, StringBuilder.class, Map.class)),
-                    entry("print", gen.getDeclaredMethod("println", ASTNode.class, StringBuilder.class, Map.class))
+                    entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class, StringBuilder.class, Map.class, int.class)),
+                    entry("expr", gen.getDeclaredMethod("expr", ASTNode.class, StringBuilder.class, Map.class, int.class)),
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("literal", ASTNode.class, StringBuilder.class, Map.class, int.class)),
+                    entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class, StringBuilder.class, Map.class, int.class)),
+                    entry("print", gen.getDeclaredMethod("println", ASTNode.class, StringBuilder.class, Map.class, int.class)),
+                    entry("cond", gen.getDeclaredMethod("cond", ASTNode.class, StringBuilder.class, Map.class, int.class))
             );
         } catch (NoSuchMethodException e) {
             map = null;
@@ -87,13 +88,13 @@ public final class CodeGenerator {
         Logger.log("Generated Jasmin Init.");
     }
 
-    public static StringBuilder generateCode(AST ast, String source) {
+    public static StringBuilder generateCode(AST ast, String source, Map<ASTNode, String> nodeTable) {
         final StringBuilder jasmin = new StringBuilder();
         final Map<String, Integer> varMap = varMapFromAST(ast);
 
         generateHeader(ast, source, jasmin);
         generateConstructor(jasmin);
-        generateMain(ast, jasmin, varMap);
+        generateMain(ast, jasmin, varMap, nodeTable);
 
         Logger.log("Jasmin Assembler:\n" + jasmin);
 
@@ -104,12 +105,12 @@ public final class CodeGenerator {
     // TODO: Stack size
     // TODO: Typen
     // TODO: Variablengröße
-    private static void generateMain(AST ast, StringBuilder jasmin, Map<String, Integer> varMap) {
+    private static void generateMain(AST ast, StringBuilder jasmin, Map<String, Integer> varMap, Map<ASTNode, String> nodeTable) {
         jasmin.append(".method public static main([Ljava/lang/String;)V\n")
               .append(".limit stack 10\n")
               .append(".limit locals ").append(varMap.size() + 1).append("\n");
 
-        generateNode(ast.getRoot().getChildren().get(3).getChildren().get(11), jasmin, varMap); // Skip crap
+        generateNode(ast.getRoot().getChildren().get(3).getChildren().get(11), jasmin, varMap, 0); // Skip crap
 
         jasmin.append("return\n")
               .append(".end method\n");
@@ -117,35 +118,63 @@ public final class CodeGenerator {
         Logger.log("Generated Jasmin Main.\n");
     }
 
-    private static void generateNode(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+    private static void generateNode(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
         if (nodeMap.containsKey(node.getName())) {
             try {
-                nodeMap.get(node.getName()).invoke(null, node, jasmin, varMap);
+                nodeMap.get(node.getName()).invoke(null, node, jasmin, varMap, labelCounter);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         } else {
-            node.getChildren().forEach(child -> generateNode(child, jasmin, varMap));
+            node.getChildren().forEach(child -> generateNode(child, jasmin, varMap, labelCounter));
         }
     }
 
-    private static void assign(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
-        generateNode(node.getChildren().get(0), jasmin, varMap);
+    // TODO: boolean expressions for conditions
+    // ifeq - if value is 0
+    // ifne - if value is not 0
+    private static void cond(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
+        // Condition
+        generateNode(node.getChildren().get(0), jasmin, varMap, labelCounter);
+
+        // Jump
+        jasmin.append("ifeq LabelFalse").append(labelCounter).append("\n")
+              .append("ifne LabelTrue").append(labelCounter).append("\n");
+
+        // If branch
+        jasmin.append("LabelTrue").append(labelCounter).append(":\n");
+        generateNode(node.getChildren().get(1), jasmin, varMap, labelCounter + 1);
+        jasmin.append("goto LabelFinish").append(labelCounter).append("\n");
+
+        // Else branch
+        jasmin.append("LabelFalse").append(labelCounter).append(":\n");
+        if (node.getChildren().size() == 3) {
+            // Else exists
+
+            generateNode(node.getChildren().get(2), jasmin, varMap, labelCounter + 1);
+        }
+        jasmin.append("goto LabelFinish").append(labelCounter).append("\n"); // Optional
+
+        jasmin.append("LabelFinish").append(labelCounter).append(":\n");
+    }
+
+    private static void assign(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
+        generateNode(node.getChildren().get(0), jasmin, varMap, labelCounter);
 
         jasmin.append("istore ") //!: Type dependant
               .append(varMap.get(node.getValue()))
               .append("\n");
     }
 
-    private static void expr(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+    private static void expr(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
         String inst = "";
 
         if (node.getChildren().size() == 1) {
             // Unary operator
 
-            generateNode(node.getChildren().get(0), jasmin, varMap);
+            generateNode(node.getChildren().get(0), jasmin, varMap, labelCounter);
 
-            inst = switch(node.getValue()) { //!: Type dependant
+            inst = switch (node.getValue()) { //!: Type dependant
                 case "ADD" -> "";
                 case "SUB" -> "ldc -1\nimul";
                 // case "NOT" -> ...
@@ -154,8 +183,8 @@ public final class CodeGenerator {
         } else if (node.getChildren().size() == 2) {
             // Binary operator
 
-            generateNode(node.getChildren().get(0), jasmin, varMap);
-            generateNode(node.getChildren().get(1), jasmin, varMap);
+            generateNode(node.getChildren().get(0), jasmin, varMap, labelCounter);
+            generateNode(node.getChildren().get(1), jasmin, varMap, labelCounter);
 
             inst = switch (node.getValue()) { //!: Type dependant
                 case "ADD" -> "iadd"; // Integer
@@ -173,13 +202,13 @@ public final class CodeGenerator {
 
     // Leafs
 
-    private static void literal(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+    private static void literal(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
         jasmin.append("bipush ") //!: Type dependant
               .append(node.getValue())
               .append("\n");
     }
 
-    private static void identifier(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+    private static void identifier(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
         Logger.log(node.getName() + ": " + node.getValue() + " => iload");
 
         jasmin.append("iload ") //!: Type dependent
@@ -187,10 +216,10 @@ public final class CodeGenerator {
               .append("\n");
     }
 
-    private static void println(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap) {
+    private static void println(ASTNode node, StringBuilder jasmin, Map<String, Integer> varMap, int labelCounter) {
         jasmin.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
 
-        generateNode(node.getChildren().get(1).getChildren().get(1), jasmin, varMap);
+        generateNode(node.getChildren().get(1).getChildren().get(1), jasmin, varMap, labelCounter);
 
         jasmin.append("invokevirtual java/io/PrintStream/println(I)V\n"); //!: Type dependent
     }
