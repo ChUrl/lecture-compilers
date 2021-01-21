@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import parser.StupsParser;
 import parser.ast.AST;
+import parser.ast.ASTNode;
 import parser.grammar.Grammar;
 import typechecker.TypeChecker;
 
@@ -12,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Map;
 
 public final class StupsCompiler {
 
@@ -72,11 +74,11 @@ public final class StupsCompiler {
         // Parsing + Typechecking of program
         final AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
         tree.postprocess(grammar);
-        TypeChecker.validate(tree);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
 
         // Codegeneration + Output
         final String outputName = filename.replaceFirst("stups", "j");
-        final StringBuilder jasmin = CodeGenerator.generateCode(tree, filename);
+        final StringBuilder jasmin = CodeGenerator.generateCode(tree, filename, nodeTable);
         try {
             final Path outputFile = Paths.get(System.getProperty("user.dir") + "/" + outputName);
             Files.writeString(outputFile, jasmin.toString());
