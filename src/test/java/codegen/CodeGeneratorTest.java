@@ -7,21 +7,20 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import parser.StupsParser;
 import parser.ast.AST;
+import parser.ast.ASTNode;
 import parser.grammar.Grammar;
 import typechecker.TypeChecker;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -92,7 +91,6 @@ class CodeGeneratorTest {
 
         final AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
         tree.postprocess(stupsGrammar);
-        TypeChecker.validate(tree);
 
         return tree;
     }
@@ -130,7 +128,8 @@ class CodeGeneratorTest {
     @MethodSource("compileArithmeticProgramsArgs")
     void compileArithmeticPrograms(String prog, int result) {
         final AST tree = getTree(buildProg(prog));
-        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput");
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
 
         compile(srcProg.toString());
         assertThat(Integer.parseInt(execute())).isEqualTo(result);
