@@ -43,6 +43,7 @@ public final class ASTCompacter {
             }
 
             log("Promoting " + child.getName() + " -> " + root.getName());
+            log(root.toString());
 
             root.setName(child.getName());
             root.setValue(child.getValue());
@@ -137,6 +138,7 @@ public final class ASTCompacter {
             }
 
             log("Moving " + child.getName() + " to value of " + root.getName());
+            log(root.toString());
 
             root.setValue(child.getName());
             toRemove.add(child);
@@ -161,7 +163,27 @@ public final class ASTCompacter {
                 continue;
             }
 
+            if (!root.getValue().isBlank()) {
+                // Do not overwrite
+                continue;
+            }
+
+            if (root.getChildren().size() == 2
+                && root.getChildren().get(0).getName().equals(root.getChildren().get(1).getName())) {
+                // Special case where variable is assigned another variable
+
+                log("Special case: Var to var assignment");
+                log("Moving " + root.getChildren().get(1).getValue() + " to value of " + root.getName());
+                log(root.toString());
+
+                root.setValue(root.getChildren().get(1).getValue());
+                toRemove.add(root.getChildren().get(1));
+
+                continue;
+            }
+
             log("Moving " + child.getValue() + " to value of " + root.getName());
+            log(root.toString());
 
             root.setValue(child.getValue());
             toRemove.add(child);
