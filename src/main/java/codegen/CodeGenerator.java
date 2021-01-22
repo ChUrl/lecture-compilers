@@ -25,9 +25,9 @@ public final class CodeGenerator {
             map = Map.ofEntries(
                     entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class)),
                     entry("expr", gen.getDeclaredMethod("expr", ASTNode.class)),
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("literal", ASTNode.class)),
-                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("literal", ASTNode.class)),
-                    entry("STRING_LIT", gen.getDeclaredMethod("literal", ASTNode.class)),
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("intLiteral", ASTNode.class)),
+                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("booleanLiteral", ASTNode.class)),
+                    entry("STRING_LIT", gen.getDeclaredMethod("stringLiteral", ASTNode.class)),
                     entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class)),
                     entry("print", gen.getDeclaredMethod("println", ASTNode.class)),
                     entry("cond", gen.getDeclaredMethod("cond", ASTNode.class))
@@ -180,9 +180,16 @@ public final class CodeGenerator {
     private void assign(ASTNode node) {
         this.generateNode(node.getChildren().get(0));
 
-        log("assign(): " + node.getName() + ": " + node.getValue() + " => istore");
+        final String type = this.nodeTypeMap.get(node.getChildren().get(0));
+        final String inst = switch (type) {
+            case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "istore ";
+            case "STRING_TYPE" -> "astore ";
+            default -> throw new IllegalStateException("Unexpected value: " + type);
+        };
 
-        this.jasmin.append("istore ") //!: Type dependant
+        log("assign(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+
+        this.jasmin.append(inst)
                    .append(this.varMap.get(node.getValue()))
                    .append("\n");
     }
@@ -225,19 +232,45 @@ public final class CodeGenerator {
 
     // Leafs
 
-    private void literal(ASTNode node) {
+    private void intLiteral(ASTNode node) {
         log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
-        this.jasmin.append("ldc ") //!: Type dependant
+        this.jasmin.append("ldc ")
                    .append(node.getValue())
                    .append("\n");
     }
 
-    private void identifier(ASTNode node) {
-        log("identifier(): " + node.getName() + ": " + node.getValue() + " => iload");
+    private void stringLiteral(ASTNode node) {
+        log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
-        this.jasmin.append("iload ") //!: Type dependent
+        // bipush only pushes 1 byte as int
+        this.jasmin.append("ldc ")
+                   .append(node.getValue())
+                   .append("\n");
+    }
+
+    private void booleanLiteral(ASTNode node) {
+        log("booleanLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
+
+        final String val = "true".equals(node.getValue()) ? "1" : "0";
+
+        this.jasmin.append("ldc ")
+                   .append(val)
+                   .append("\n");
+    }
+
+    private void identifier(ASTNode node) {
+        final String type = this.nodeTypeMap.get(node);
+        final String inst = switch (type) {
+            case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload ";
+            case "STRING_TYPE" -> "aload ";
+            default -> throw new IllegalStateException("Unexpected value: " + type);
+        };
+
+        log("identifier(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+
+        this.jasmin.append(inst)
                    .append(this.varMap.get(node.getValue()))
                    .append("\n");
     }
@@ -245,8 +278,20 @@ public final class CodeGenerator {
     private void println(ASTNode node) {
         this.jasmin.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
 
-        this.generateNode(node.getChildren().get(1).getChildren().get(1));
+        final ASTNode expr = node.getChildren().get(1).getChildren().get(1);
+        final String type = switch (this.nodeTypeMap.get(expr)) {
+            case "BOOLEAN_TYPE" -> "Z";
+            case "INTEGER_TYPE" -> "I";
+            case "STRING_TYPE" -> "Ljava/lang/String;";
+            default -> throw new IllegalStateException("Unexpected value: " + this.nodeTypeMap.get(expr));
+        };
 
-        this.jasmin.append("invokevirtual java/io/PrintStream/println(I)V\n"); //!: Type dependent
+        this.generateNode(expr);
+
+        log("println(): " + expr.getName() + ": " + expr.getValue() + " => " + type);
+
+        this.jasmin.append("invokevirtual java/io/PrintStream/println(")
+                   .append(type)
+                   .append(")V\n");
     }
 }
