@@ -86,7 +86,7 @@ public final class CodeGenerator {
         System.out.println(" - Generating Jasmin Assembler...");
         final String clazz = this.tree.getRoot().getChildren().get(1).getValue();
 
-        this.jasmin.append(".bytecode 55.0\n")
+        this.jasmin.append(".bytecode 49.0\n") // 55.0 has stricter verification => stackmap frames missing
                    .append(".source ").append(source).append("\n")
                    .append(".class public ").append(clazz).append("\n")
                    .append(".super java/lang/Object\n");
@@ -152,30 +152,29 @@ public final class CodeGenerator {
     // ifeq - if value is 0
     // ifne - if value is not 0
     private void cond(ASTNode node) {
+        final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
         // Condition
         this.generateNode(node.getChildren().get(0));
 
         // Jump
-        this.jasmin.append("\t\tifeq LabelFalse").append(this.labelCounter).append("\n")
-                   .append("\t\tifne LabelTrue").append(this.labelCounter).append("\n");
+        this.jasmin.append("\t\tifeq IFfalse").append(currentLabel).append("\n"); // ifeq: == 0 => false
 
-        // If branch
-        this.jasmin.append("LabelTrue").append(this.labelCounter).append(":\n");
+        // IFtrue branch
         this.generateNode(node.getChildren().get(1));
-        this.jasmin.append("\t\tgoto LabelFinish").append(this.labelCounter).append("\n");
+        this.jasmin.append("\t\tgoto IFend").append(currentLabel).append("\n");
 
-        // Else branch
-        this.jasmin.append("LabelFalse").append(this.labelCounter).append(":\n");
+        // IFfalse branch
+        this.jasmin.append("IFfalse").append(currentLabel).append(":\n");
         if (node.getChildren().size() == 3) {
             // Else exists
 
             this.generateNode(node.getChildren().get(2));
         }
-        this.jasmin.append("\t\tgoto LabelFinish").append(this.labelCounter).append("\n"); // Optional
 
-        this.jasmin.append("LabelFinish").append(this.labelCounter).append(":\n");
+        // IFend branch
+        this.jasmin.append("IFend").append(currentLabel).append(":\n");
     }
 
     private void assign(ASTNode node) {
@@ -215,7 +214,6 @@ public final class CodeGenerator {
             inst = switch (node.getValue()) {
                 case "ADD" -> "";
                 case "SUB" -> "ldc -1\n\t\timul";
-                // case "NOT" -> ...
                 default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
             };
         } else if (node.getChildren().size() == 2) {
@@ -255,22 +253,50 @@ public final class CodeGenerator {
             this.generateNode(node.getChildren().get(0));
 
             // 1 -> 0, 0 -> 1?
-            inst = "ldc 1\n\t\tisub\n\t\tdup\n\t\timul"; // Subtract 1 and square for now
+            //            inst = "ldc 1\n\t\tisub\n\t\tdup\n\t\timul"; // Subtract 1 and square for now
+            inst = "ldc 1\n\t\tixor"; // 0  ^1 = 1, 1  ^1 = 0
 
         } else if (node.getChildren().size() == 2) {
             // Binary operator
 
+            final int currentLabel = this.labelCounter;
+            this.labelCounter++;
+
             this.generateNode(node.getChildren().get(0));
             this.generateNode(node.getChildren().get(1));
+
+            final String type = this.nodeTypeMap.get(node.getChildren().get(0));
+            final String cmpeq = switch (type) {
+                case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "if_icmpeq";
+                case "STRING_TYPE" -> "if_accmpeq";
+                default -> throw new IllegalStateException("Unexpected value: " + type);
+            };
+            final String cmpne = switch (type) {
+                case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "if_icmpne";
+                case "STRING_TYPE" -> "if_accmpne";
+                default -> throw new IllegalStateException("Unexpected value: " + type);
+            };
 
             inst = switch (node.getValue()) {
                 case "AND" -> "iand"; // Boolean
                 case "OR" -> "ior";
+                case "EQUAL" -> cmpeq + " EQtrue" + currentLabel // If equal jump to EQtrue
+                                + "\n\t\tldc 0" // If false load 0
+                                + "\n\t\tgoto EQend" + currentLabel // If false skip true branch
+                                + "\nEQtrue" + currentLabel + ":"
+                                + "\n\t\tldc 1" // if true load 1
+                                + "\nEQend" + currentLabel + ":";
+                case "NOT_EQUAL" -> cmpne + " NEtrue" + currentLabel // If not equal jump to NEtrue
+                                    + "\n\t\tldc 0" // If false load 0
+                                    + "\n\t\tgoto NEend" + currentLabel // If false skip true branch
+                                    + "\nNEtrue" + currentLabel + ":"
+                                    + "\n\t\tldc 1" // if true load 1
+                                    + "\nNEend" + currentLabel + ":";
                 default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
             };
         }
 
-        log("boolExpr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+        log("boolExpr(): " + node.getName() + ": " + node.getValue() + " => \n\t\t" + inst);
 
         this.jasmin.append("\t\t")
                    .append(inst)
