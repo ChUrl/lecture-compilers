@@ -120,6 +120,12 @@ public final class TypeChecker {
 
             final String childReturnType = nodeTable.get(child);
 
+            if (childReturnType == null) {
+                System.out.println("Variable " + child.getValue() + " wurde nicht deklariert.");
+
+                throw new SymbolNotDefinedException("Zugriff auf nicht deklarierte Variable " + child.getValue());
+            }
+
             if (!requiredType.contains(childReturnType)) {
                 // Child returned Typ, welcher nicht im SymbolTable als Argumenttyp steht
                 // Der NodeTable enthält auch Literale, diese müssen also nicht einzeln behandelt werden
