@@ -82,6 +82,15 @@ public final class CodeGenerator {
         return Collections.unmodifiableMap(varMap);
     }
 
+    private static String genComparisonInst(String inst, String labelPre, int currentLabel) {
+        return inst + " " + labelPre + "true" + currentLabel // If not equal jump to NEtrue
+               + "\n\t\tldc 0" // If false load 0
+               + "\n\t\tgoto " + labelPre + "end" + currentLabel // If false skip true branch
+               + "\n" + labelPre + "true" + currentLabel + ":"
+               + "\n\t\tldc 1" // if true load 1
+               + "\n" + labelPre + "end" + currentLabel + ":";
+    }
+
     private void generateHeader(String source) {
         System.out.println(" - Generating Jasmin Assembler...");
         final String clazz = this.tree.getRoot().getChildren().get(1).getValue();
@@ -280,18 +289,12 @@ public final class CodeGenerator {
             inst = switch (node.getValue()) {
                 case "AND" -> "iand"; // Boolean
                 case "OR" -> "ior";
-                case "EQUAL" -> cmpeq + " EQtrue" + currentLabel // If equal jump to EQtrue
-                                + "\n\t\tldc 0" // If false load 0
-                                + "\n\t\tgoto EQend" + currentLabel // If false skip true branch
-                                + "\nEQtrue" + currentLabel + ":"
-                                + "\n\t\tldc 1" // if true load 1
-                                + "\nEQend" + currentLabel + ":";
-                case "NOT_EQUAL" -> cmpne + " NEtrue" + currentLabel // If not equal jump to NEtrue
-                                    + "\n\t\tldc 0" // If false load 0
-                                    + "\n\t\tgoto NEend" + currentLabel // If false skip true branch
-                                    + "\nNEtrue" + currentLabel + ":"
-                                    + "\n\t\tldc 1" // if true load 1
-                                    + "\nNEend" + currentLabel + ":";
+                case "EQUAL" -> genComparisonInst(cmpeq, "EQ", currentLabel);
+                case "NOT_EQUAL" -> genComparisonInst(cmpne, "NE", currentLabel);
+                case "LESS" -> genComparisonInst("if_icmplt", "LT", currentLabel);
+                case "LESS_EQUAL" -> genComparisonInst("if_icmple", "LE", currentLabel);
+                case "GREATER" -> genComparisonInst("if_icmpgt", "GT", currentLabel);
+                case "GREATER_EQUAL" -> genComparisonInst("if_icmpge", "GE", currentLabel);
                 default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
             };
         }
