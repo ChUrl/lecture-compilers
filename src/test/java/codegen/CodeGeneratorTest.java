@@ -146,11 +146,11 @@ class CodeGeneratorTest {
 
     private static Stream<Arguments> compileIfElseProgramsArgs() {
         return Stream.of(
-                Arguments.of("10", "i == 10", "i = 1", "i = -1", 1),
+                Arguments.of("10", "i == 10", "i = 1", "i = -1", 1), // 1
                 Arguments.of("5", "i == 10", "i = 1", "i = -1", -1),
                 Arguments.of("10", "i != 10", "i = 1", "i = -1", -1),
                 Arguments.of("5", "i != 10", "i = 1", "i = -1", 1),
-                Arguments.of("10", "i == 10", "i = 2 * 5 - 3 * 2;\ni = i + 1", "i = -1", 5),
+                Arguments.of("10", "i == 10", "i = 2 * 5 - 3 * 2;\ni = i + 1", "i = -1", 5), // 5
                 Arguments.of("10", "i != 10", "i = 1", "i = (-1 * 3 - 3) / 3 + 2; i = i + 1", 1),
                 Arguments.of("10", "i != 10", "i = i", "i = i", 10),
                 Arguments.of("10", "i != 10", "i = 1", null, 10),
