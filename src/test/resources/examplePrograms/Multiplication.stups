@@ -1,0 +1,13 @@
+class TestOutput {
+    public static void main(String[] args) {
+        int a = 4;
+        int b = 5;
+        int result = 0;
+
+        while (a > 0) {
+            result = result + b;
+            a = a - 1;
+            System.out.println(result);
+        }
+    }
+}

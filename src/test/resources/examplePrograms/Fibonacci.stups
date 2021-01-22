@@ -1,0 +1,14 @@
+class TestOutput {
+    public static void main(String[] args) {
+        int old = 0;
+        int new = 1;
+
+        while (new < 25) {
+            int temp = new;
+            new = new + old;
+            old = temp;
+
+            System.out.println(new);
+        }
+    }
+}

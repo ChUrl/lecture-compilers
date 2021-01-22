@@ -1,4 +1,4 @@
-class IfElseClass {
+class TestOutput {
 
     public static void main(String[] args) {
         int x = 5;

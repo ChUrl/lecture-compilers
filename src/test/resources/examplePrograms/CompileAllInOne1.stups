@@ -1,0 +1,25 @@
+class TestOutput {
+    public static void main(String[] args) {
+        int a = 5;
+        int b = 10;
+        int i = a * b - 4 * b;
+        boolean bo = false && true;
+        String s = "";
+
+        while (i > 0) {
+            if (i % 2 == 1) {
+                bo = !bo && true;
+                s = "TRUE";
+            } else {
+                i = i - 1;
+                s = "ELSE";
+            }
+
+            i = i - 1;
+        }
+
+        System.out.println(i);
+        System.out.println(bo);
+        System.out.println(s);
+    }
+}

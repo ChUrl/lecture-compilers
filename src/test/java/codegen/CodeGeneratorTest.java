@@ -4,6 +4,7 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CodeGeneratorTest {
 
@@ -36,6 +38,17 @@ class CodeGeneratorTest {
         final Grammar grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
         stupsGrammar = grammar;
+    }
+
+    private static String readProgram(String prog) {
+        try {
+            final Path progPath = Paths.get(CodeGeneratorTest.class.getClassLoader().getResource("examplePrograms/" + prog).toURI());
+            return Files.readString(progPath);
+        } catch (URISyntaxException | IOException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     private static AST lexParseProgram(String prog) {
@@ -106,6 +119,16 @@ class CodeGeneratorTest {
                + ") {\n\t\t\t"
                + ifBlock
                + ";\n\t\t} " + elseBlc + "\n\t\tSystem.out.println(i);\n\t}\n}";
+    }
+
+    private static String buildLoopProgram(String expr, String condition, String body) {
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
+               + expr
+               + ";\n\t\twhile ("
+               + condition
+               + ") {\n\t\t\t"
+               + body
+               + ";\n\t\t}\n\t\tSystem.out.println(i);\n\t}\n}";
     }
 
     private static String buildLogicProgram(String expr) {
@@ -186,6 +209,29 @@ class CodeGeneratorTest {
         );
     }
 
+    public static Stream<Arguments> compileLoopProgramsArgs() {
+        return Stream.of(
+                Arguments.of("0", "i <= 5", "System.out.println(i); i = i + 1", "0\n1\n2\n3\n4\n5\n6"),
+                Arguments.of("5 - 9", "i != 0", "System.out.println(i); i = i + 1", "-4\n-3\n-2\n-1\n0"),
+                Arguments.of("0", "i < 0", "System.out.println(i); i = i + 1", "0"),
+                Arguments.of("2", "i <= 5", "System.out.println(i); i = i * i", "2\n4\n16")
+        );
+    }
+
+    public static Stream<Arguments> compileProgramsArgs() {
+        return Stream.of(
+                Arguments.of("EmptyMain.stups", ""), // 1
+                Arguments.of("GeneralComment.stups", "Test"),
+                Arguments.of("GeneralIfElse.stups", "x ist kleiner als y.\nx und y sind gleich gross."),
+                Arguments.of("Println.stups", "Hey\ntrue\n5\n1\nHey\nfalse"),
+                Arguments.of("CompileAllInOne1.stups", "0\nfalse\nELSE"), // 5
+                Arguments.of("Fibonacci.stups", "1\n2\n3\n5\n8\n13\n21\n34"),
+                Arguments.of("Factorial.stups", "1\n2\n6\n24\n120"),
+                Arguments.of("Squares.stups", "1\n4\n9\n16\n25\n36\n49\n64\n81\n100"),
+                Arguments.of("Multiplication.stups", "5\n10\n15\n20")
+        );
+    }
+
     @ParameterizedTest
     @MethodSource("compileArithmeticProgramsArgs")
     void compileArithmeticProgramsTest(String prog, int result) {
@@ -229,5 +275,46 @@ class CodeGeneratorTest {
 
         compileJasmin(srcProg.toString());
         assertThat(Boolean.parseBoolean(executeCompiledProgram())).isEqualTo(result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("compileLoopProgramsArgs")
+    void compileLoopProgramsTest(String expr, String condition, String body, String result) {
+        final String program = buildLoopProgram(expr, condition, body);
+        System.out.println(program);
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
+        final StringBuilder srcProg = gen.generateCode("TestOutput");
+
+        compileJasmin(srcProg.toString());
+        assertThat(executeCompiledProgram()).isEqualTo(result);
+    }
+
+    @ParameterizedTest
+    @MethodSource("compileProgramsArgs")
+    void compileProgramsTest(String prog, String result) {
+        final String program = readProgram(prog);
+        System.out.print(program);
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
+        final StringBuilder srcProg = gen.generateCode("TestOutput");
+
+        compileJasmin(srcProg.toString());
+        assertThat(executeCompiledProgram()).isEqualTo(result);
+    }
+
+    @Test
+    void compileEmptyProgramTest() {
+        final String program = readProgram("EmptyFile.stups");
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
+
+        assertThatThrownBy(() -> gen.generateCode("TestOutput")).isInstanceOf(CodeGenerationException.class);
     }
 }

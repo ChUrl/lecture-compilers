@@ -1,4 +1,4 @@
-class MyClass {
+class TestOutput {
     public static void main(String[] args) {
         i = 1 * ();
     }

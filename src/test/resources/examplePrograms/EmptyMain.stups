@@ -1,6 +1,6 @@
-class EmptyClass {
+class TestOutput {
 
     public static void main(String[] args) {
-        
+
     }
 }

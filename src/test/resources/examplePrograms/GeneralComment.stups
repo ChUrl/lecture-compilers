@@ -1,5 +1,5 @@
 // Tolle Testklasse
-class CommentClass {
+class TestOutput {
 
     // Das ist ein Kommentar
     public static void main(String[] args) {
