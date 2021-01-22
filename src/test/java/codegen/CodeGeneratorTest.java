@@ -132,6 +132,7 @@ class CodeGeneratorTest {
                 Arguments.of("6 % 8", 6),
                 Arguments.of("6 % 2", 0), // 15
                 Arguments.of("6 % 4", 2),
+                Arguments.of("123456789 - 123456780", 9),
                 Arguments.of("(6 % 4 + 2) * 6 / 3 * (2 + 4) - 1", 47),
                 Arguments.of("5 - 2 * 3", -1),
                 Arguments.of("5 - 2 * 3 + 6 / 2 * 3 + 1 / 1 - 5 * 8 / 2 * 1 + 7 / 6", -10), // 20
@@ -193,7 +194,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
+        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
+        final StringBuilder srcProg = gen.generateCode("TestOutput");
 
         compileJasmin(srcProg.toString());
         assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
@@ -207,7 +209,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
+        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
+        final StringBuilder srcProg = gen.generateCode("TestOutput");
 
         compileJasmin(srcProg.toString());
         assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
@@ -221,7 +224,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final StringBuilder srcProg = CodeGenerator.generateCode(tree, "TestOutput", nodeTable);
+        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
+        final StringBuilder srcProg = gen.generateCode("TestOutput");
 
         compileJasmin(srcProg.toString());
         assertThat(Boolean.parseBoolean(executeCompiledProgram())).isEqualTo(result);
