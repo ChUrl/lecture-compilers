@@ -24,6 +24,7 @@ public final class CodeGenerator {
             final Class<?> gen = CodeGenerator.class;
             map = Map.ofEntries(
                     entry("cond", gen.getDeclaredMethod("cond", ASTNode.class)),
+                    entry("loop", gen.getDeclaredMethod("loop", ASTNode.class)),
                     entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class)),
                     entry("expr", gen.getDeclaredMethod("expr", ASTNode.class)),
                     // Leafs
@@ -127,10 +128,7 @@ public final class CodeGenerator {
         return this.jasmin;
     }
 
-    // TODO: Indentation?
     // TODO: Stack size
-    // TODO: Typen
-    // TODO: Variablengröße
     private void generateMain() {
         this.jasmin.append(".method public static main([Ljava/lang/String;)V\n")
                    .append("\t.limit stack 10\n")
@@ -157,7 +155,6 @@ public final class CodeGenerator {
         }
     }
 
-    // TODO: boolean expressions for conditions
     // ifeq - if value is 0
     // ifne - if value is not 0
     private void cond(ASTNode node) {
@@ -184,6 +181,26 @@ public final class CodeGenerator {
 
         // IFend branch
         this.jasmin.append("IFend").append(currentLabel).append(":\n");
+    }
+
+    private void loop(ASTNode node) {
+        final int currentLabel = this.labelCounter;
+        this.labelCounter++;
+
+        this.jasmin.append("LOOPstart").append(currentLabel).append(":\n");
+
+        // Condition
+        this.generateNode(node.getChildren().get(0).getChildren().get(1));
+
+        // Jump
+        this.jasmin.append("\t\tifeq LOOPend").append(currentLabel).append("\n"); // ifeq: == 0 => Loop stopped
+
+        // Loop body
+        this.generateNode(node.getChildren().get(1));
+        this.jasmin.append("\t\tgoto LOOPstart").append(currentLabel).append("\n"); // Jump to Loop start
+
+        // Loop end
+        this.jasmin.append("LOOPend").append(currentLabel).append(":\n");
     }
 
     private void assign(ASTNode node) {
