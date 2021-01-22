@@ -118,6 +118,10 @@ public final class CodeGenerator {
     }
 
     public StringBuilder generateCode(String source) {
+        if (!this.tree.getRoot().hasChildren()) {
+            throw new CodeGenerationException("Empty File can't be compiled");
+        }
+
         this.generateHeader(source);
         this.generateConstructor();
         this.generateMain();
