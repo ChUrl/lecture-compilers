@@ -111,8 +111,8 @@ public final class CodeGenerator {
         this.generateConstructor();
         this.generateMain();
 
-        log("Jasmin Assembler:\n" + this.jasmin);
-        System.out.println("Code-generation successfull.");
+        log("Jasmin Assembler:\n" + "-".repeat(100) + "\n" + this.jasmin + "-".repeat(100));
+        System.out.println("Code-generation successful.");
 
         return this.jasmin;
     }
@@ -123,13 +123,13 @@ public final class CodeGenerator {
     // TODO: Variablengröße
     private void generateMain() {
         this.jasmin.append(".method public static main([Ljava/lang/String;)V\n")
-                   .append(".limit stack 10\n")
-                   .append(".limit locals ").append(this.varMap.size() + 1).append("\n");
+                   .append("\t.limit stack 10\n")
+                   .append("\t.limit locals ").append(this.varMap.size() + 1).append("\n");
 
         // Needs to be skipped to not trigger generation for IDENTIFIER: args or IDENTIFIER: ClassName
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
 
-        this.jasmin.append("return\n")
+        this.jasmin.append("\t\treturn\n")
                    .append(".end method\n");
 
         log("Generated Jasmin Main.\n");
@@ -157,13 +157,13 @@ public final class CodeGenerator {
         this.generateNode(node.getChildren().get(0));
 
         // Jump
-        this.jasmin.append("ifeq LabelFalse").append(this.labelCounter).append("\n")
-                   .append("ifne LabelTrue").append(this.labelCounter).append("\n");
+        this.jasmin.append("\t\tifeq LabelFalse").append(this.labelCounter).append("\n")
+                   .append("\t\tifne LabelTrue").append(this.labelCounter).append("\n");
 
         // If branch
         this.jasmin.append("LabelTrue").append(this.labelCounter).append(":\n");
         this.generateNode(node.getChildren().get(1));
-        this.jasmin.append("goto LabelFinish").append(this.labelCounter).append("\n");
+        this.jasmin.append("\t\tgoto LabelFinish").append(this.labelCounter).append("\n");
 
         // Else branch
         this.jasmin.append("LabelFalse").append(this.labelCounter).append(":\n");
@@ -172,7 +172,7 @@ public final class CodeGenerator {
 
             this.generateNode(node.getChildren().get(2));
         }
-        this.jasmin.append("goto LabelFinish").append(this.labelCounter).append("\n"); // Optional
+        this.jasmin.append("\t\tgoto LabelFinish").append(this.labelCounter).append("\n"); // Optional
 
         this.jasmin.append("LabelFinish").append(this.labelCounter).append(":\n");
     }
@@ -189,7 +189,8 @@ public final class CodeGenerator {
 
         log("assign(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.jasmin.append(inst)
+        this.jasmin.append("\t\t")
+                   .append(inst)
                    .append(this.varMap.get(node.getValue()))
                    .append("\n");
     }
@@ -204,7 +205,7 @@ public final class CodeGenerator {
 
             inst = switch (node.getValue()) { //!: Type dependant
                 case "ADD" -> "";
-                case "SUB" -> "ldc -1\nimul";
+                case "SUB" -> "ldc -1\n\t\timul";
                 // case "NOT" -> ...
                 default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
             };
@@ -226,7 +227,8 @@ public final class CodeGenerator {
 
         log("expr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.jasmin.append(inst)
+        this.jasmin.append("\t\t")
+                   .append(inst)
                    .append("\n");
     }
 
@@ -236,7 +238,7 @@ public final class CodeGenerator {
         log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
-        this.jasmin.append("ldc ")
+        this.jasmin.append("\t\tldc ")
                    .append(node.getValue())
                    .append("\n");
     }
@@ -245,7 +247,7 @@ public final class CodeGenerator {
         log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
-        this.jasmin.append("ldc ")
+        this.jasmin.append("\t\tldc ")
                    .append(node.getValue())
                    .append("\n");
     }
@@ -255,7 +257,7 @@ public final class CodeGenerator {
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
 
-        this.jasmin.append("ldc ")
+        this.jasmin.append("\t\tldc ")
                    .append(val)
                    .append("\n");
     }
@@ -270,13 +272,14 @@ public final class CodeGenerator {
 
         log("identifier(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.jasmin.append(inst)
+        this.jasmin.append("\t\t")
+                   .append(inst)
                    .append(this.varMap.get(node.getValue()))
                    .append("\n");
     }
 
     private void println(ASTNode node) {
-        this.jasmin.append("getstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
+        this.jasmin.append("\t\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
 
         final ASTNode expr = node.getChildren().get(1).getChildren().get(1);
         final String type = switch (this.nodeTypeMap.get(expr)) {
@@ -290,7 +293,7 @@ public final class CodeGenerator {
 
         log("println(): " + expr.getName() + ": " + expr.getValue() + " => " + type);
 
-        this.jasmin.append("invokevirtual java/io/PrintStream/println(")
+        this.jasmin.append("\t\tinvokevirtual java/io/PrintStream/println(")
                    .append(type)
                    .append(")V\n");
     }
