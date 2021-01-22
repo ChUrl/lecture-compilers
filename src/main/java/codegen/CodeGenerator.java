@@ -23,14 +23,15 @@ public final class CodeGenerator {
         try {
             final Class<?> gen = CodeGenerator.class;
             map = Map.ofEntries(
+                    entry("cond", gen.getDeclaredMethod("cond", ASTNode.class)),
                     entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class)),
                     entry("expr", gen.getDeclaredMethod("expr", ASTNode.class)),
+                    // Leafs
                     entry("INTEGER_LIT", gen.getDeclaredMethod("intLiteral", ASTNode.class)),
-                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("booleanLiteral", ASTNode.class)),
+                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteral", ASTNode.class)),
                     entry("STRING_LIT", gen.getDeclaredMethod("stringLiteral", ASTNode.class)),
                     entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class)),
-                    entry("print", gen.getDeclaredMethod("println", ASTNode.class)),
-                    entry("cond", gen.getDeclaredMethod("cond", ASTNode.class))
+                    entry("print", gen.getDeclaredMethod("println", ASTNode.class))
             );
         } catch (NoSuchMethodException e) {
             map = null;
@@ -196,6 +197,14 @@ public final class CodeGenerator {
     }
 
     private void expr(ASTNode node) {
+        if ("INTEGER_TYPE".equals(this.nodeTypeMap.get(node))) {
+            this.intExpr(node);
+        } else if ("BOOLEAN_TYPE".equals(this.nodeTypeMap.get(node))) {
+            this.boolExpr(node);
+        }
+    }
+
+    private void intExpr(ASTNode node) {
         String inst = "";
 
         if (node.getChildren().size() == 1) {
@@ -203,7 +212,7 @@ public final class CodeGenerator {
 
             this.generateNode(node.getChildren().get(0));
 
-            inst = switch (node.getValue()) { //!: Type dependant
+            inst = switch (node.getValue()) {
                 case "ADD" -> "";
                 case "SUB" -> "ldc -1\n\t\timul";
                 // case "NOT" -> ...
@@ -215,7 +224,7 @@ public final class CodeGenerator {
             this.generateNode(node.getChildren().get(0));
             this.generateNode(node.getChildren().get(1));
 
-            inst = switch (node.getValue()) { //!: Type dependant
+            inst = switch (node.getValue()) {
                 case "ADD" -> "iadd"; // Integer
                 case "SUB" -> "isub";
                 case "MUL" -> "imul";
@@ -225,7 +234,43 @@ public final class CodeGenerator {
             };
         }
 
-        log("expr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+        log("intExpr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+
+        this.jasmin.append("\t\t")
+                   .append(inst)
+                   .append("\n");
+    }
+
+    private void boolExpr(ASTNode node) {
+        String inst = "";
+
+        if (node.getChildren().size() == 1) {
+            // Unary operator
+
+            if (!"NOT".equals(node.getValue())) {
+                // Diese Möglichkeit gibts eigentlich nicht
+                throw new IllegalStateException("Unexpected value: " + node.getValue());
+            }
+
+            this.generateNode(node.getChildren().get(0));
+
+            // 1 -> 0, 0 -> 1?
+            inst = "ldc 1\n\t\tisub\n\t\tdup\n\t\timul"; // Subtract 1 and square for now
+
+        } else if (node.getChildren().size() == 2) {
+            // Binary operator
+
+            this.generateNode(node.getChildren().get(0));
+            this.generateNode(node.getChildren().get(1));
+
+            inst = switch (node.getValue()) {
+                case "AND" -> "iand"; // Boolean
+                case "OR" -> "ior";
+                default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
+            };
+        }
+
+        log("boolExpr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
         this.jasmin.append("\t\t")
                    .append(inst)
@@ -252,7 +297,7 @@ public final class CodeGenerator {
                    .append("\n");
     }
 
-    private void booleanLiteral(ASTNode node) {
+    private void boolLiteral(ASTNode node) {
         log("booleanLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
