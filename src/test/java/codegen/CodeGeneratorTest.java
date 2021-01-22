@@ -160,26 +160,26 @@ class CodeGeneratorTest {
 
     private static Stream<Arguments> compileLogicProgramsArgs() {
         return Stream.of(
-                Arguments.of("true || false", true),
+                Arguments.of("true || false", true), // 1
                 Arguments.of("false || false", false),
                 Arguments.of("true && false", false),
                 Arguments.of("!(true && false)", true),
-                Arguments.of("true && !false", true),
+                Arguments.of("true && !false", true), // 5
                 Arguments.of("(5 < 4) || false", false),
                 Arguments.of("5 > 4 && 4 < 5", true),
                 Arguments.of("5 == 5 && !(5 != 5)", true),
                 Arguments.of("true == true", true),
-                Arguments.of("false == false", true),
+                Arguments.of("false == false", true), // 10
                 Arguments.of("(1 < 2) == (3 < 4)", true),
                 Arguments.of("1 >= 1", true),
                 Arguments.of("true && 5 < 6", true),
                 Arguments.of("!true", false),
-                Arguments.of("!false", true),
+                Arguments.of("!false", true), // 15
                 Arguments.of("true && (true || false)", true),
                 Arguments.of("false || true && false", false),
                 Arguments.of("(((5 < 4) == false) == true) == true", true),
                 Arguments.of("(false == false) && (true == !false) && true", true),
-                Arguments.of("true && true && true && false", false),
+                Arguments.of("true && true && true && false", false), // 20
                 Arguments.of("false || false || false || true", true),
                 Arguments.of("true && false || false && true || (5 < 6 == false)", false),
                 Arguments.of("false || 5 < 6 == false", false)
