@@ -48,6 +48,8 @@ public final class ASTCompacter {
             root.setName(child.getName());
             root.setValue(child.getValue());
             root.setChildren(child.getChildren());
+
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed
             toRemove.add(child);
         }
 
@@ -72,6 +74,7 @@ public final class ASTCompacter {
 
             log("Removing " + child.getName());
 
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed
             toRemove.add(child);
         }
 
@@ -96,6 +99,7 @@ public final class ASTCompacter {
 
             log("Removing " + root.getName() + " -> " + child.getName());
 
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed
             toRemove.add(child);
         }
 
@@ -141,6 +145,8 @@ public final class ASTCompacter {
             log(root.toString());
 
             root.setValue(child.getName());
+
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed
             toRemove.add(child);
         }
 
@@ -177,6 +183,8 @@ public final class ASTCompacter {
                 log(root.toString());
 
                 root.setValue(root.getChildren().get(1).getValue());
+
+                root.getChildren().get(1).setValue("REMOVE"); // If both childs have the same identity both are removed
                 toRemove.add(root.getChildren().get(1));
 
                 continue;
