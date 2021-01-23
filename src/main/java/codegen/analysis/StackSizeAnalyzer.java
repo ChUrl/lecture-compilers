@@ -19,16 +19,16 @@ public final class StackSizeAnalyzer {
 
     private StackSizeAnalyzer() {}
 
-    public static int model(AST tree) {
+    public static int runStackModel(AST tree) {
         log("\nDetermining required stack depth:");
 
         final StackModel stack = new StackModel();
-        model(tree.getRoot().getChildren().get(3).getChildren().get(11), stack);
+        runStackModel(tree.getRoot().getChildren().get(3).getChildren().get(11), stack);
 
         return stack.getMax();
     }
 
-    private static void model(ASTNode root, StackModel stack) {
+    private static void runStackModel(ASTNode root, StackModel stack) {
         if (mod.contains(root.getName())) {
             switch (root.getName()) {
                 case "assignment" -> assignment(root, stack);
@@ -39,7 +39,7 @@ public final class StackSizeAnalyzer {
             }
         } else {
             for (ASTNode child : root.getChildren()) {
-                model(child, stack);
+                runStackModel(child, stack);
             }
         }
     }
@@ -50,7 +50,7 @@ public final class StackSizeAnalyzer {
     }
 
     private static void assignment(ASTNode root, StackModel stack) {
-        model(root.getChildren().get(0), stack);
+        runStackModel(root.getChildren().get(0), stack);
 
         log("assignment():");
         stack.pop();
@@ -59,7 +59,7 @@ public final class StackSizeAnalyzer {
     private static void println(ASTNode root, StackModel stack) {
         stack.push(root); // Getstatic
 
-        model(root.getChildren().get(1).getChildren().get(1), stack);
+        runStackModel(root.getChildren().get(1).getChildren().get(1), stack);
 
         log("println():");
         stack.pop(); // Objectref
@@ -68,21 +68,23 @@ public final class StackSizeAnalyzer {
 
     private static void expr(ASTNode root, StackModel stack) {
         if (root.getChildren().size() == 2 && bin.contains(root.getValue())) {
-            model(root.getChildren().get(0), stack);
-            model(root.getChildren().get(1), stack);
+            runStackModel(root.getChildren().get(0), stack);
+            runStackModel(root.getChildren().get(1), stack);
 
             log("expr():");
             stack.pop(); // Argument
             stack.pop(); // Argument
             stack.push(root); // Result
         } else if (root.getChildren().size() == 1 && "NOT".equals(root.getValue())) {
-            model(root.getChildren().get(0), stack);
+            runStackModel(root.getChildren().get(0), stack);
 
             log("expr():");
-            stack.push(root); // 1 for xor
+            stack.push(new ASTNode("1 (XOR)", 0)); // 1 for xor
             stack.pop(); // xor
             stack.pop(); // xor
             stack.push(root); // result
+        } else if (root.getChildren().size() == 1) {
+            runStackModel(root.getChildren().get(0), stack);
         }
     }
 }

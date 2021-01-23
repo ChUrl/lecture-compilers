@@ -135,7 +135,7 @@ public final class CodeGenerator {
 
     private void generateMain() {
         this.jasmin.append(".method public static main([Ljava/lang/String;)V\n")
-                   .append("\t.limit stack ").append(StackSizeAnalyzer.model(this.tree)).append("\n")
+                   .append("\t.limit stack ").append(StackSizeAnalyzer.runStackModel(this.tree)).append("\n")
                    .append("\t.limit locals ").append(this.varMap.size() + 1).append("\n");
 
         log("\nGenerating main method code");
