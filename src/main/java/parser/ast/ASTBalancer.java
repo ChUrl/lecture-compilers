@@ -10,6 +10,7 @@ public final class ASTBalancer {
 
     private static final Map<String, Integer> priority;
     private static final Set<String> unary;
+    private static final Set<String> commutative;
 
     //!: Operatorpräzedenz
     // 0 - Unary: -, +, !
@@ -36,6 +37,8 @@ public final class ASTBalancer {
                                  Map.entry("OR", 6));
 
         unary = Set.of("NOT", "ADD", "SUB");
+
+        commutative = Set.of("ADD", "MUL", "EQUAL", "NOT_EQUAL", "AND", "OR");
     }
 
     private ASTBalancer() {}
@@ -44,6 +47,7 @@ public final class ASTBalancer {
         flip(tree);
         leftPrecedence(tree);
         operatorPrecedence(tree);
+        flipCommutativeExpr(tree);
 
         log(tree.toString());
         log("-".repeat(100));
@@ -63,6 +67,27 @@ public final class ASTBalancer {
         }
 
         Collections.reverse(root.getChildren());
+    }
+
+    public static void flipCommutativeExpr(AST tree) {
+        log("Flipping commutative expressions for stack efficiency");
+        flipCommutativeExpr(tree.getRoot());
+    }
+
+    private static void flipCommutativeExpr(ASTNode root) {
+        for (ASTNode child : root.getChildren()) {
+            flipCommutativeExpr(child);
+        }
+
+        if ("expr".equals(root.getName()) && commutative.contains(root.getValue())) {
+            if (root.getChildren().size() == 2 && root.getChildren().get(0).size() < root.getChildren().get(1).size()) {
+                // Make the bigger subtree the left one
+                log("Flipping " + root.getName() + ": " + root.getValue() + " for stack efficiency.");
+                log(root.toString());
+
+                Collections.reverse(root.getChildren());
+            }
+        }
     }
 
     // Führt Linksrotationen durch
