@@ -1,5 +1,6 @@
 package codegen;
 
+import codegen.analysis.StackSizeAnalyzer;
 import parser.ast.AST;
 import parser.ast.ASTNode;
 
@@ -93,7 +94,6 @@ public final class CodeGenerator {
     }
 
     private void generateHeader(String source) {
-        System.out.println(" - Generating Jasmin Assembler...");
         final String clazz = this.tree.getRoot().getChildren().get(1).getValue();
 
         this.jasmin.append(".bytecode 49.0\n") // 55.0 has stricter verification => stackmap frames missing
@@ -118,6 +118,7 @@ public final class CodeGenerator {
     }
 
     public StringBuilder generateCode(String source) {
+        System.out.println(" - Generating Jasmin assembler...");
         if (!this.tree.getRoot().hasChildren()) {
             throw new CodeGenerationException("Empty File can't be compiled");
         }
@@ -132,11 +133,12 @@ public final class CodeGenerator {
         return this.jasmin;
     }
 
-    // TODO: Stack size
     private void generateMain() {
         this.jasmin.append(".method public static main([Ljava/lang/String;)V\n")
-                   .append("\t.limit stack 10\n")
+                   .append("\t.limit stack ").append(StackSizeAnalyzer.model(this.tree)).append("\n")
                    .append("\t.limit locals ").append(this.varMap.size() + 1).append("\n");
+
+        log("\nGenerating main method code");
 
         // Needs to be skipped to not trigger generation for IDENTIFIER: args or IDENTIFIER: ClassName
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
@@ -207,7 +209,7 @@ public final class CodeGenerator {
         this.jasmin.append("LOOPend").append(currentLabel).append(":\n");
     }
 
-    private void assign(ASTNode node) {
+    private void assign(ASTNode node) { //! Stack - 1
         this.generateNode(node.getChildren().get(0));
 
         final String type = this.nodeTypeMap.get(node.getChildren().get(0));
@@ -236,17 +238,17 @@ public final class CodeGenerator {
     private void intExpr(ASTNode node) {
         String inst = "";
 
-        if (node.getChildren().size() == 1) {
+        if (node.getChildren().size() == 1) { //! Stack + 0
             // Unary operator
 
             this.generateNode(node.getChildren().get(0));
 
             inst = switch (node.getValue()) {
                 case "ADD" -> "";
-                case "SUB" -> "ldc -1\n\t\timul";
+                case "SUB" -> "ineg";
                 default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
             };
-        } else if (node.getChildren().size() == 2) {
+        } else if (node.getChildren().size() == 2) { //! Stack - 1
             // Binary operator
 
             this.generateNode(node.getChildren().get(0));
@@ -272,7 +274,7 @@ public final class CodeGenerator {
     private void boolExpr(ASTNode node) {
         String inst = "";
 
-        if (node.getChildren().size() == 1) {
+        if (node.getChildren().size() == 1) { //! Stack + 1
             // Unary operator
 
             if (!"NOT".equals(node.getValue())) {
@@ -282,11 +284,9 @@ public final class CodeGenerator {
 
             this.generateNode(node.getChildren().get(0));
 
-            // 1 -> 0, 0 -> 1?
-            //            inst = "ldc 1\n\t\tisub\n\t\tdup\n\t\timul"; // Subtract 1 and square for now
             inst = "ldc 1\n\t\tixor"; // 0  ^1 = 1, 1  ^1 = 0
 
-        } else if (node.getChildren().size() == 2) {
+        } else if (node.getChildren().size() == 2) { //! Stack - 1
             // Binary operator
 
             final int currentLabel = this.labelCounter;
@@ -329,7 +329,7 @@ public final class CodeGenerator {
 
     // Leafs
 
-    private void intLiteral(ASTNode node) {
+    private void intLiteral(ASTNode node) { //! Stack + 1
         log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
@@ -338,7 +338,7 @@ public final class CodeGenerator {
                    .append("\n");
     }
 
-    private void stringLiteral(ASTNode node) {
+    private void stringLiteral(ASTNode node) { //! Stack + 1
         log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
@@ -347,7 +347,7 @@ public final class CodeGenerator {
                    .append("\n");
     }
 
-    private void boolLiteral(ASTNode node) {
+    private void boolLiteral(ASTNode node) { //! Stack + 1
         log("booleanLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
@@ -357,7 +357,7 @@ public final class CodeGenerator {
                    .append("\n");
     }
 
-    private void identifier(ASTNode node) {
+    private void identifier(ASTNode node) { //! Stack + 1
         final String type = this.nodeTypeMap.get(node);
         final String inst = switch (type) {
             case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload ";
@@ -373,7 +373,7 @@ public final class CodeGenerator {
                    .append("\n");
     }
 
-    private void println(ASTNode node) {
+    private void println(ASTNode node) { //! Stack + 1
         this.jasmin.append("\t\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
 
         final ASTNode expr = node.getChildren().get(1).getChildren().get(1);
