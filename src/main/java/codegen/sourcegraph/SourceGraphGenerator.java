@@ -4,6 +4,7 @@ import codegen.CodeGenerationException;
 import codegen.analysis.StackSizeAnalyzer;
 import parser.ast.AST;
 import parser.ast.ASTNode;
+import util.Logger;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -101,6 +102,7 @@ public final class SourceGraphGenerator {
         System.out.println(" - Generating Source Graph...");
 
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
+        Logger.call(this.graph::printToImage);
 
         log("\n\nSourceGraph print:\n" + "-".repeat(100) + "\n" + this.graph.print() + "-".repeat(100));
         System.out.println("Graph-generation successful.");
