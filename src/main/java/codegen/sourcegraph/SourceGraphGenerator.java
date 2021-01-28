@@ -1,5 +1,6 @@
-package codegen;
+package codegen.sourcegraph;
 
+import codegen.CodeGenerationException;
 import codegen.analysis.StackSizeAnalyzer;
 import parser.ast.AST;
 import parser.ast.ASTNode;
@@ -15,23 +16,23 @@ import java.util.Map;
 import static java.util.Map.entry;
 import static util.Logger.log;
 
-public final class CodeGenerator {
+public final class SourceGraphGenerator {
 
     private static final Map<String, Method> methodMap;
 
     static {
         Map<String, Method> map;
         try {
-            final Class<?> gen = CodeGenerator.class;
+            final Class<?> gen = SourceGraphGenerator.class;
             map = Map.ofEntries(
                     entry("cond", gen.getDeclaredMethod("cond", ASTNode.class)),
                     entry("loop", gen.getDeclaredMethod("loop", ASTNode.class)),
                     entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class)),
                     entry("expr", gen.getDeclaredMethod("expr", ASTNode.class)),
                     // Leafs
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("intLiteral", ASTNode.class)),
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("intStringLiteral", ASTNode.class)),
                     entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteral", ASTNode.class)),
-                    entry("STRING_LIT", gen.getDeclaredMethod("stringLiteral", ASTNode.class)),
+                    entry("STRING_LIT", gen.getDeclaredMethod("intStringLiteral", ASTNode.class)),
                     entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class)),
                     entry("print", gen.getDeclaredMethod("println", ASTNode.class))
             );
@@ -44,20 +45,34 @@ public final class CodeGenerator {
 
     private final Map<String, Integer> varMap;
     private final Map<ASTNode, String> nodeTypeMap;
-    private final StringBuilder jasmin;
+    private final String source;
     private final AST tree;
+    private final SourceGraph graph;
 
     private int labelCounter;
 
-    private CodeGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap) {
+    private SourceGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, SourceGraph graph, String source) {
         this.varMap = varMap;
         this.tree = tree;
         this.nodeTypeMap = nodeTypeMap;
-        this.jasmin = new StringBuilder();
+        this.graph = graph;
+        this.source = source;
     }
 
-    public static CodeGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap) {
-        return new CodeGenerator(varMapFromAST(tree), tree, nodeTypeMap);
+    public static SourceGraphGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap, String source) {
+        if (!tree.getRoot().hasChildren()) {
+            throw new CodeGenerationException("Empty File can't be compiled");
+        }
+
+        final Map<String, Integer> varMap = varMapFromAST(tree);
+
+        final String bytecodeVersion = "49.0";
+        final String clazz = tree.getRoot().getChildren().get(1).getValue();
+        final int stackSize = StackSizeAnalyzer.runStackModel(tree);
+        final int localCount = varMap.size() + 1;
+        final SourceGraph graph = new SourceGraph(bytecodeVersion, source, clazz, stackSize, localCount);
+
+        return new SourceGraphGenerator(varMap, tree, nodeTypeMap, graph, source);
     }
 
     private static Map<String, Integer> varMapFromAST(AST tree) {
@@ -84,69 +99,16 @@ public final class CodeGenerator {
         return Collections.unmodifiableMap(varMap);
     }
 
-    private static String genComparisonInst(String inst, String labelPre, int currentLabel) {
-        return inst + " " + labelPre + "true" + currentLabel // If not equal jump to NEtrue
-               + "\n\t\tldc 0" // If false load 0
-               + "\n\t\tgoto " + labelPre + "end" + currentLabel // If false skip true branch
-               + "\n" + labelPre + "true" + currentLabel + ":"
-               + "\n\t\tldc 1" // if true load 1
-               + "\n" + labelPre + "end" + currentLabel + ":";
-    }
-
-    private void generateHeader(String source) {
-        final String clazz = this.tree.getRoot().getChildren().get(1).getValue();
-
-        this.jasmin.append(".bytecode 49.0\n") // 55.0 has stricter verification => stackmap frames missing
-                   .append(".source ").append(source).append("\n")
-                   .append(".class public ").append(clazz).append("\n")
-                   .append(".super java/lang/Object\n");
-
-        log("Generated Jasmin Header.");
-    }
-
-    private void generateConstructor() {
-        this.jasmin.append(".method public <init>()V\n")
-                   .append("\t.limit stack 1\n")
-                   .append("\t.limit locals 1\n")
-                   .append("\t.line 1\n")
-                   .append("\t\taload_0\n")
-                   .append("\t\tinvokespecial java/lang/Object/<init>()V\n")
-                   .append("\t\treturn\n")
-                   .append(".end method\n\n");
-
-        log("Generated Jasmin Constructor.");
-    }
-
-    public StringBuilder generateCode(String source) {
+    public SourceGraph generateCode() {
         System.out.println(" - Generating Jasmin assembler...");
-        if (!this.tree.getRoot().hasChildren()) {
-            throw new CodeGenerationException("Empty File can't be compiled");
-        }
 
-        this.generateHeader(source);
-        this.generateConstructor();
-        this.generateMain();
-
-        log("Jasmin Assembler:\n" + "-".repeat(100) + "\n" + this.jasmin + "-".repeat(100));
-        System.out.println("Code-generation successful.");
-
-        return this.jasmin;
-    }
-
-    private void generateMain() {
-        this.jasmin.append(".method public static main([Ljava/lang/String;)V\n")
-                   .append("\t.limit stack ").append(StackSizeAnalyzer.runStackModel(this.tree)).append("\n")
-                   .append("\t.limit locals ").append(this.varMap.size() + 1).append("\n");
-
-        log("\nGenerating main method code");
-
-        // Needs to be skipped to not trigger generation for IDENTIFIER: args or IDENTIFIER: ClassName
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
 
-        this.jasmin.append("\t\treturn\n")
-                   .append(".end method\n");
+        log("\n\nJasmin Assembler from FlowGraph:\n" + "-".repeat(100) + "\n" + this.graph + "-".repeat(100));
+        log("\n\nFlowGraph print:\n" + "-".repeat(100) + "\n" + this.graph.print() + "-".repeat(100));
+        System.out.println("Code-generation successful.");
 
-        log("Generated Jasmin Main.\n");
+        return this.graph;
     }
 
     private void generateNode(ASTNode node) {
@@ -171,14 +133,14 @@ public final class CodeGenerator {
         this.generateNode(node.getChildren().get(0));
 
         // Jump
-        this.jasmin.append("\t\tifeq IFfalse").append(currentLabel).append("\n"); // ifeq: == 0 => false
+        this.graph.addJump("ifeq", "IFfalse" + currentLabel);
 
         // IFtrue branch
         this.generateNode(node.getChildren().get(1));
-        this.jasmin.append("\t\tgoto IFend").append(currentLabel).append("\n");
+        this.graph.addJump("goto", "IFend" + currentLabel);
 
         // IFfalse branch
-        this.jasmin.append("IFfalse").append(currentLabel).append(":\n");
+        this.graph.addLabel("IFfalse" + currentLabel);
         if (node.getChildren().size() == 3) {
             // Else exists
 
@@ -186,27 +148,27 @@ public final class CodeGenerator {
         }
 
         // IFend branch
-        this.jasmin.append("IFend").append(currentLabel).append(":\n");
+        this.graph.addLabel("IFend" + currentLabel);
     }
 
     private void loop(ASTNode node) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
-        this.jasmin.append("LOOPstart").append(currentLabel).append(":\n");
+        this.graph.addLabel("LOOPstart" + currentLabel);
 
         // Condition
         this.generateNode(node.getChildren().get(0).getChildren().get(1));
 
         // Jump
-        this.jasmin.append("\t\tifeq LOOPend").append(currentLabel).append("\n"); // ifeq: == 0 => Loop stopped
+        this.graph.addJump("ifeq", "LOOPend" + currentLabel);
 
         // Loop body
         this.generateNode(node.getChildren().get(1));
-        this.jasmin.append("\t\tgoto LOOPstart").append(currentLabel).append("\n"); // Jump to Loop start
+        this.graph.addJump("goto", "LOOPstart" + currentLabel);
 
         // Loop end
-        this.jasmin.append("LOOPend").append(currentLabel).append(":\n");
+        this.graph.addLabel("LOOPend" + currentLabel);
     }
 
     private void assign(ASTNode node) { //! Stack - 1
@@ -214,17 +176,14 @@ public final class CodeGenerator {
 
         final String type = this.nodeTypeMap.get(node.getChildren().get(0));
         final String inst = switch (type) {
-            case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "istore ";
-            case "STRING_TYPE" -> "astore ";
+            case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "istore";
+            case "STRING_TYPE" -> "astore";
             default -> throw new IllegalStateException("Unexpected value: " + type);
         };
 
         log("assign(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.jasmin.append("\t\t")
-                   .append(inst)
-                   .append(this.varMap.get(node.getValue()))
-                   .append("\n");
+        this.graph.addInst(inst, this.varMap.get(node.getValue()).toString());
     }
 
     private void expr(ASTNode node) {
@@ -266,14 +225,10 @@ public final class CodeGenerator {
 
         log("intExpr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.jasmin.append("\t\t")
-                   .append(inst)
-                   .append("\n");
+        this.graph.addInst(inst);
     }
 
     private void boolExpr(ASTNode node) {
-        String inst = "";
-
         if (node.getChildren().size() == 1) { //! Stack + 1
             // Unary operator
 
@@ -284,7 +239,9 @@ public final class CodeGenerator {
 
             this.generateNode(node.getChildren().get(0));
 
-            inst = "ldc 1\n\t\tixor"; // 0  ^1 = 1, 1  ^1 = 0
+            // 0  ^1 = 1, 1  ^1 = 0
+            this.graph.addInst("ldc", "1");
+            this.graph.addInst("ixor");
 
         } else if (node.getChildren().size() == 2) { //! Stack - 1
             // Binary operator
@@ -307,44 +264,36 @@ public final class CodeGenerator {
                 default -> throw new IllegalStateException("Unexpected value: " + type);
             };
 
-            inst = switch (node.getValue()) {
-                case "AND" -> "iand"; // Boolean
-                case "OR" -> "ior";
-                case "EQUAL" -> genComparisonInst(cmpeq, "EQ", currentLabel);
-                case "NOT_EQUAL" -> genComparisonInst(cmpne, "NE", currentLabel);
-                case "LESS" -> genComparisonInst("if_icmplt", "LT", currentLabel);
-                case "LESS_EQUAL" -> genComparisonInst("if_icmple", "LE", currentLabel);
-                case "GREATER" -> genComparisonInst("if_icmpgt", "GT", currentLabel);
-                case "GREATER_EQUAL" -> genComparisonInst("if_icmpge", "GE", currentLabel);
+            switch (node.getValue()) {
+                case "AND" -> this.graph.addInst("iand"); // Boolean
+                case "OR" -> this.graph.addInst("ior");
+                case "EQUAL" -> this.genComparisonInst(cmpeq, "EQ", currentLabel);
+                case "NOT_EQUAL" -> this.genComparisonInst(cmpne, "NE", currentLabel);
+                case "LESS" -> this.genComparisonInst("if_icmplt", "LT", currentLabel);
+                case "LESS_EQUAL" -> this.genComparisonInst("if_icmple", "LE", currentLabel);
+                case "GREATER" -> this.genComparisonInst("if_icmpgt", "GT", currentLabel);
+                case "GREATER_EQUAL" -> this.genComparisonInst("if_icmpge", "GE", currentLabel);
                 default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
-            };
+            }
         }
+    }
 
-        log("boolExpr(): " + node.getName() + ": " + node.getValue() + " => \n\t\t" + inst);
-
-        this.jasmin.append("\t\t")
-                   .append(inst)
-                   .append("\n");
+    private void genComparisonInst(String cmpInst, String labelPre, int currentLabel) {
+        this.graph.addJump(cmpInst, labelPre + "true" + currentLabel); // If not equal jump to NEtrue
+        this.graph.addInst("ldc", "0"); // If false load 0
+        this.graph.addJump("goto", labelPre + "end" + currentLabel); // If false skip to true
+        this.graph.addLabel(labelPre + "true" + currentLabel);
+        this.graph.addInst("ldc", "1"); // If true load 1
+        this.graph.addLabel(labelPre + "end" + currentLabel);
     }
 
     // Leafs
 
-    private void intLiteral(ASTNode node) { //! Stack + 1
+    private void intStringLiteral(ASTNode node) { //! Stack + 1
         log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
-        this.jasmin.append("\t\tldc ")
-                   .append(node.getValue())
-                   .append("\n");
-    }
-
-    private void stringLiteral(ASTNode node) { //! Stack + 1
-        log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
-
-        // bipush only pushes 1 byte as int
-        this.jasmin.append("\t\tldc ")
-                   .append(node.getValue())
-                   .append("\n");
+        this.graph.addInst("ldc", node.getValue());
     }
 
     private void boolLiteral(ASTNode node) { //! Stack + 1
@@ -352,29 +301,24 @@ public final class CodeGenerator {
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
 
-        this.jasmin.append("\t\tldc ")
-                   .append(val)
-                   .append("\n");
+        this.graph.addInst("ldc", val);
     }
 
     private void identifier(ASTNode node) { //! Stack + 1
         final String type = this.nodeTypeMap.get(node);
         final String inst = switch (type) {
-            case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload ";
-            case "STRING_TYPE" -> "aload ";
+            case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload";
+            case "STRING_TYPE" -> "aload";
             default -> throw new IllegalStateException("Unexpected value: " + type);
         };
 
         log("identifier(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.jasmin.append("\t\t")
-                   .append(inst)
-                   .append(this.varMap.get(node.getValue()))
-                   .append("\n");
+        this.graph.addInst(inst, this.varMap.get(node.getValue()).toString());
     }
 
     private void println(ASTNode node) { //! Stack + 1
-        this.jasmin.append("\t\tgetstatic java/lang/System/out Ljava/io/PrintStream;\n"); // Push System.out to stack
+        this.graph.addInst("getstatic", "java/lang/System/out", "Ljava/io/PrintStream;");
 
         final ASTNode expr = node.getChildren().get(1).getChildren().get(1);
         final String type = switch (this.nodeTypeMap.get(expr)) {
@@ -388,8 +332,6 @@ public final class CodeGenerator {
 
         log("println(): " + expr.getName() + ": " + expr.getValue() + " => " + type);
 
-        this.jasmin.append("\t\tinvokevirtual java/io/PrintStream/println(")
-                   .append(type)
-                   .append(")V\n");
+        this.graph.addInst("invokevirtual", "java/io/PrintStream/println(" + type + ")V");
     }
 }

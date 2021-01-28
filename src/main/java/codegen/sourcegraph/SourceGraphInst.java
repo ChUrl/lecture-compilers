@@ -1,11 +1,11 @@
-package codegen.analysis.flowgraph;
+package codegen.sourcegraph;
 
-public class FlowGraphLine {
+public class SourceGraphInst {
 
     private final String instruction;
     private final String[] args;
 
-    public FlowGraphLine(String instruction, String... args) {
+    public SourceGraphInst(String instruction, String... args) {
         this.instruction = instruction;
         this.args = args;
     }

@@ -1,6 +1,6 @@
-package codegen.analysis.flowgraph;
+package codegen.sourcegraph;
 
-public class FlowGraphHead {
+public class SourceGraphHead {
 
     private final String bytecodeVersion;
     private final String source;
@@ -8,7 +8,7 @@ public class FlowGraphHead {
     private final int stackSize;
     private final int localCount;
 
-    public FlowGraphHead(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
+    public SourceGraphHead(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
         this.bytecodeVersion = bytecodeVersion;
         this.source = source;
         this.clazz = clazz;
@@ -20,7 +20,7 @@ public class FlowGraphHead {
     public String toString() {
         return ".bytecode " + this.bytecodeVersion + "\n"
                + ".source " + this.source + "\n"
-               + ".class public" + this.clazz + "\n"
+               + ".class public " + this.clazz + "\n"
                + ".super java/lang/Object\n"
                + ".method public <init>()V\n"
                + "\t.limit stack 1\n"

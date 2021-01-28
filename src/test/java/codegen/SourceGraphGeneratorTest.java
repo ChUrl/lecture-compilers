@@ -1,5 +1,7 @@
 package codegen;
 
+import codegen.sourcegraph.SourceGraph;
+import codegen.sourcegraph.SourceGraphGenerator;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
@@ -27,14 +29,14 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-class CodeGeneratorTest {
+class SourceGraphGeneratorTest {
 
     private static StupsParser parser;
     private static Grammar stupsGrammar;
 
     @BeforeAll
     static void init() throws IOException, URISyntaxException {
-        final Path path = Paths.get(CodeGeneratorTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Path path = Paths.get(SourceGraphGeneratorTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         final Grammar grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
         stupsGrammar = grammar;
@@ -42,7 +44,7 @@ class CodeGeneratorTest {
 
     private static String readProgram(String prog) {
         try {
-            final Path progPath = Paths.get(CodeGeneratorTest.class.getClassLoader().getResource("examplePrograms/" + prog).toURI());
+            final Path progPath = Paths.get(SourceGraphGeneratorTest.class.getClassLoader().getResource("examplePrograms/" + prog).toURI());
             return Files.readString(progPath);
         } catch (URISyntaxException | IOException e) {
             e.printStackTrace();
@@ -240,8 +242,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
-        final StringBuilder srcProg = gen.generateCode("TestOutput");
+        final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutpu");
+        final SourceGraph srcProg = gen.generateCode();
 
         compileJasmin(srcProg.toString());
         assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
@@ -255,8 +257,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
-        final StringBuilder srcProg = gen.generateCode("TestOutput");
+        final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
+        final SourceGraph srcProg = gen.generateCode();
 
         compileJasmin(srcProg.toString());
         assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
@@ -270,8 +272,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
-        final StringBuilder srcProg = gen.generateCode("TestOutput");
+        final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
+        final SourceGraph srcProg = gen.generateCode();
 
         compileJasmin(srcProg.toString());
         assertThat(Boolean.parseBoolean(executeCompiledProgram())).isEqualTo(result);
@@ -285,8 +287,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
-        final StringBuilder srcProg = gen.generateCode("TestOutput");
+        final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
+        final SourceGraph srcProg = gen.generateCode();
 
         compileJasmin(srcProg.toString());
         assertThat(executeCompiledProgram()).isEqualTo(result);
@@ -300,8 +302,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
-        final StringBuilder srcProg = gen.generateCode("TestOutput");
+        final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
+        final SourceGraph srcProg = gen.generateCode();
 
         compileJasmin(srcProg.toString());
         assertThat(executeCompiledProgram()).isEqualTo(result);
@@ -313,8 +315,8 @@ class CodeGeneratorTest {
 
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final CodeGenerator gen = CodeGenerator.fromAST(tree, nodeTable);
 
-        assertThatThrownBy(() -> gen.generateCode("TestOutput")).isInstanceOf(CodeGenerationException.class);
+        assertThatThrownBy(() -> SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput"))
+                .isInstanceOf(CodeGenerationException.class);
     }
 }
