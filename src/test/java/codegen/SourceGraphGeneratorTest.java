@@ -243,7 +243,7 @@ class SourceGraphGeneratorTest {
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutpu");
-        final SourceGraph srcProg = gen.generateCode();
+        final SourceGraph srcProg = gen.generateGraph();
 
         compileJasmin(srcProg.toString());
         assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
@@ -258,7 +258,7 @@ class SourceGraphGeneratorTest {
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
-        final SourceGraph srcProg = gen.generateCode();
+        final SourceGraph srcProg = gen.generateGraph();
 
         compileJasmin(srcProg.toString());
         assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
@@ -273,7 +273,7 @@ class SourceGraphGeneratorTest {
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
-        final SourceGraph srcProg = gen.generateCode();
+        final SourceGraph srcProg = gen.generateGraph();
 
         compileJasmin(srcProg.toString());
         assertThat(Boolean.parseBoolean(executeCompiledProgram())).isEqualTo(result);
@@ -288,7 +288,7 @@ class SourceGraphGeneratorTest {
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
-        final SourceGraph srcProg = gen.generateCode();
+        final SourceGraph srcProg = gen.generateGraph();
 
         compileJasmin(srcProg.toString());
         assertThat(executeCompiledProgram()).isEqualTo(result);
@@ -303,7 +303,7 @@ class SourceGraphGeneratorTest {
         final AST tree = lexParseProgram(program);
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
-        final SourceGraph srcProg = gen.generateCode();
+        final SourceGraph srcProg = gen.generateGraph();
 
         compileJasmin(srcProg.toString());
         assertThat(executeCompiledProgram()).isEqualTo(result);

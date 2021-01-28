@@ -25,16 +25,16 @@ public final class SourceGraphGenerator {
         try {
             final Class<?> gen = SourceGraphGenerator.class;
             map = Map.ofEntries(
-                    entry("cond", gen.getDeclaredMethod("cond", ASTNode.class)),
-                    entry("loop", gen.getDeclaredMethod("loop", ASTNode.class)),
-                    entry("assignment", gen.getDeclaredMethod("assign", ASTNode.class)),
-                    entry("expr", gen.getDeclaredMethod("expr", ASTNode.class)),
+                    entry("cond", gen.getDeclaredMethod("condNode", ASTNode.class)),
+                    entry("loop", gen.getDeclaredMethod("loopNode", ASTNode.class)),
+                    entry("assignment", gen.getDeclaredMethod("assignNode", ASTNode.class)),
+                    entry("expr", gen.getDeclaredMethod("exprNode", ASTNode.class)),
                     // Leafs
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("intStringLiteral", ASTNode.class)),
-                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteral", ASTNode.class)),
-                    entry("STRING_LIT", gen.getDeclaredMethod("intStringLiteral", ASTNode.class)),
-                    entry("IDENTIFIER", gen.getDeclaredMethod("identifier", ASTNode.class)),
-                    entry("print", gen.getDeclaredMethod("println", ASTNode.class))
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("intStringLiteralNode", ASTNode.class)),
+                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteralNode", ASTNode.class)),
+                    entry("STRING_LIT", gen.getDeclaredMethod("intStringLiteralNode", ASTNode.class)),
+                    entry("IDENTIFIER", gen.getDeclaredMethod("identifierNode", ASTNode.class)),
+                    entry("print", gen.getDeclaredMethod("printlnNode", ASTNode.class))
             );
         } catch (NoSuchMethodException e) {
             map = null;
@@ -43,20 +43,18 @@ public final class SourceGraphGenerator {
         methodMap = map;
     }
 
+    private final AST tree;
     private final Map<String, Integer> varMap;
     private final Map<ASTNode, String> nodeTypeMap;
-    private final String source;
-    private final AST tree;
     private final SourceGraph graph;
 
     private int labelCounter;
 
-    private SourceGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, SourceGraph graph, String source) {
+    private SourceGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, SourceGraph graph) {
         this.varMap = varMap;
         this.tree = tree;
         this.nodeTypeMap = nodeTypeMap;
         this.graph = graph;
-        this.source = source;
     }
 
     public static SourceGraphGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap, String source) {
@@ -72,7 +70,7 @@ public final class SourceGraphGenerator {
         final int localCount = varMap.size() + 1;
         final SourceGraph graph = new SourceGraph(bytecodeVersion, source, clazz, stackSize, localCount);
 
-        return new SourceGraphGenerator(varMap, tree, nodeTypeMap, graph, source);
+        return new SourceGraphGenerator(varMap, tree, nodeTypeMap, graph);
     }
 
     private static Map<String, Integer> varMapFromAST(AST tree) {
@@ -99,14 +97,13 @@ public final class SourceGraphGenerator {
         return Collections.unmodifiableMap(varMap);
     }
 
-    public SourceGraph generateCode() {
-        System.out.println(" - Generating Jasmin assembler...");
+    public SourceGraph generateGraph() {
+        System.out.println(" - Generating Source Graph...");
 
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
 
-        log("\n\nJasmin Assembler from FlowGraph:\n" + "-".repeat(100) + "\n" + this.graph + "-".repeat(100));
-        log("\n\nFlowGraph print:\n" + "-".repeat(100) + "\n" + this.graph.print() + "-".repeat(100));
-        System.out.println("Code-generation successful.");
+        log("\n\nSourceGraph print:\n" + "-".repeat(100) + "\n" + this.graph.print() + "-".repeat(100));
+        System.out.println("Graph-generation successful.");
 
         return this.graph;
     }
@@ -125,7 +122,7 @@ public final class SourceGraphGenerator {
 
     // ifeq - if value is 0
     // ifne - if value is not 0
-    private void cond(ASTNode node) {
+    private void condNode(ASTNode node) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
@@ -151,7 +148,7 @@ public final class SourceGraphGenerator {
         this.graph.addLabel("IFend" + currentLabel);
     }
 
-    private void loop(ASTNode node) {
+    private void loopNode(ASTNode node) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
@@ -171,7 +168,7 @@ public final class SourceGraphGenerator {
         this.graph.addLabel("LOOPend" + currentLabel);
     }
 
-    private void assign(ASTNode node) { //! Stack - 1
+    private void assignNode(ASTNode node) { //! Stack - 1
         this.generateNode(node.getChildren().get(0));
 
         final String type = this.nodeTypeMap.get(node.getChildren().get(0));
@@ -186,7 +183,7 @@ public final class SourceGraphGenerator {
         this.graph.addInst(inst, this.varMap.get(node.getValue()).toString());
     }
 
-    private void expr(ASTNode node) {
+    private void exprNode(ASTNode node) {
         if ("INTEGER_TYPE".equals(this.nodeTypeMap.get(node))) {
             this.intExpr(node);
         } else if ("BOOLEAN_TYPE".equals(this.nodeTypeMap.get(node))) {
@@ -289,14 +286,14 @@ public final class SourceGraphGenerator {
 
     // Leafs
 
-    private void intStringLiteral(ASTNode node) { //! Stack + 1
-        log("literal(): " + node.getName() + ": " + node.getValue() + " => ldc");
+    private void intStringLiteralNode(ASTNode node) { //! Stack + 1
+        log("intStringLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
         this.graph.addInst("ldc", node.getValue());
     }
 
-    private void boolLiteral(ASTNode node) { //! Stack + 1
+    private void boolLiteralNode(ASTNode node) { //! Stack + 1
         log("booleanLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
@@ -304,7 +301,7 @@ public final class SourceGraphGenerator {
         this.graph.addInst("ldc", val);
     }
 
-    private void identifier(ASTNode node) { //! Stack + 1
+    private void identifierNode(ASTNode node) { //! Stack + 1
         final String type = this.nodeTypeMap.get(node);
         final String inst = switch (type) {
             case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload";
@@ -317,7 +314,7 @@ public final class SourceGraphGenerator {
         this.graph.addInst(inst, this.varMap.get(node.getValue()).toString());
     }
 
-    private void println(ASTNode node) { //! Stack + 1
+    private void printlnNode(ASTNode node) { //! Stack + 1
         this.graph.addInst("getstatic", "java/lang/System/out", "Ljava/io/PrintStream;");
 
         final ASTNode expr = node.getChildren().get(1).getChildren().get(1);

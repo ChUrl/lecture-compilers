@@ -1,5 +1,4 @@
-import codegen.sourcegraph.SourceGraph;
-import codegen.sourcegraph.SourceGraphGenerator;
+import codegen.CodeGenerator;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
@@ -78,12 +77,11 @@ public final class StupsCompiler {
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
 
         // Codegeneration + Output
-        final String outputName = filename.replaceFirst("stups", "j");
-        final SourceGraphGenerator gen = SourceGraphGenerator.fromAST(tree, nodeTable, filename);
-        final SourceGraph graph = gen.generateCode();
+        final String outputName = filename.replaceFirst("\\.stups", ".j");
+        final String sourceCode = CodeGenerator.generateCode(tree, nodeTable, filename);
         try {
             final Path outputFile = Paths.get(System.getProperty("user.dir") + "/" + outputName);
-            Files.writeString(outputFile, graph.toString());
+            Files.writeString(outputFile, sourceCode);
         } catch (IOException e) {
             System.out.println("Datei konnte nicht geschrieben werden.");
             return;
