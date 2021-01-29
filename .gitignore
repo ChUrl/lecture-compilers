@@ -12,5 +12,5 @@ jasmin.jar
 *.j
 
 TestClass.stups
-/DotOut.dot.svg
-/DotOut.dot
+*.svg
+*.dot
