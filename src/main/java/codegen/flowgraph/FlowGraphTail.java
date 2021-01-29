@@ -1,6 +1,6 @@
-package codegen.sourcegraph;
+package codegen.flowgraph;
 
-public class SourceGraphTail {
+public class FlowGraphTail {
 
     @Override
     public String toString() {

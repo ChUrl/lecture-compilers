@@ -1,4 +1,4 @@
-package codegen.sourcegraph;
+package codegen.flowgraph;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -10,25 +10,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SourceGraph {
+public class FlowGraph {
 
-    private final SourceGraphHead head;
-    private final List<SourceBlock> blocks;
-    private final SourceGraphTail tail;
+    private final FlowGraphHead head;
+    private final List<FlowBasicBlock> blocks;
+    private final FlowGraphTail tail;
 
     // If a new block has this label, the value in this map is a predecessor
-    private final Map<String, SourceBlock> predecessorMap;
+    private final Map<String, FlowBasicBlock> predecessorMap;
 
-    public SourceGraph(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
-        this.head = new SourceGraphHead(bytecodeVersion, source, clazz, stackSize, localCount);
+    public FlowGraph(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
+        this.head = new FlowGraphHead(bytecodeVersion, source, clazz, stackSize, localCount);
         this.blocks = new ArrayList<>();
-        this.tail = new SourceGraphTail();
+        this.tail = new FlowGraphTail();
         this.predecessorMap = new HashMap<>();
     }
 
     // Label marks beginning of block
     public void addLabel(String label) {
-        final SourceBlock newBlock = new SourceBlock(label);
+        final FlowBasicBlock newBlock = new FlowBasicBlock(label);
 
 
         // Resolve missing successors/predecessors from jumps
@@ -39,34 +39,37 @@ public class SourceGraph {
             // this.predecessorMap.remove(label); // Problematic if multiple gotos to same label
         }
 
+        /*
+        TODO: Hier ist ein Bug, welcher im Datenflussgraph zu gotos mit 2 successors führt
         if (this.getCurrentBlock().isEmpty()) {
             // Replace empty blocks, we don't need them
 
             if (this.blocks.size() >= 2) {
                 // This empty blocks successors become the previous blocks successors after replacment
 
-                this.blocks.get(this.blocks.size() - 2).addSuccessors(this.getCurrentBlock().getSuccessors());
+                this.blocks.get(this.blocks.size() - 2).addSuccessors(this.getCurrentBlock().getSuccessorSet());
             }
 
             // Previous blocks predecessors are also the new blocks predecessors
-            newBlock.addPredecessors(this.getCurrentBlock().getPredecessors());
+            newBlock.addPredecessors(this.getCurrentBlock().getPredecessorSet());
 
             this.blocks.set(this.blocks.size() - 1, newBlock); // Replace
         } else {
+        */
             // Append block if last one isn't empty
 
             newBlock.addPredecessor(this.getCurrentBlock()); // Obvious predecessor of new block
             this.getCurrentBlock().addSuccessor(newBlock); // Obvious successor of current block
 
             this.blocks.add(newBlock);
-        }
+        //        }
     }
 
     // Jump means end of block
     public void addJump(String jumpInstruction, String label) {
         this.addInst(jumpInstruction, label);
 
-        final SourceBlock newBlock = new SourceBlock();
+        final FlowBasicBlock newBlock = new FlowBasicBlock();
         newBlock.addPredecessor(this.getCurrentBlock()); // Obvious predecessor of new block
 
         if (!"goto".equals(jumpInstruction)) {
@@ -76,7 +79,7 @@ public class SourceGraph {
         }
 
         // Jumped successor
-        final SourceBlock labelBlock = this.getBlockByLabel(label);
+        final FlowBasicBlock labelBlock = this.getBlockByLabel(label);
         if (labelBlock != null) {
             // Successor exists
 
@@ -93,15 +96,15 @@ public class SourceGraph {
 
     public void addInst(String instruction, String... args) {
         if (this.blocks.isEmpty()) {
-            this.blocks.add(new SourceBlock()); // First block doesn't exist
+            this.blocks.add(new FlowBasicBlock()); // First block doesn't exist
         }
 
-        this.getCurrentBlock().addLine(instruction, args); // Add to last block
+        this.getCurrentBlock().addInstruction(instruction, args); // Add to last block
     }
 
     public String print() {
         final String blocksString = this.blocks.stream()
-                                               .map(SourceBlock::toString)
+                                               .map(FlowBasicBlock::toString)
                                                .map(string -> string + "-".repeat(50) + "\n")
                                                .collect(Collectors.joining());
 
@@ -116,9 +119,11 @@ public class SourceGraph {
         dot.append("digraph dfd {\n")
            .append("node[shape=Mrecord]\n");
 
-        for (SourceBlock block : this.blocks) {
+        for (FlowBasicBlock block : this.blocks) {
             dot.append(block.getId())
                .append(" [label=\"{<f0> ")
+               .append(this.blocks.indexOf(block))
+               .append(": ")
                .append(block.getLabel())
                .append("|<f1> ")
                .append(block.printInst())
@@ -131,8 +136,8 @@ public class SourceGraph {
         dot.append("START -> ").append(this.blocks.get(0).getId()).append(";\n");
         dot.append(this.getCurrentBlock().getId()).append(" -> END;\n");
 
-        for (SourceBlock block : this.blocks) {
-            for (SourceBlock succ : block.getSuccessors()) {
+        for (FlowBasicBlock block : this.blocks) {
+            for (FlowBasicBlock succ : block.getSuccessorSet()) {
                 dot.append(block.getId()).append(" -> ").append(succ.getId()).append(";\n");
             }
         }
@@ -141,14 +146,14 @@ public class SourceGraph {
 
         final String dotOut = dot.toString();
 
-        final Path dotFile = Paths.get(System.getProperty("user.dir") + "/DotOut.dot");
+        final Path dotFile = Paths.get(System.getProperty("user.dir") + "/FlowGraph.dot");
         try {
             Files.writeString(dotFile, dotOut);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        final ProcessBuilder dotCompile = new ProcessBuilder("dot", "-Tsvg", "-O", "DotOut.dot");
+        final ProcessBuilder dotCompile = new ProcessBuilder("dot", "-Tsvg", "-oFlowGraph.svg", "FlowGraph.dot");
         try {
             dotCompile.start();
         } catch (IOException e) {
@@ -161,7 +166,7 @@ public class SourceGraph {
     @Override
     public String toString() {
         final String blocksString = this.blocks.stream()
-                                               .map(SourceBlock::toString)
+                                               .map(FlowBasicBlock::toString)
                                                .collect(Collectors.joining());
 
         return this.head
@@ -169,14 +174,25 @@ public class SourceGraph {
                + this.tail;
     }
 
-    private SourceBlock getBlockByLabel(String label) {
+    private FlowBasicBlock getBlockByLabel(String label) {
         return this.blocks.stream()
                           .filter(block -> block.getLabel().equals(label))
                           .findFirst()
                           .orElse(null);
     }
 
-    private SourceBlock getCurrentBlock() {
+    private FlowBasicBlock getCurrentBlock() {
         return this.blocks.get(this.blocks.size() - 1);
+    }
+
+    public List<FlowBasicBlock> getBlocks() {
+        return this.blocks;
+    }
+
+    public FlowBasicBlock getBlockById(String id) {
+        return this.blocks.stream()
+                          .filter(block -> block.getId().equals(id))
+                          .findFirst()
+                          .orElse(null);
     }
 }

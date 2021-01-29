@@ -1,6 +1,6 @@
-package codegen.sourcegraph;
+package codegen.flowgraph;
 
-public class SourceGraphHead {
+public class FlowGraphHead {
 
     private final String bytecodeVersion;
     private final String source;
@@ -8,7 +8,7 @@ public class SourceGraphHead {
     private final int stackSize;
     private final int localCount;
 
-    public SourceGraphHead(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
+    public FlowGraphHead(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
         this.bytecodeVersion = bytecodeVersion;
         this.source = source;
         this.clazz = clazz;

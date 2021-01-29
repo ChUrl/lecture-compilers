@@ -1,4 +1,4 @@
-package codegen.sourcegraph;
+package codegen.flowgraph;
 
 import codegen.CodeGenerationException;
 import codegen.analysis.StackSizeAnalyzer;
@@ -17,14 +17,14 @@ import java.util.Map;
 import static java.util.Map.entry;
 import static util.Logger.log;
 
-public final class SourceGraphGenerator {
+public final class FlowGraphGenerator {
 
     private static final Map<String, Method> methodMap;
 
     static {
         Map<String, Method> map;
         try {
-            final Class<?> gen = SourceGraphGenerator.class;
+            final Class<?> gen = FlowGraphGenerator.class;
             map = Map.ofEntries(
                     entry("cond", gen.getDeclaredMethod("condNode", ASTNode.class)),
                     entry("loop", gen.getDeclaredMethod("loopNode", ASTNode.class)),
@@ -47,34 +47,33 @@ public final class SourceGraphGenerator {
     private final AST tree;
     private final Map<String, Integer> varMap;
     private final Map<ASTNode, String> nodeTypeMap;
-    private final SourceGraph graph;
-
+    private final FlowGraph graph;
     private int labelCounter;
 
-    private SourceGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, SourceGraph graph) {
+    private FlowGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, FlowGraph graph) {
         this.varMap = varMap;
         this.tree = tree;
         this.nodeTypeMap = nodeTypeMap;
         this.graph = graph;
     }
 
-    public static SourceGraphGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap, String source) {
+    public static FlowGraphGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap, String source) {
         if (!tree.getRoot().hasChildren()) {
             throw new CodeGenerationException("Empty File can't be compiled");
         }
 
-        final Map<String, Integer> varMap = varMapFromAST(tree);
+        final Map<String, Integer> varMap = initVarMap(tree);
 
         final String bytecodeVersion = "49.0";
         final String clazz = tree.getRoot().getChildren().get(1).getValue();
         final int stackSize = StackSizeAnalyzer.runStackModel(tree);
         final int localCount = varMap.size() + 1;
-        final SourceGraph graph = new SourceGraph(bytecodeVersion, source, clazz, stackSize, localCount);
+        final FlowGraph graph = new FlowGraph(bytecodeVersion, source, clazz, stackSize, localCount);
 
-        return new SourceGraphGenerator(varMap, tree, nodeTypeMap, graph);
+        return new FlowGraphGenerator(varMap, tree, nodeTypeMap, graph);
     }
 
-    private static Map<String, Integer> varMapFromAST(AST tree) {
+    private static Map<String, Integer> initVarMap(AST tree) {
         final Map<String, Integer> varMap = new HashMap<>();
 
         // Assign variables to map
@@ -98,7 +97,11 @@ public final class SourceGraphGenerator {
         return Collections.unmodifiableMap(varMap);
     }
 
-    public SourceGraph generateGraph() {
+    public Map<String, Integer> getVarMap() {
+        return this.varMap;
+    }
+
+    public FlowGraph generateGraph() {
         System.out.println(" - Generating Source Graph...");
 
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
