@@ -117,7 +117,7 @@ public final class LivenessAnalysis {
             }
         }
 
-        printInterferenceGraphToPicture(interferenceGraph);
+        Logger.call(() -> printInterferenceGraphToPicture(interferenceGraph));
 
         System.out.println("\nLiveness: " + colors + " register nötig.");
     }
