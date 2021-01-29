@@ -1,5 +1,7 @@
 package util;
 
+import java.util.function.Supplier;
+
 // Maximal professioneller Logger
 public final class Logger {
 
@@ -22,6 +24,12 @@ public final class Logger {
     public static void logIfTrue(boolean pred, String message) {
         if (pred) {
             log(message);
+        }
+    }
+
+    public static void call(Supplier<String> call) {
+        if (enabled) {
+            call.get();
         }
     }
 }

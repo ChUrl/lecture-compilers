@@ -70,7 +70,8 @@ public final class LivenessAnalysis {
         for (Map.Entry<String, Integer> var : varMap.entrySet()) {
             interferenceGraph.add(new InterferenceNode(var.getValue().toString()));
         }
-        System.out.println("Interference nodes: " + interferenceGraph);
+
+        Logger.log("Interference nodes: " + interferenceGraph);
 
         // Determine neighbours
         for (DataFlowNode node : nodes) {
@@ -119,7 +120,7 @@ public final class LivenessAnalysis {
 
         Logger.call(() -> printInterferenceGraphToPicture(interferenceGraph));
 
-        System.out.println("\nLiveness: " + colors + " register nötig.");
+        System.out.println("\nRegisters: " + colors);
     }
 
     // Printing
