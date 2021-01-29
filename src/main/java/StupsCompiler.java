@@ -1,4 +1,8 @@
 import codegen.CodeGenerator;
+import codegen.analysis.dataflow.DataFlowGraph;
+import codegen.analysis.liveness.LivenessAnalysis;
+import codegen.flowgraph.FlowGraph;
+import codegen.flowgraph.FlowGraphGenerator;
 import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
@@ -102,5 +106,49 @@ public final class StupsCompiler {
 
     private static void liveness(String filename) {
         System.out.println("Liveness-Analyse für " + filename);
+
+        // File opening + Lexing
+        Lexer lexer;
+        try {
+            // Relativer Pfad
+
+            final Path programPath = Paths.get(System.getProperty("user.dir") + "/" + filename);
+            lexer = new StupsLexer(CharStreams.fromPath(programPath));
+        } catch (IOException e) {
+
+            try {
+                // Absoluter Pfad
+
+                final Path programPath = Paths.get(filename);
+                lexer = new StupsLexer(CharStreams.fromPath(programPath));
+            } catch (IOException ee) {
+                System.out.println("Das Programm konnte nicht gelesen werden.");
+                return;
+            }
+        }
+
+        // Grammar parsing from file
+        final Grammar grammar;
+        try {
+            final Path grammarFile = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
+            grammar = Grammar.fromFile(grammarFile);
+        } catch (IOException e) {
+            System.out.println("Die Grammatik konnte nicht geöffnet werden.");
+            return;
+        }
+
+        // Parser from Grammar
+        final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
+
+        // Parsing + Typechecking of program
+        final AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
+        tree.postprocess(grammar);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+
+        final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, filename);
+        final FlowGraph graph = gen.generateGraph();
+        final DataFlowGraph dataFlowGraph = DataFlowGraph.fromSourceGraph(graph);
+
+        LivenessAnalysis.doLivenessAnalysis(dataFlowGraph, gen.getVarMap());
     }
 }
