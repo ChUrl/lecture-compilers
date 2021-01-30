@@ -29,8 +29,12 @@ public class FlowBasicBlock {
         this("");
     }
 
+    /**
+     * Ermittelt ob ein BasicBlock ohne weiteres entfernbar ist.
+     * Der Block darf kein Label haben, damit keine Sprünge ins Leere passieren.
+     */
     public boolean isEmpty() {
-        return this.label.isBlank() && this.instructions.isEmpty();
+        return this.instructions.isEmpty() && this.label.isBlank();
     }
 
     public String getId() {

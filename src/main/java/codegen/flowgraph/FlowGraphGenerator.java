@@ -17,11 +17,15 @@ import java.util.Map;
 import static java.util.Map.entry;
 import static util.Logger.log;
 
+/**
+ * Erzeugt den SourceCode in FlussGraph-Darstellung.
+ */
 public final class FlowGraphGenerator {
 
     private static final Map<String, Method> methodMap;
 
     static {
+        // Init the method mappings: ASTNode.getName() -> FlowGraphGenerator.method
         Map<String, Method> map;
         try {
             final Class<?> gen = FlowGraphGenerator.class;
@@ -76,7 +80,7 @@ public final class FlowGraphGenerator {
     private static Map<String, Integer> initVarMap(AST tree) {
         final Map<String, Integer> varMap = new HashMap<>();
 
-        // Assign variables to map
+        // Assign variables to map: Symbol -> jasminLocalVarNr.
         int varCount = 0;
         final Deque<ASTNode> stack = new ArrayDeque<>();
         stack.push(tree.getRoot());
@@ -97,14 +101,17 @@ public final class FlowGraphGenerator {
         return Collections.unmodifiableMap(varMap);
     }
 
-    public Map<String, Integer> getVarMap() {
-        return this.varMap;
-    }
-
+    /**
+     * Erzeugt den Flussgraphen für den gespeicherten AST.
+     * Der Flussgraph ist dabei die Graphenform des generierten SourceCodes:
+     * Die Instruktionen sind unterteilt in BasicBlocks, welche über Kanten verbunden sind.
+     */
     public FlowGraph generateGraph() {
         System.out.println(" - Generating Source Graph...");
 
+        // Skip the first 2 identifiers: ClassName, MainArgs
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
+        this.graph.purgeEmptyBlocks();
         Logger.call(this.graph::printToImage);
 
         log("\n\nSourceGraph print:\n" + "-".repeat(100) + "\n" + this.graph.print() + "-".repeat(100));
@@ -113,137 +120,168 @@ public final class FlowGraphGenerator {
         return this.graph;
     }
 
-    private void generateNode(ASTNode node) {
-        if (methodMap.containsKey(node.getName())) {
+    /**
+     * Erzeugt den FlussGraphen für die angegebene Wurzel.
+     * Der Wurzelname wird über die methodMap einer Methode zugewiesen.
+     * Diese wird aufgerufen und erzeugt den entsprechenden Teilbaum.
+     */
+    private void generateNode(ASTNode root) {
+        if (methodMap.containsKey(root.getName())) {
             try {
-                methodMap.get(node.getName()).invoke(this, node);
+                methodMap.get(root.getName()).invoke(this, root);
             } catch (IllegalAccessException | InvocationTargetException e) {
                 e.printStackTrace();
             }
         } else {
-            node.getChildren().forEach(this::generateNode);
+            root.getChildren().forEach(this::generateNode);
         }
     }
 
     // ifeq - if value is 0
     // ifne - if value is not 0
-    private void condNode(ASTNode node) {
+
+    /**
+     * Erzeugt den Teilbaum für einen If-Knoten.
+     */
+    private void condNode(ASTNode root) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
-        // Condition
-        this.generateNode(node.getChildren().get(0));
+        // Condition If ( ... ) {
+        this.generateNode(root.getChildren().get(0));
 
-        // Jump
+        // Jump if condition false
         this.graph.addJump("ifeq", "IFfalse" + currentLabel);
 
-        // IFtrue branch
-        this.generateNode(node.getChildren().get(1));
-        this.graph.addJump("goto", "IFend" + currentLabel);
+        // IFtrue branch (gets executed without jump)
+        this.generateNode(root.getChildren().get(1));
+        this.graph.addJump("goto", "IFend" + currentLabel); // Skip IFfalse branch
 
-        // IFfalse branch
+        // IFfalse branch (gets executed after jump)
         this.graph.addLabel("IFfalse" + currentLabel);
-        if (node.getChildren().size() == 3) {
+        if (root.getChildren().size() == 3) {
             // Else exists
 
-            this.generateNode(node.getChildren().get(2));
+            this.generateNode(root.getChildren().get(2));
         }
 
         // IFend branch
         this.graph.addLabel("IFend" + currentLabel);
     }
 
-    private void loopNode(ASTNode node) {
+    /**
+     * Erzeugt den Teilbaum für einen While-Knoten.
+     */
+    private void loopNode(ASTNode root) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
+        // LOOPstart label for loop repetition
         this.graph.addLabel("LOOPstart" + currentLabel);
 
-        // Condition
-        this.generateNode(node.getChildren().get(0).getChildren().get(1));
+        // Condition while ( ... ) {
+        this.generateNode(root.getChildren().get(0).getChildren().get(1));
 
-        // Jump
+        // Jump out of loop if condition is false
         this.graph.addJump("ifeq", "LOOPend" + currentLabel);
 
-        // Loop body
-        this.generateNode(node.getChildren().get(1));
-        this.graph.addJump("goto", "LOOPstart" + currentLabel);
+        // Loop body (gets executed without jump)
+        this.generateNode(root.getChildren().get(1));
+        this.graph.addJump("goto", "LOOPstart" + currentLabel); // Repeat loop
 
         // Loop end
         this.graph.addLabel("LOOPend" + currentLabel);
     }
 
-    private void assignNode(ASTNode node) { //! Stack - 1
-        this.generateNode(node.getChildren().get(0));
+    /**
+     * Erzeugt den Teilbaum für Assignment-Knoten.
+     * Die JVM-Stacksize wird dabei um 1 verringert, da istore/astore 1 Argument konsumieren.
+     */
+    private void assignNode(ASTNode root) { //! Stack - 1
+        this.generateNode(root.getChildren().get(0));
 
-        final String type = this.nodeTypeMap.get(node.getChildren().get(0));
+        final String type = this.nodeTypeMap.get(root.getChildren().get(0));
         final String inst = switch (type) {
             case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "istore";
             case "STRING_TYPE" -> "astore";
             default -> throw new IllegalStateException("Unexpected value: " + type);
         };
 
-        log("assign(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+        log("assign(): " + root.getName() + ": " + root.getValue() + " => " + inst);
 
-        this.graph.addInst(inst, this.varMap.get(node.getValue()).toString());
+        this.graph.addInstruction(inst, this.varMap.get(root.getValue()).toString());
     }
 
-    private void exprNode(ASTNode node) {
-        if ("INTEGER_TYPE".equals(this.nodeTypeMap.get(node))) {
-            this.intExpr(node);
-        } else if ("BOOLEAN_TYPE".equals(this.nodeTypeMap.get(node))) {
-            this.boolExpr(node);
+    /**
+     * Wählt die entsprechende Methode für mathematische oder logische Ausdrücke.
+     */
+    private void exprNode(ASTNode root) {
+        if ("INTEGER_TYPE".equals(this.nodeTypeMap.get(root))) {
+            this.intExpr(root);
+        } else if ("BOOLEAN_TYPE".equals(this.nodeTypeMap.get(root))) {
+            this.boolExpr(root);
         }
     }
 
-    private void intExpr(ASTNode node) {
+    /**
+     * Erzeugt den Teilbaum für mathematische Ausdrücke.
+     * Bei unären Operatoren bleibt die Stackgröße konstant (1 konsumiert, 1 Ergebnis),
+     * bei binären Operatoren sinkt die Stackgröße um 1 (2 konsumiert, 1 Ergebnis).
+     */
+    private void intExpr(ASTNode root) {
         String inst = "";
 
-        if (node.getChildren().size() == 1) { //! Stack + 0
+        if (root.getChildren().size() == 1) { //! Stack + 0
             // Unary operator
 
-            this.generateNode(node.getChildren().get(0));
+            this.generateNode(root.getChildren().get(0));
 
-            inst = switch (node.getValue()) {
+            inst = switch (root.getValue()) {
                 case "ADD" -> "";
                 case "SUB" -> "ineg";
-                default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
+                default -> throw new IllegalStateException("Unexpected value: " + root.getValue());
             };
-        } else if (node.getChildren().size() == 2) { //! Stack - 1
+        } else if (root.getChildren().size() == 2) { //! Stack - 1
             // Binary operator
 
-            this.generateNode(node.getChildren().get(0));
-            this.generateNode(node.getChildren().get(1));
+            this.generateNode(root.getChildren().get(0));
+            this.generateNode(root.getChildren().get(1));
 
-            inst = switch (node.getValue()) {
+            inst = switch (root.getValue()) {
                 case "ADD" -> "iadd"; // Integer
                 case "SUB" -> "isub";
                 case "MUL" -> "imul";
                 case "DIV" -> "idiv";
                 case "MOD" -> "irem"; // Remainder operator
-                default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
+                default -> throw new IllegalStateException("Unexpected value: " + root.getValue());
             };
         }
 
-        log("intExpr(): " + node.getName() + ": " + node.getValue() + " => " + inst);
+        log("intExpr(): " + root.getName() + ": " + root.getValue() + " => " + inst);
 
-        this.graph.addInst(inst);
+        this.graph.addInstruction(inst);
     }
 
+    /**
+     * Erzeugt den Teilbaum für logische Ausdrücke.
+     * Bei unären Operatoren wächst der Stack temporär um 1 (NOT pusht eine 1 für xor),
+     * bei binären Operatoren sinkt die Stackgröße um 1 (2 konsumiert, 1 Ergebnis).
+     */
     private void boolExpr(ASTNode node) {
         if (node.getChildren().size() == 1) { //! Stack + 1
             // Unary operator
 
             if (!"NOT".equals(node.getValue())) {
-                // Diese Möglichkeit gibts eigentlich nicht
+                // Possibility doesn't exist, would be frontend-error
+
                 throw new IllegalStateException("Unexpected value: " + node.getValue());
             }
 
             this.generateNode(node.getChildren().get(0));
 
-            // 0  ^1 = 1, 1  ^1 = 0
-            this.graph.addInst("ldc", "1");
-            this.graph.addInst("ixor");
+            // 0 xor 1 = 1, 1 xor 1 = 0 => not
+            this.graph.addInstruction("ldc", "1");
+            this.graph.addInstruction("ixor");
 
         } else if (node.getChildren().size() == 2) { //! Stack - 1
             // Binary operator
@@ -266,9 +304,10 @@ public final class FlowGraphGenerator {
                 default -> throw new IllegalStateException("Unexpected value: " + type);
             };
 
+            // The comparison operations need to jump
             switch (node.getValue()) {
-                case "AND" -> this.graph.addInst("iand"); // Boolean
-                case "OR" -> this.graph.addInst("ior");
+                case "AND" -> this.graph.addInstruction("iand"); // Boolean
+                case "OR" -> this.graph.addInstruction("ior");
                 case "EQUAL" -> this.genComparisonInst(cmpeq, "EQ", currentLabel);
                 case "NOT_EQUAL" -> this.genComparisonInst(cmpne, "NE", currentLabel);
                 case "LESS" -> this.genComparisonInst("if_icmplt", "LT", currentLabel);
@@ -280,12 +319,19 @@ public final class FlowGraphGenerator {
         }
     }
 
+    /**
+     * Erzeugt die Instruktionen für eine Vergleichsoperation.
+     *
+     * @param cmpInst      Die Vergleichsanweisung
+     * @param labelPre     Das Labelpräfix, abhängig von der Art des Vergleichs
+     * @param currentLabel Der aktuelle Labelcounter
+     */
     private void genComparisonInst(String cmpInst, String labelPre, int currentLabel) {
         this.graph.addJump(cmpInst, labelPre + "true" + currentLabel); // If not equal jump to NEtrue
-        this.graph.addInst("ldc", "0"); // If false load 0
+        this.graph.addInstruction("ldc", "0"); // If false load 0
         this.graph.addJump("goto", labelPre + "end" + currentLabel); // If false skip to true
         this.graph.addLabel(labelPre + "true" + currentLabel);
-        this.graph.addInst("ldc", "1"); // If true load 1
+        this.graph.addInstruction("ldc", "1"); // If true load 1
         this.graph.addLabel(labelPre + "end" + currentLabel);
     }
 
@@ -295,7 +341,7 @@ public final class FlowGraphGenerator {
         log("intStringLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
-        this.graph.addInst("ldc", node.getValue());
+        this.graph.addInstruction("ldc", node.getValue());
     }
 
     private void boolLiteralNode(ASTNode node) { //! Stack + 1
@@ -303,7 +349,7 @@ public final class FlowGraphGenerator {
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
 
-        this.graph.addInst("ldc", val);
+        this.graph.addInstruction("ldc", val);
     }
 
     private void identifierNode(ASTNode node) { //! Stack + 1
@@ -316,11 +362,11 @@ public final class FlowGraphGenerator {
 
         log("identifier(): " + node.getName() + ": " + node.getValue() + " => " + inst);
 
-        this.graph.addInst(inst, this.varMap.get(node.getValue()).toString());
+        this.graph.addInstruction(inst, this.varMap.get(node.getValue()).toString());
     }
 
     private void printlnNode(ASTNode node) { //! Stack + 1
-        this.graph.addInst("getstatic", "java/lang/System/out", "Ljava/io/PrintStream;");
+        this.graph.addInstruction("getstatic", "java/lang/System/out", "Ljava/io/PrintStream;");
 
         final ASTNode expr = node.getChildren().get(1).getChildren().get(1);
         final String type = switch (this.nodeTypeMap.get(expr)) {
@@ -334,6 +380,12 @@ public final class FlowGraphGenerator {
 
         log("println(): " + expr.getName() + ": " + expr.getValue() + " => " + type);
 
-        this.graph.addInst("invokevirtual", "java/io/PrintStream/println(" + type + ")V");
+        this.graph.addInstruction("invokevirtual", "java/io/PrintStream/println(" + type + ")V");
+    }
+
+    // Getters, Setters
+
+    public Map<String, Integer> getVarMap() {
+        return this.varMap;
     }
 }
