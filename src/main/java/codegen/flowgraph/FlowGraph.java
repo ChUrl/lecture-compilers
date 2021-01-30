@@ -153,6 +153,10 @@ public class FlowGraph {
     }
 
     public String printToImage() {
+        if (this.basicBlocks.isEmpty()) {
+            return "Empty Graph";
+        }
+
         final StringBuilder dot = new StringBuilder();
 
         dot.append("digraph dfd {\n")

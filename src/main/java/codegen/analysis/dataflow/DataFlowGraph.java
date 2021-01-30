@@ -73,6 +73,10 @@ public final class DataFlowGraph {
     // Printing
 
     public String printToImage() {
+        if (this.graph.isEmpty()) {
+            return "Empty Graph";
+        }
+
         final StringBuilder dot = new StringBuilder();
 
         dot.append("digraph dfd {\n")
