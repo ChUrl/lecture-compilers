@@ -25,7 +25,7 @@ public final class DataFlowGraph {
     public static DataFlowGraph fromSourceGraph(FlowGraph srcGraph) {
         final List<DataFlowNode> graph = new LinkedList<>();
 
-        for (FlowBasicBlock block : srcGraph.getBlocks()) {
+        for (FlowBasicBlock block : srcGraph.getBasicBlocks()) {
             for (FlowInstruction inst : block.getInstructions()) {
                 graph.add(DataFlowNode.fromFlowNode(inst, block));
             }
@@ -37,7 +37,7 @@ public final class DataFlowGraph {
     }
 
     private static void initSuccPred(FlowGraph srcGraph, List<DataFlowNode> graph) {
-        for (FlowBasicBlock block : srcGraph.getBlocks()) {
+        for (FlowBasicBlock block : srcGraph.getBasicBlocks()) {
             for (FlowInstruction inst : block.getInstructions()) {
                 final DataFlowNode current = getNodeByInstruction(inst, graph);
 
@@ -94,8 +94,18 @@ public final class DataFlowGraph {
         dot.append(this.graph.get(this.graph.size() - 1).getId()).append(" -> END;\n");
 
         for (DataFlowNode node : this.graph) {
+            // Successors
             for (DataFlowNode succ : node.getSuccessors()) {
                 dot.append(node.getId()).append(" -> ").append(succ.getId()).append(";\n");
+            }
+
+            // Predecessors
+            for (DataFlowNode pred : node.getPredecessors()) {
+                if (!dot.toString().contains(pred.getId() + " -> " + node.getId())) {
+                    // No duplicates
+
+                    dot.append(pred.getId()).append(" -> ").append(node.getId()).append(";\n");
+                }
             }
         }
 
