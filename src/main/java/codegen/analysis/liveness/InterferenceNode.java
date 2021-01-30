@@ -16,8 +16,18 @@ public class InterferenceNode {
         this.neighbours = new HashSet<>();
     }
 
+    // Getters, Setters
+
     public String getSymbol() {
         return this.symbol;
+    }
+
+    public Integer getColor() {
+        return this.color;
+    }
+
+    public void setColor(int color) {
+        this.color = color;
     }
 
     public void addNeighbour(InterferenceNode node) {
@@ -29,6 +39,8 @@ public class InterferenceNode {
     public Set<InterferenceNode> getNeighbours() {
         return this.neighbours;
     }
+
+    // Overrides
 
     @Override
     public int hashCode() {
@@ -50,13 +62,5 @@ public class InterferenceNode {
     @Override
     public String toString() {
         return this.symbol;
-    }
-
-    public Integer getColor() {
-        return this.color;
-    }
-
-    public void setColor(int color) {
-        this.color = color;
     }
 }

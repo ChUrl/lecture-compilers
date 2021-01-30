@@ -72,10 +72,11 @@ public final class StupsCompiler {
         System.out.println("Liveness-Analyse für " + filename);
 
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
-
         final FlowGraph graph = gen.generateGraph();
         final DataFlowGraph dataFlowGraph = DataFlowGraph.fromSourceGraph(graph);
-        LivenessAnalysis.doLivenessAnalysis(dataFlowGraph, gen.getVarMap());
+
+        final LivenessAnalysis liveness = LivenessAnalysis.fromDataFlowGraph(dataFlowGraph, gen.getVarMap());
+        liveness.doLivenessAnalysis();
     }
 
     private static FlowGraphGenerator getFlowGraphGen(String filename) {
