@@ -96,7 +96,11 @@ public final class DataFlowGraph {
         for (DataFlowNode node : this.graph) {
             // Successors
             for (DataFlowNode succ : node.getSuccessors()) {
-                dot.append(node.getId()).append(" -> ").append(succ.getId()).append(";\n");
+                if (!dot.toString().contains(node.getId() + " -> " + succ.getId())) {
+                    // No duplicate arrows
+
+                    dot.append(node.getId()).append(" -> ").append(succ.getId()).append(";\n");
+                }
             }
 
             // Predecessors

@@ -34,7 +34,6 @@ public class FlowGraph {
     public void addLabel(String label) {
         final FlowBasicBlock newBlock = new FlowBasicBlock(label);
 
-
         // Resolve missing successors/predecessors from jumps
         if (this.predecessorMap.containsKey(label)) {
             this.predecessorMap.get(label).addSuccessor(newBlock);
@@ -54,7 +53,7 @@ public class FlowGraph {
         final FlowBasicBlock newBlock = new FlowBasicBlock();
 
         if (!"goto".equals(jumpInstruction)) {
-            // Goto always jumps
+            // Goto always jumps, so we don't have a direct relation in order of the code
 
             newBlock.addPredecessor(this.getCurrentBlock()); // Obvious predecessor of new block
             this.getCurrentBlock().addSuccessor(newBlock); // Obvious successor of current block
@@ -160,6 +159,8 @@ public class FlowGraph {
            .append("node[shape=Mrecord]\n");
 
         for (FlowBasicBlock block : this.basicBlocks) {
+            System.out.println(block);
+            System.out.println("-".repeat(100));
             dot.append(block.getId())
                .append(" [label=\"{<f0> ")
                .append(this.basicBlocks.indexOf(block))
@@ -179,7 +180,11 @@ public class FlowGraph {
         for (FlowBasicBlock block : this.basicBlocks) {
             // Successors
             for (FlowBasicBlock succ : block.getSuccessorSet()) {
-                dot.append(block.getId()).append(" -> ").append(succ.getId()).append(";\n");
+                if (!dot.toString().contains(block.getId() + " -> " + succ.getId())) {
+                    // No duplicate arrows
+
+                    dot.append(block.getId()).append(" -> ").append(succ.getId()).append(";\n");
+                }
             }
 
             // Predecessors

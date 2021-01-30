@@ -141,6 +141,8 @@ public class FlowBasicBlock {
         return this.instructions.stream()
                                 .map(inst -> inst.toString().trim() + "\\n")
                                 .map(inst -> inst.replace("\"", "\\\""))
+                                .map(inst -> inst.replace("<", "less"))
+                                .map(inst -> inst.replace(">", "greater"))
                                 .collect(Collectors.joining());
     }
 
