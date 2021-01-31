@@ -76,6 +76,10 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
                             .findFirst();
     }
 
+    public static DataFlowGraph copy(DataFlowGraph dataFlowGraph) {
+        return new DataFlowGraph(new ArrayList<>(dataFlowGraph.dataFlowNodes));
+    }
+
     public int indexOf(DataFlowNode node) {
         return this.dataFlowNodes.indexOf(node);
     }

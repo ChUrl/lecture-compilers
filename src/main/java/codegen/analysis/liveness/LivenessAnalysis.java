@@ -4,9 +4,9 @@ import codegen.analysis.dataflow.DataFlowGraph;
 import codegen.analysis.dataflow.DataFlowNode;
 import util.Logger;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 public final class LivenessAnalysis {
 
@@ -16,57 +16,54 @@ public final class LivenessAnalysis {
         this.interferenceGraph = interferenceGraph;
     }
 
-    public static LivenessAnalysis fromDataFlowGraph(DataFlowGraph graph, Map<String, Integer> varMap) {
-        calculateLivenessInOut(graph); // TODO: Copy the graph
+    public static LivenessAnalysis fromDataFlowGraph(DataFlowGraph dataFlowGraph, Map<String, Integer> varMap) {
+        final DataFlowGraph livenessDataFlowGraph = DataFlowGraph.copy(dataFlowGraph);
 
-        return new LivenessAnalysis(InterferenceGraph.fromDataFlowGraph(graph, varMap));
+        calculateLivenessInOut(livenessDataFlowGraph);
+
+        return new LivenessAnalysis(InterferenceGraph.fromDataFlowGraph(livenessDataFlowGraph, varMap));
     }
 
-    private static void calculateLivenessInOut(DataFlowGraph graph) {
+    private static void calculateLivenessInOut(DataFlowGraph dataFlowGraph) {
         boolean change;
 
         do {
             change = false;
 
-            for (DataFlowNode node : graph) {
-                // TODO: Indexof mega unnötig
-                if (graph.indexOf(node) == graph.size() - 1) {
+            for (DataFlowNode node : dataFlowGraph) {
+                if (dataFlowGraph.indexOf(node) == dataFlowGraph.size() - 1) {
                     // Skip END
 
                     continue;
                 }
 
-                change = change || updateInOut(node);
+                change = change || updateNodeInOut(node);
             }
         } while (change);
-
-        // TODO: Indexof mega unnötig
-        Logger.log("IN, OUT Sets:");
-        for (DataFlowNode node : graph) {
-            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " IN: " + node.getInSet());
-            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " OUT: " + node.getOutSet());
-        }
-        Logger.log("\n");
     }
 
-    private static boolean updateInOut(DataFlowNode node) {
+    private static boolean updateNodeInOut(DataFlowNode dataFlowNode) {
         boolean change;
 
-        for (DataFlowNode succ : node.getSuccessorSet()) {
+        for (DataFlowNode succ : dataFlowNode.getSuccessorSet()) {
             // A variable going live into the successor implies it going live out of the predecessor
 
-            node.addOut(succ.getInSet());
+            dataFlowNode.addOut(succ.getInSet());
         }
 
-        final Set<String> addIN = new HashSet<>(node.getOutSet()); // Copy important
-        addIN.removeAll(node.getDefSet()); // If a variable that is live-out is defined in the node, it doesn't have to be live-in
+        final Collection<String> addIN = new HashSet<>(dataFlowNode.getOutSet());
+        addIN.removeAll(dataFlowNode.getDefSet()); // If a variable that is live-out is defined in the node, it doesn't have to be live-in
 
-        change = node.addIn(node.getUseSet()); // A variable being used implies it going in live
-        change = change || node.addIn(addIN); // A variable that is live-out and isn't defined in the node must be live-in
+        change = dataFlowNode.addIn(dataFlowNode.getUseSet()); // A variable being used implies it going in live
+        change = change || dataFlowNode.addIn(addIN); // A variable that is live-out and isn't defined in the node must be live-in
 
         return change;
     }
 
+    /**
+     * Führt die Liveness-Analyse auf dem gespeicherten {@link InterferenceGraph} durch.
+     * Die Registeranzahl wird durch naive Färbung des InterferenzGraphen ermittelt.
+     */
     public int doLivenessAnalysis() {
         final int registers = this.colorInterferenceGraph();
 
@@ -86,8 +83,8 @@ public final class LivenessAnalysis {
             currentColor = 1;
 
             // Get all colors that can't be used
-            final Set<Integer> neighbourColors = new HashSet<>();
-            for (InterferenceNode neighbour : node.getNeighbours()) {
+            final Collection<Integer> neighbourColors = new HashSet<>();
+            for (InterferenceNode neighbour : node.getNeighbourSet()) {
                 neighbourColors.add(neighbour.getColor());
             }
 
