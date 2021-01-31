@@ -65,10 +65,12 @@ public final class LivenessAnalysis {
         return change;
     }
 
-    public void doLivenessAnalysis() {
+    public int doLivenessAnalysis() {
         final int registers = this.colorInterferenceGraph();
 
         System.out.println("\nRegisters: " + registers);
+
+        return registers;
     }
 
     private int colorInterferenceGraph() {
