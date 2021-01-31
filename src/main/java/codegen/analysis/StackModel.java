@@ -1,14 +1,20 @@
 package codegen.analysis;
 
 import parser.ast.ASTNode;
-import util.Logger;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
 
+/**
+ * Simuliert den Laufzeit-Stack während einer Programmausführung.
+ */
 public class StackModel {
 
     private final Deque<ASTNode> stack;
+
+    /**
+     * Speichert die maximale Stacktiefe während der Ausführung.
+     */
     private int max;
 
     public StackModel() {
@@ -16,22 +22,16 @@ public class StackModel {
     }
 
     public void push(ASTNode root) {
-        Logger.log("PUSH " + root.getName() + ": " + root.getValue());
         this.stack.push(root);
         this.updateMax();
     }
 
-    public ASTNode pop() {
+    public void pop() {
         if (this.stack.isEmpty()) {
             throw new IllegalStateException("Can't pop empty stack");
         }
 
-        Logger.log("POP " + this.stack.peek().getName() + ": " + this.stack.peek().getValue());
-        return this.stack.pop();
-    }
-
-    public ASTNode peek() {
-        return this.stack.peek();
+        this.stack.pop();
     }
 
     private void updateMax() {
