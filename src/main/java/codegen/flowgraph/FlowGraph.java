@@ -1,53 +1,79 @@
 package codegen.flowgraph;
 
+import parser.ast.AST;
+import util.GraphvizCaller;
 import util.Logger;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Die Graph-Repräsentation des Programm, erzeugt aus einem {@link AST}.
+ * Der Grundbaustein ist {@link FlowBasicBlock}, diese enthalten wiederum {@link FlowInstruction}.
+ */
 public class FlowGraph implements Iterable<FlowBasicBlock> {
 
-    private final FlowGraphHead head;
     private final List<FlowBasicBlock> basicBlocks;
-    private final FlowGraphTail tail;
 
-    // If a new block has this label, the value in this map is a predecessor
+    // Only for Export to Jasmin-Assembler
+    private final FlowGraphHead exportHead;
+    private final FlowGraphTail exportTail;
+
+    /**
+     * Wenn ein neuer Block ein Label bekommt, welches in der Predecessor-Map vorhanden ist,
+     * dann ist der hier gespeicherte Block ein Predecessor des neuen Blockes.
+     * <p>
+     * Einträge werden hier hinzugefügt, wenn ein Jump nach vorne passiert.
+     * In diesem Fall ist der Jump-Successor noch nicht im Graph präsent.
+     */
     private final Map<String, FlowBasicBlock> predecessorMap;
 
     public FlowGraph(String bytecodeVersion, String source, String clazz, int stackSize, int localCount) {
-        this.head = new FlowGraphHead(bytecodeVersion, source, clazz, stackSize, localCount);
+        this.exportHead = new FlowGraphHead(bytecodeVersion, source, clazz, stackSize, localCount);
         this.basicBlocks = new ArrayList<>();
-        this.tail = new FlowGraphTail();
+        this.exportTail = new FlowGraphTail();
         this.predecessorMap = new HashMap<>();
     }
 
-    // Label marks beginning of block
+    /**
+     * Ein Label markiert den Beginn eines neuen Blockes.
+     * Es werden Predecessor/Successor-Verbindungen zum letzten Block
+     * und zu Blöcken aus der {@link #predecessorMap} hergestellt.
+     */
     public void addLabel(String label) {
         final FlowBasicBlock newBlock = new FlowBasicBlock(label);
 
         // Resolve missing successors/predecessors from jumps
         if (this.predecessorMap.containsKey(label)) {
-            this.predecessorMap.get(label).addSuccessor(newBlock);
-            newBlock.addPredecessor(this.predecessorMap.get(label));
+            this.predecessorMap.get(label).addSuccessorBlock(newBlock);
+            newBlock.addPredecessorBlock(this.predecessorMap.get(label));
         }
 
-        newBlock.addPredecessor(this.getCurrentBlock()); // Obvious predecessor of new block
-        this.getCurrentBlock().addSuccessor(newBlock); // Obvious successor of current block
+        final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
+        if (currentBlock.isPresent()) {
+            newBlock.addPredecessorBlock(currentBlock.get()); // Obvious predecessor of new block
+            currentBlock.get().addSuccessorBlock(newBlock); // Obvious successor of current block
+        }
 
         this.basicBlocks.add(newBlock);
     }
 
-    // Jump means end of block
+    /**
+     * Ein Jump markiert das Ende eines Blockes.
+     * Es werden Predecessor/Successor-Verbindungen zum letzten Block hergestellt
+     * und wenn nötig Einträge in der {@link #predecessorMap} angelegt.
+     * <p>
+     * Da GoTo immer springt, wird diese Sprunganweisung gesondert betrachtet.
+     *
+     * @param jumpInstruction Der verwendete Sprungbefehl.
+     */
     public void addJump(String jumpInstruction, String label) {
         this.addInstruction(jumpInstruction, label);
 
@@ -56,21 +82,30 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
         if (!"goto".equals(jumpInstruction)) {
             // Goto always jumps, so we don't have a direct relation in order of the code
 
-            newBlock.addPredecessor(this.getCurrentBlock()); // Obvious predecessor of new block
-            this.getCurrentBlock().addSuccessor(newBlock); // Obvious successor of current block
+            final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
+            if (currentBlock.isPresent()) {
+
+                newBlock.addPredecessorBlock(currentBlock.get()); // Obvious predecessor of new block
+                currentBlock.get().addSuccessorBlock(newBlock); // Obvious successor of current block
+            }
         }
 
         // Jumped successor
-        final FlowBasicBlock labelBlock = this.getBlockByLabel(label);
-        if (labelBlock != null) {
+        final Optional<FlowBasicBlock> labelBlock = this.getBlockByLabel(label);
+        final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
+
+        if (labelBlock.isPresent()) {
             // Successor exists
 
-            this.getCurrentBlock().addSuccessor(labelBlock);
-            labelBlock.addPredecessor(this.getCurrentBlock());
+            if (currentBlock.isPresent()) {
+                currentBlock.get().addSuccessorBlock(labelBlock.get());
+                labelBlock.get().addPredecessorBlock(currentBlock.get());
+            }
         } else {
             // Successor doesn't exist, so wait until it does
 
-            this.predecessorMap.put(label, this.getCurrentBlock()); // Current node is predecessor of label-block
+            // Current node is predecessor of label-block
+            currentBlock.ifPresent(flowBasicBlock -> this.predecessorMap.put(label, flowBasicBlock));
         }
 
         this.basicBlocks.add(newBlock);
@@ -81,16 +116,20 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
             this.basicBlocks.add(new FlowBasicBlock("START")); // First block doesn't exist
         }
 
-        this.getCurrentBlock().addInstruction(instruction, args); // Add to last block
+        final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
+
+        // Add to last block
+        currentBlock.ifPresent(flowBasicBlock -> flowBasicBlock.addInstruction(instruction, args));
     }
 
     /**
      * Entfernt leere Blöcke.
+     * Ein Block ist "leer", wenn er kein Label und keine Instructions hat.
      */
     public void purgeEmptyBlocks() {
         Logger.log("\nPurging empty blocks: ");
 
-        final Set<FlowBasicBlock> toRemove = new HashSet<>();
+        final Collection<FlowBasicBlock> toRemove = new HashSet<>();
 
         // Collect removable blocks
         for (FlowBasicBlock block : this.basicBlocks) {
@@ -103,52 +142,53 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
         // Remove blocks + reroute predecessors/successors
         for (FlowBasicBlock block : toRemove) {
 
-            for (FlowBasicBlock pred : block.getPredecessorSet()) {
+            // Reroute
+            for (FlowBasicBlock predecessor : block.getBlockPredecessorSet()) {
+                for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
 
-                for (FlowBasicBlock succ : block.getSuccessorSet()) {
-
-                    Logger.log("Rerouting Block " + this.basicBlocks.indexOf(pred) + " to Block " + this.basicBlocks.indexOf(succ));
-                    pred.addSuccessor(succ);
-                    succ.addPredecessor(pred);
+                    Logger.log("Rerouting Block " + this.basicBlocks.indexOf(predecessor)
+                               + " to Block " + this.basicBlocks.indexOf(successor));
+                    predecessor.addSuccessorBlock(successor);
+                    successor.addPredecessorBlock(predecessor);
                 }
-
-                pred.getSuccessorSet().remove(block);
             }
 
-            for (FlowBasicBlock succ : block.getSuccessorSet()) {
-                succ.getPredecessorSet().remove(block);
+            // Remove references
+            for (FlowBasicBlock predecessor : block.getBlockPredecessorSet()) {
+                predecessor.removeSuccessorBlock(block);
+            }
+
+            for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
+                successor.removePredecessorBlock(block);
             }
         }
 
         this.basicBlocks.removeAll(toRemove);
     }
 
-    private FlowBasicBlock getBlockByLabel(String label) {
+    private Optional<FlowBasicBlock> getBlockByLabel(String label) {
         return this.basicBlocks.stream()
                                .filter(block -> block.getLabel().equals(label))
-                               .findFirst()
-                               .orElse(null);
+                               .findFirst();
     }
 
-    private FlowBasicBlock getCurrentBlock() {
-        return this.basicBlocks.get(this.basicBlocks.size() - 1);
+    /**
+     * Der aktuelle Block ist immer der letzte Block.
+     */
+    private Optional<FlowBasicBlock> getCurrentBlock() {
+        if (this.basicBlocks.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(this.basicBlocks.get(this.basicBlocks.size() - 1));
     }
 
     // Printing
 
-    public String print() {
-        final String blocksString = this.basicBlocks.stream()
-                                                    .map(FlowBasicBlock::toString)
-                                                    .map(string -> string + "-".repeat(50) + "\n")
-                                                    .collect(Collectors.joining());
-
-        return this.head + "-".repeat(100) + "\n"
-               + "-".repeat(50) + "\n" + blocksString + "-".repeat(100) + "\n"
-               + this.tail;
-    }
-
     public String printToImage() {
-        if (this.basicBlocks.isEmpty()) {
+        final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
+
+        if (this.basicBlocks.isEmpty() || currentBlock.isEmpty()) {
             return "Empty Graph";
         }
 
@@ -174,45 +214,19 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
            .append("END[label=\"END\"];\n");
 
         dot.append("START -> ").append(this.basicBlocks.get(0).getId()).append(";\n");
-        dot.append(this.getCurrentBlock().getId()).append(" -> END;\n");
+        dot.append(currentBlock.get().getId()).append(" -> END;\n");
 
         for (FlowBasicBlock block : this.basicBlocks) {
             // Successors
-            for (FlowBasicBlock succ : block.getSuccessorSet()) {
-                if (!dot.toString().contains(block.getId() + " -> " + succ.getId())) {
-                    // No duplicate arrows
 
-                    dot.append(block.getId()).append(" -> ").append(succ.getId()).append(";\n");
-                }
-            }
-
-            // Predecessors
-            for (FlowBasicBlock pred : block.getPredecessorSet()) {
-                if (!dot.toString().contains(pred.getId() + " -> " + block.getId())) {
-                    // No duplicate arrows
-
-                    dot.append(pred.getId()).append(" -> ").append(block.getId()).append(";\n");
-                }
+            for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
+                dot.append(block.getId()).append(" -> ").append(successor.getId()).append(";\n");
             }
         }
 
         dot.append("}");
 
-        final String dotOut = dot.toString();
-
-        final Path dotFile = Paths.get(System.getProperty("user.dir") + "/FlowGraph.dot");
-        try {
-            Files.writeString(dotFile, dotOut);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        final ProcessBuilder dotCompile = new ProcessBuilder("dot", "-Tsvg", "-oFlowGraph.svg", "FlowGraph.dot");
-        try {
-            dotCompile.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        GraphvizCaller.callGraphviz(dot, "FlowGraph");
 
         return "Finished.";
     }
@@ -225,9 +239,9 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
                                                     .map(FlowBasicBlock::toString)
                                                     .collect(Collectors.joining());
 
-        return this.head
+        return this.exportHead
                + blocksString
-               + this.tail;
+               + this.exportTail;
     }
 
     @Override
