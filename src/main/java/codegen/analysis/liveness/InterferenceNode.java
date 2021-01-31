@@ -1,5 +1,6 @@
 package codegen.analysis.liveness;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -49,7 +50,7 @@ public class InterferenceNode {
     }
 
     public Set<InterferenceNode> getNeighbourSet() {
-        return this.neighbours;
+        return Collections.unmodifiableSet(this.neighbours);
     }
 
     public boolean addNeighbour(InterferenceNode node) {
