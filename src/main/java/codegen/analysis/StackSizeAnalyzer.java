@@ -1,7 +1,7 @@
 package codegen.analysis;
 
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 
 import java.util.Set;
 
@@ -9,7 +9,7 @@ import static util.Logger.log;
 
 /**
  * Ermittelt die maximal benötigte Stacktiefe für ein Programm.
- * Das Programm wird übergeben als {@link AST}.
+ * Das Programm wird übergeben als {@link SyntaxTree}.
  */
 public final class StackSizeAnalyzer {
 
@@ -23,7 +23,7 @@ public final class StackSizeAnalyzer {
 
     private StackSizeAnalyzer() {}
 
-    public static int runStackModel(AST tree) {
+    public static int runStackModel(SyntaxTree tree) {
         log("\nDetermining required stack depth:");
 
         final StackModel stack = new StackModel();
@@ -33,7 +33,7 @@ public final class StackSizeAnalyzer {
         return stack.getMax();
     }
 
-    private static void runStackModel(ASTNode root, StackModel stack) {
+    private static void runStackModel(SyntaxTreeNode root, StackModel stack) {
         if (mod.contains(root.getName())) {
             switch (root.getName()) {
                 case "assignment" -> assignment(root, stack);
@@ -43,7 +43,7 @@ public final class StackSizeAnalyzer {
                 default -> throw new IllegalStateException("Unexpected value: " + root.getName());
             }
         } else {
-            for (ASTNode child : root.getChildren()) {
+            for (SyntaxTreeNode child : root.getChildren()) {
                 runStackModel(child, stack);
             }
         }
@@ -51,17 +51,17 @@ public final class StackSizeAnalyzer {
 
     // Simulate instructions
 
-    private static void literal(ASTNode root, StackModel stack) {
+    private static void literal(SyntaxTreeNode root, StackModel stack) {
         stack.push(root);
     }
 
-    private static void assignment(ASTNode root, StackModel stack) {
+    private static void assignment(SyntaxTreeNode root, StackModel stack) {
         runStackModel(root.getChildren().get(0), stack);
 
         stack.pop();
     }
 
-    private static void println(ASTNode root, StackModel stack) {
+    private static void println(SyntaxTreeNode root, StackModel stack) {
         stack.push(root); // Getstatic
 
         runStackModel(root.getChildren().get(1).getChildren().get(1), stack);
@@ -70,7 +70,7 @@ public final class StackSizeAnalyzer {
         stack.pop(); // Argument
     }
 
-    private static void expr(ASTNode root, StackModel stack) {
+    private static void expr(SyntaxTreeNode root, StackModel stack) {
         if (root.getChildren().size() == 2 && binaryOperators.contains(root.getValue())) {
             // Expression with binary operator
 
@@ -85,7 +85,7 @@ public final class StackSizeAnalyzer {
 
             runStackModel(root.getChildren().get(0), stack);
 
-            stack.push(new ASTNode("1 (XOR)", 0)); // 1 for xor
+            stack.push(new SyntaxTreeNode("1 (XOR)", 0)); // 1 for xor
             stack.pop(); // xor
             stack.pop(); // xor
             stack.push(root); // result

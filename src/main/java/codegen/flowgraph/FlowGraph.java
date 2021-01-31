@@ -1,6 +1,6 @@
 package codegen.flowgraph;
 
-import parser.ast.AST;
+import parser.ast.SyntaxTree;
 import util.GraphvizCaller;
 import util.Logger;
 
@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- * Die Graph-Repräsentation des Programm, erzeugt aus einem {@link AST}.
+ * Die Graph-Repräsentation des Programm, erzeugt aus einem {@link SyntaxTree}.
  * Der Grundbaustein ist {@link FlowBasicBlock}, diese enthalten wiederum {@link FlowInstruction}.
  */
 public class FlowGraph implements Iterable<FlowBasicBlock> {

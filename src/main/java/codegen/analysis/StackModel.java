@@ -1,6 +1,6 @@
 package codegen.analysis;
 
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTreeNode;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -10,7 +10,7 @@ import java.util.Deque;
  */
 public class StackModel {
 
-    private final Deque<ASTNode> stack;
+    private final Deque<SyntaxTreeNode> stack;
 
     /**
      * Speichert die maximale Stacktiefe während der Ausführung.
@@ -21,7 +21,7 @@ public class StackModel {
         this.stack = new ArrayDeque<>();
     }
 
-    public void push(ASTNode root) {
+    public void push(SyntaxTreeNode root) {
         this.stack.push(root);
         this.updateMax();
     }

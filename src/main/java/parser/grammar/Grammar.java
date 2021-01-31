@@ -1,6 +1,6 @@
 package parser.grammar;
 
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTreeNode;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -243,7 +243,7 @@ public class Grammar {
      * Es wird nicht root promoted, sondern roots einziges Kind.
      * Checkt auch auf Anzahl der Kinder.
      */
-    public boolean canPromoteChild(ASTNode root) {
+    public boolean canPromoteChild(SyntaxTreeNode root) {
         return this.canPromoteChild(root.getName())
                && root.getChildren().size() == 1
                && root.getValue().isEmpty();
@@ -257,10 +257,10 @@ public class Grammar {
     /**
      * Checkt auch auf Anzahl der Kinder und vorhandene Value.
      */
-    public boolean canDeleteIfEmpty(ASTNode root) {
+    public boolean canDeleteIfEmpty(SyntaxTreeNode root) {
         return this.canDeleteIfEmpty(root.getName())
                && root.getValue().isEmpty()
-               && !root.hasChildren();
+               && root.isEmpty();
     }
 
     public boolean canDeleteIfEmpty(String sym) {
@@ -272,9 +272,9 @@ public class Grammar {
      * Checkt auch auf Anzahl der Kinder.
      * Epsilon-Knoten werden immer gelöscht.
      */
-    public boolean canDeleteChild(ASTNode parent, ASTNode child) {
+    public boolean canDeleteChild(SyntaxTreeNode parent, SyntaxTreeNode child) {
         return this.canDeleteChild(parent.getName(), child.getName())
-               && !child.hasChildren();
+               && child.isEmpty();
     }
 
     public boolean canDeleteChild(String parent, String child) {
@@ -284,7 +284,7 @@ public class Grammar {
     }
 
 
-    public boolean canBeRenamed(ASTNode root) {
+    public boolean canBeRenamed(SyntaxTreeNode root) {
         return this.canBeRenamed(root.getName());
     }
 
@@ -292,7 +292,7 @@ public class Grammar {
         return this.actions.get(RENAMETO).contains(sym);
     }
 
-    public String getNewName(ASTNode root) {
+    public String getNewName(SyntaxTreeNode root) {
         return this.getNewName(root.getName());
     }
 
@@ -301,7 +301,7 @@ public class Grammar {
     }
 
 
-    public boolean hasValToVal(ASTNode parent, ASTNode child) {
+    public boolean hasValToVal(SyntaxTreeNode parent, SyntaxTreeNode child) {
         return this.hasValToVal(parent.getName(), child.getName());
     }
 
@@ -314,7 +314,7 @@ public class Grammar {
     /**
      * Checkt auch auf bereits existierende Values.
      */
-    public boolean canMoveNameToVal(ASTNode parent, ASTNode child) {
+    public boolean canMoveNameToVal(SyntaxTreeNode parent, SyntaxTreeNode child) {
         return this.canMoveNameToVal(parent.getName(), child.getName())
                && parent.getValue().isEmpty();
     }

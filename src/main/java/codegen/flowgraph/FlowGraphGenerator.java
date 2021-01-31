@@ -2,8 +2,8 @@ package codegen.flowgraph;
 
 import codegen.CodeGenerationException;
 import codegen.analysis.StackSizeAnalyzer;
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 import typechecker.TypeChecker;
 
 import java.lang.reflect.InvocationTargetException;
@@ -23,7 +23,7 @@ import static util.Logger.log;
 public final class FlowGraphGenerator {
 
     /**
-     * Mappt die {@link ASTNode}-Namen auf entsprechende Methoden für die Codeerzeugung.
+     * Mappt die {@link SyntaxTreeNode}-Namen auf entsprechende Methoden für die Codeerzeugung.
      */
     private static final Map<String, Method> methodMap;
 
@@ -33,16 +33,16 @@ public final class FlowGraphGenerator {
         try {
             final Class<?> gen = FlowGraphGenerator.class;
             map = Map.ofEntries(
-                    entry("cond", gen.getDeclaredMethod("condNode", ASTNode.class)),
-                    entry("loop", gen.getDeclaredMethod("loopNode", ASTNode.class)),
-                    entry("assignment", gen.getDeclaredMethod("assignNode", ASTNode.class)),
-                    entry("expr", gen.getDeclaredMethod("exprNode", ASTNode.class)),
+                    entry("cond", gen.getDeclaredMethod("condNode", SyntaxTreeNode.class)),
+                    entry("loop", gen.getDeclaredMethod("loopNode", SyntaxTreeNode.class)),
+                    entry("assignment", gen.getDeclaredMethod("assignNode", SyntaxTreeNode.class)),
+                    entry("expr", gen.getDeclaredMethod("exprNode", SyntaxTreeNode.class)),
                     // Leafs
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("intStringLiteralNode", ASTNode.class)),
-                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteralNode", ASTNode.class)),
-                    entry("STRING_LIT", gen.getDeclaredMethod("intStringLiteralNode", ASTNode.class)),
-                    entry("IDENTIFIER", gen.getDeclaredMethod("identifierNode", ASTNode.class)),
-                    entry("print", gen.getDeclaredMethod("printlnNode", ASTNode.class))
+                    entry("INTEGER_LIT", gen.getDeclaredMethod("intStringLiteralNode", SyntaxTreeNode.class)),
+                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteralNode", SyntaxTreeNode.class)),
+                    entry("STRING_LIT", gen.getDeclaredMethod("intStringLiteralNode", SyntaxTreeNode.class)),
+                    entry("IDENTIFIER", gen.getDeclaredMethod("identifierNode", SyntaxTreeNode.class)),
+                    entry("print", gen.getDeclaredMethod("printlnNode", SyntaxTreeNode.class))
             );
         } catch (NoSuchMethodException e) {
             map = null;
@@ -51,13 +51,13 @@ public final class FlowGraphGenerator {
         methodMap = map;
     }
 
-    private final AST tree;
+    private final SyntaxTree tree;
 
     /**
      * Enthält den Rückgabetypen von jedem Expression-Node.
      * Wird erstellt im {@link TypeChecker}.
      */
-    private final Map<ASTNode, String> nodeTypeMap;
+    private final Map<SyntaxTreeNode, String> nodeTypeMap;
 
     /**
      * Enthält die Mappings vom Symbol/Variablennamen auf die Position in der JVM-Locals-Tabelle.
@@ -68,7 +68,7 @@ public final class FlowGraphGenerator {
 
     private int labelCounter;
 
-    private FlowGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, FlowGraph graph) {
+    private FlowGraphGenerator(Map<String, Integer> varMap, SyntaxTree tree, Map<SyntaxTreeNode, String> nodeTypeMap, FlowGraph graph) {
         this.varMap = varMap;
         this.tree = tree;
         this.nodeTypeMap = nodeTypeMap;
@@ -78,7 +78,7 @@ public final class FlowGraphGenerator {
     /**
      * @param source Das Source-File, welches compiliert wird (Optionaler Jasmin-Parameter)
      */
-    public static FlowGraphGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap, String source) {
+    public static FlowGraphGenerator fromAST(SyntaxTree tree, Map<SyntaxTreeNode, String> nodeTypeMap, String source) {
         if (tree.isEmpty()) {
             throw new CodeGenerationException("Empty File can't be compiled");
         }
@@ -89,17 +89,17 @@ public final class FlowGraphGenerator {
         return new FlowGraphGenerator(varMap, tree, nodeTypeMap, graph);
     }
 
-    private static Map<String, Integer> initVarMap(AST tree) {
+    private static Map<String, Integer> initVarMap(SyntaxTree tree) {
         final Map<String, Integer> varMap = new HashMap<>();
 
-        final Deque<ASTNode> stack = new ArrayDeque<>();
+        final Deque<SyntaxTreeNode> stack = new ArrayDeque<>();
         stack.push(tree.getRoot());
 
         int currentVarNumber = 0;
 
         // Assign variables to map: Symbol -> jasminLocalVarNr.
         while (!stack.isEmpty()) {
-            final ASTNode current = stack.pop();
+            final SyntaxTreeNode current = stack.pop();
 
             if ("declaration".equals(current.getName())) {
                 // New variables only come from declarations
@@ -117,7 +117,7 @@ public final class FlowGraphGenerator {
         return Collections.unmodifiableMap(varMap);
     }
 
-    private static FlowGraph initFlowGraph(AST tree, Map<String, Integer> varMap, String source) {
+    private static FlowGraph initFlowGraph(SyntaxTree tree, Map<String, Integer> varMap, String source) {
         final String bytecodeVersion = "49.0";
         final String clazz = tree.getRoot().getChildren().get(1).getValue();
         final int stackSize = StackSizeAnalyzer.runStackModel(tree);
@@ -149,7 +149,7 @@ public final class FlowGraphGenerator {
      * Der Wurzelname wird über die methodMap einer Methode zugewiesen.
      * Diese wird aufgerufen und erzeugt den entsprechenden Teilbaum.
      */
-    private void generateNode(ASTNode root) {
+    private void generateNode(SyntaxTreeNode root) {
         if (methodMap.containsKey(root.getName())) {
             try {
                 methodMap.get(root.getName()).invoke(this, root);
@@ -164,7 +164,7 @@ public final class FlowGraphGenerator {
     /**
      * Erzeugt den Teilbaum für einen If-Knoten.
      */
-    private void condNode(ASTNode root) {
+    private void condNode(SyntaxTreeNode root) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
@@ -193,7 +193,7 @@ public final class FlowGraphGenerator {
     /**
      * Erzeugt den Teilbaum für einen While-Knoten.
      */
-    private void loopNode(ASTNode root) {
+    private void loopNode(SyntaxTreeNode root) {
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
 
@@ -218,7 +218,7 @@ public final class FlowGraphGenerator {
      * Erzeugt den Teilbaum für Assignment-Knoten.
      * Die JVM-Stacksize wird dabei um 1 verringert, da istore/astore 1 Argument konsumieren.
      */
-    private void assignNode(ASTNode root) { //! Stack - 1
+    private void assignNode(SyntaxTreeNode root) { //! Stack - 1
         this.generateNode(root.getChildren().get(0));
 
         final String type = this.nodeTypeMap.get(root.getChildren().get(0));
@@ -236,7 +236,7 @@ public final class FlowGraphGenerator {
     /**
      * Wählt die entsprechende Methode für mathematische oder logische Ausdrücke.
      */
-    private void exprNode(ASTNode root) {
+    private void exprNode(SyntaxTreeNode root) {
         if ("INTEGER_TYPE".equals(this.nodeTypeMap.get(root))) {
             this.intExpr(root);
         } else if ("BOOLEAN_TYPE".equals(this.nodeTypeMap.get(root))) {
@@ -249,7 +249,7 @@ public final class FlowGraphGenerator {
      * Bei unären Operatoren bleibt die Stackgröße konstant (1 konsumiert, 1 Ergebnis),
      * bei binären Operatoren sinkt die Stackgröße um 1 (2 konsumiert, 1 Ergebnis).
      */
-    private void intExpr(ASTNode root) {
+    private void intExpr(SyntaxTreeNode root) {
         String inst = "";
 
         if (root.getChildren().size() == 1) { //! Stack + 0
@@ -288,7 +288,7 @@ public final class FlowGraphGenerator {
      * Bei unären Operatoren wächst der Stack temporär um 1 (NOT pusht eine 1 für xor),
      * bei binären Operatoren sinkt die Stackgröße um 1 (2 konsumiert, 1 Ergebnis).
      */
-    private void boolExpr(ASTNode node) {
+    private void boolExpr(SyntaxTreeNode node) {
         if (node.getChildren().size() == 1) { //! Stack + 1
             // Unary operator
 
@@ -358,14 +358,14 @@ public final class FlowGraphGenerator {
 
     // Leafs
 
-    private void intStringLiteralNode(ASTNode node) { //! Stack + 1
+    private void intStringLiteralNode(SyntaxTreeNode node) { //! Stack + 1
         log("intStringLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         // bipush only pushes 1 byte as int
         this.graph.addInstruction("ldc", node.getValue());
     }
 
-    private void boolLiteralNode(ASTNode node) { //! Stack + 1
+    private void boolLiteralNode(SyntaxTreeNode node) { //! Stack + 1
         log("booleanLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc");
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
@@ -373,7 +373,7 @@ public final class FlowGraphGenerator {
         this.graph.addInstruction("ldc", val);
     }
 
-    private void identifierNode(ASTNode node) { //! Stack + 1
+    private void identifierNode(SyntaxTreeNode node) { //! Stack + 1
         final String type = this.nodeTypeMap.get(node);
         final String inst = switch (type) {
             case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload";
@@ -386,10 +386,10 @@ public final class FlowGraphGenerator {
         this.graph.addInstruction(inst, this.varMap.get(node.getValue()).toString());
     }
 
-    private void printlnNode(ASTNode node) { //! Stack + 1
+    private void printlnNode(SyntaxTreeNode node) { //! Stack + 1
         this.graph.addInstruction("getstatic", "java/lang/System/out", "Ljava/io/PrintStream;");
 
-        final ASTNode expr = node.getChildren().get(1).getChildren().get(1);
+        final SyntaxTreeNode expr = node.getChildren().get(1).getChildren().get(1);
         final String type = switch (this.nodeTypeMap.get(expr)) {
             case "BOOLEAN_TYPE" -> "Z";
             case "INTEGER_TYPE" -> "I";

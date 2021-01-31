@@ -43,7 +43,7 @@ public final class ASTBalancer {
 
     private ASTBalancer() {}
 
-    public static void balance(AST tree) {
+    public static void balance(SyntaxTree tree) {
         flip(tree);
         leftPrecedence(tree);
         operatorPrecedence(tree);
@@ -56,26 +56,26 @@ public final class ASTBalancer {
     }
 
     // Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen
-    public static void flip(AST tree) {
+    public static void flip(SyntaxTree tree) {
         log("Flipping tree for ltr evaluation");
         flip(tree.getRoot());
     }
 
-    private static void flip(ASTNode root) {
-        for (ASTNode child : root.getChildren()) {
+    private static void flip(SyntaxTreeNode root) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             flip(child);
         }
 
         Collections.reverse(root.getChildren());
     }
 
-    public static void flipCommutativeExpr(AST tree) {
+    public static void flipCommutativeExpr(SyntaxTree tree) {
         log("Flipping commutative expressions for stack efficiency");
         flipCommutativeExpr(tree.getRoot());
     }
 
-    private static void flipCommutativeExpr(ASTNode root) {
-        for (ASTNode child : root.getChildren()) {
+    private static void flipCommutativeExpr(SyntaxTreeNode root) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             flipCommutativeExpr(child);
         }
 
@@ -92,18 +92,18 @@ public final class ASTBalancer {
 
     // Führt Linksrotationen durch
     // Es werden EXPR-Nodes (2 Childs, 1 davon EXPR, Kein Wert) solange wie möglich linksrotiert
-    public static void leftPrecedence(AST tree) {
+    public static void leftPrecedence(SyntaxTree tree) {
         log("Left-rotating expressions for left-precedence");
         leftPrecedence(tree.getRoot());
     }
 
     // Es wird solange rotiert bis die letzte "Rotation" durchgeführt wurde
-    private static void leftPrecedence(ASTNode root) {
-        for (ASTNode child : root.getChildren()) {
+    private static void leftPrecedence(SyntaxTreeNode root) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             leftPrecedence(child);
         }
 
-        final ASTNode expr = getExpr(root);
+        final SyntaxTreeNode expr = getExpr(root);
 
         if (expr == null || root.getChildren().size() != 2 || !root.getValue().isEmpty()) {
             return;
@@ -117,12 +117,12 @@ public final class ASTBalancer {
     }
 
     // Die Letzte Rotation ist keine richtige Rotation, dort wird false zurückgegeben
-    private static boolean specialLeftRotate(ASTNode root) {
+    private static boolean specialLeftRotate(SyntaxTreeNode root) {
         log("Special-Left-Rotation around " + root.getName());
         log(root.toString());
 
-        final ASTNode left = root.getChildren().get(0);
-        final ASTNode right = root.getChildren().get(1);
+        final SyntaxTreeNode left = root.getChildren().get(0);
+        final SyntaxTreeNode right = root.getChildren().get(1);
 
         // Verhindert Wurzel mit nur einem EXPR-Child (nach oben "hängende" Wurzel)
         if (endOfExpr(right)) {
@@ -132,7 +132,7 @@ public final class ASTBalancer {
             return false; // Braucht keine weitere Rotation
         }
 
-        final ASTNode insertLeft = new ASTNode(root.getName(), root.getLine());
+        final SyntaxTreeNode insertLeft = new SyntaxTreeNode(root.getName(), root.getLine());
         insertLeft.setValue(right.getValue()); // Operation wird linksvererbt
         insertLeft.setChildren(left, right.getChildren().get(0));
 
@@ -143,8 +143,8 @@ public final class ASTBalancer {
     }
 
     // Findet die 1te (linkeste) expr
-    private static ASTNode getExpr(ASTNode root) {
-        for (ASTNode child : root.getChildren()) {
+    private static SyntaxTreeNode getExpr(SyntaxTreeNode root) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             if ("expr".equals(child.getName())) {
                 return child;
             }
@@ -153,11 +153,11 @@ public final class ASTBalancer {
         return null;
     }
 
-    private static boolean endOfExpr(ASTNode root) {
+    private static boolean endOfExpr(SyntaxTreeNode root) {
         return root.getChildren().size() == 1;
     }
 
-    public static void operatorPrecedence(AST tree) {
+    public static void operatorPrecedence(SyntaxTree tree) {
         log("Right-rotating expressions for operator-precedence");
 
         boolean changed;
@@ -167,10 +167,10 @@ public final class ASTBalancer {
         } while (changed);
     }
 
-    public static boolean operatorPrecedence(ASTNode root) {
+    public static boolean operatorPrecedence(SyntaxTreeNode root) {
         boolean changed = false;
 
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             changed = changed || operatorPrecedence(child);
 
             if (preceding(root, child)) {
@@ -182,7 +182,7 @@ public final class ASTBalancer {
         return changed;
     }
 
-    private static boolean preceding(ASTNode parent, ASTNode child) {
+    private static boolean preceding(SyntaxTreeNode parent, SyntaxTreeNode child) {
         if (!"expr".equals(parent.getName()) || parent.getValue().isEmpty()
             || !"expr".equals(child.getName()) || child.getValue().isEmpty()) {
             return false;
@@ -199,14 +199,14 @@ public final class ASTBalancer {
         }
     }
 
-    private static void simpleRightRotate(ASTNode root) {
+    private static void simpleRightRotate(SyntaxTreeNode root) {
         log("Right-Rotation around " + root.getName() + ": " + root.getValue());
         log(root.toString());
 
-        final ASTNode left = root.getChildren().get(0);
-        final ASTNode right = root.getChildren().get(1);
+        final SyntaxTreeNode left = root.getChildren().get(0);
+        final SyntaxTreeNode right = root.getChildren().get(1);
 
-        final ASTNode insertRight = new ASTNode(root.getName(), root.getLine());
+        final SyntaxTreeNode insertRight = new SyntaxTreeNode(root.getName(), root.getLine());
         insertRight.setValue(root.getValue());
         insertRight.setChildren(left.getChildren().get(1), right);
 

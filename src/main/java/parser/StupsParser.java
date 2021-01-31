@@ -2,8 +2,8 @@ package parser;
 
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.Vocabulary;
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 import parser.grammar.Grammar;
 import parser.grammar.GrammarAnalyzer;
 
@@ -37,11 +37,11 @@ public class StupsParser {
         srcLine.ifPresent(s -> System.out.println("  :: " + s));
     }
 
-    public AST parse(List<? extends Token> token, Vocabulary voc) {
+    public SyntaxTree parse(List<? extends Token> token, Vocabulary voc) {
         System.out.println(" - Parsing program...");
-        final ASTNode root = new ASTNode(this.parsetable.getStartSymbol(), 0);
-        final AST tree = new AST(root);
-        final Deque<ASTNode> stack = new ArrayDeque<>();
+        final SyntaxTreeNode root = new SyntaxTreeNode(this.parsetable.getStartSymbol(), 0);
+        final SyntaxTree tree = new SyntaxTree(root);
+        final Deque<SyntaxTreeNode> stack = new ArrayDeque<>();
         stack.push(root);
 
         int inputPosition = 0;
@@ -97,12 +97,12 @@ public class StupsParser {
                 // Hier wird auch der AST aufgebaut
 
                 log("Used: " + top + " -> " + prod);
-                final ASTNode pop = stack.pop();
+                final SyntaxTreeNode pop = stack.pop();
 
                 final String[] split = prod.split(" ");
 
                 for (int i = split.length - 1; i >= 0; i--) {
-                    final ASTNode node = new ASTNode(split[i], currentLine);
+                    final SyntaxTreeNode node = new SyntaxTreeNode(split[i], currentLine);
 
                     if (inputPosition + i < token.size()) {
                         // Die Schleife geht in der Eingabe weiter

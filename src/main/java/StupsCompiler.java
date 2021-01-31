@@ -6,8 +6,8 @@ import lexer.StupsLexer;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.Lexer;
 import parser.StupsParser;
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 import parser.grammar.Grammar;
 import typechecker.TypeChecker;
 import util.Logger;
@@ -122,10 +122,11 @@ public final class StupsCompiler {
         final StupsParser stupsParser = StupsParser.fromGrammar(grammar);
 
         // Parsing + Typechecking of program
-        final AST tree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
-        tree.postprocess(grammar);
-        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final SyntaxTree parseTree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
 
-        return FlowGraphGenerator.fromAST(tree, nodeTable, filename);
+        final SyntaxTree abstractSyntaxTree = SyntaxTree.toAbstractSyntaxTree(parseTree, grammar);
+        final Map<SyntaxTreeNode, String> nodeTable = TypeChecker.validate(abstractSyntaxTree);
+
+        return FlowGraphGenerator.fromAST(abstractSyntaxTree, nodeTable, filename);
     }
 }

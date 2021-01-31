@@ -7,7 +7,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import parser.ParseException;
 import parser.StupsParser;
-import parser.ast.AST;
+import parser.ast.SyntaxTree;
 import parser.grammar.Grammar;
 import typechecker.AssignmentTypeMismatchException;
 import typechecker.OperatorTypeMismatchException;
@@ -36,12 +36,12 @@ class TypeCheckerTest {
                + "}}";
     }
 
-    private AST getTree(String expr) {
+    private SyntaxTree getTree(String expr) {
         final Lexer lex = new StupsLexer(CharStreams.fromString(exprToProg(expr)));
-        final AST tree = this.stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-        tree.postprocess(this.grammar);
+        final SyntaxTree tree = this.stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
+        final SyntaxTree ast = SyntaxTree.toAbstractSyntaxTree(tree, this.grammar);
 
-        return tree;
+        return ast;
     }
 
     @ParameterizedTest

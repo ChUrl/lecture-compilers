@@ -11,7 +11,7 @@ public final class ASTCompacter {
 
     private ASTCompacter() {}
 
-    public static void clean(AST tree, Grammar grammar) {
+    public static void clean(SyntaxTree tree, Grammar grammar) {
         deleteChildren(tree, grammar);
         deleteIfEmpty(tree, grammar);
         promote(tree, grammar);
@@ -26,15 +26,15 @@ public final class ASTCompacter {
     }
 
     // Entfernt [promote]-able Nodes (Reicht Werte nach oben)
-    public static void promote(AST tree, Grammar grammar) {
+    public static void promote(SyntaxTree tree, Grammar grammar) {
         log("\nPromoting nodes:");
         promote(tree.getRoot(), grammar);
     }
 
-    private static void promote(ASTNode root, Grammar grammar) {
-        final Collection<ASTNode> toRemove = new HashSet<>();
+    private static void promote(SyntaxTreeNode root, Grammar grammar) {
+        final Collection<SyntaxTreeNode> toRemove = new HashSet<>();
 
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             promote(child, grammar);
 
             // Impliziert, dass die for-schleife nur 1x läuft, deshalb ist child das richtige Kind
@@ -57,15 +57,15 @@ public final class ASTCompacter {
     }
 
     // Entfernt [delIfEmpty] Nodes (löscht Nodes ohne Inhalt)
-    public static void deleteIfEmpty(AST tree, Grammar grammar) {
+    public static void deleteIfEmpty(SyntaxTree tree, Grammar grammar) {
         log("\nDeleting empty nodes:");
         deleteIfEmpty(tree.getRoot(), grammar);
     }
 
-    private static void deleteIfEmpty(ASTNode root, Grammar grammar) {
-        final Collection<ASTNode> toRemove = new HashSet<>();
+    private static void deleteIfEmpty(SyntaxTreeNode root, Grammar grammar) {
+        final Collection<SyntaxTreeNode> toRemove = new HashSet<>();
 
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             deleteIfEmpty(child, grammar);
 
             if (!grammar.canDeleteIfEmpty(child)) {
@@ -82,15 +82,15 @@ public final class ASTCompacter {
     }
 
     // Löscht redundante Informationen in [delChildren]-Nodes (z.b. IF-child von COND) und Epsilon-Nodes
-    public static void deleteChildren(AST tree, Grammar grammar) {
+    public static void deleteChildren(SyntaxTree tree, Grammar grammar) {
         log("Removing redundant children:");
         deleteChildren(tree.getRoot(), grammar);
     }
 
-    private static void deleteChildren(ASTNode root, Grammar grammar) {
-        final Collection<ASTNode> toRemove = new HashSet<>();
+    private static void deleteChildren(SyntaxTreeNode root, Grammar grammar) {
+        final Collection<SyntaxTreeNode> toRemove = new HashSet<>();
 
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             deleteChildren(child, grammar);
 
             if (!grammar.canDeleteChild(root, child)) {
@@ -107,13 +107,13 @@ public final class ASTCompacter {
     }
 
     // Umbenennungen
-    private static void renameTo(AST tree, Grammar grammar) {
+    private static void renameTo(SyntaxTree tree, Grammar grammar) {
         log("\nRenaming nodes:");
         renameTo(tree.getRoot(), grammar);
     }
 
-    private static void renameTo(ASTNode root, Grammar grammar) {
-        for (ASTNode child : root.getChildren()) {
+    private static void renameTo(SyntaxTreeNode root, Grammar grammar) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             renameTo(child, grammar);
 
             if (!grammar.canBeRenamed(root)) {
@@ -126,15 +126,15 @@ public final class ASTCompacter {
         }
     }
 
-    public static void nameToValue(AST tree, Grammar grammar) {
+    public static void nameToValue(SyntaxTree tree, Grammar grammar) {
         log("\nMoving names to values:");
         nameToValue(tree.getRoot(), grammar);
     }
 
-    private static void nameToValue(ASTNode root, Grammar grammar) {
-        final Collection<ASTNode> toRemove = new HashSet<>();
+    private static void nameToValue(SyntaxTreeNode root, Grammar grammar) {
+        final Collection<SyntaxTreeNode> toRemove = new HashSet<>();
 
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             nameToValue(child, grammar);
 
             if (!grammar.canMoveNameToVal(root, child)) {
@@ -154,15 +154,15 @@ public final class ASTCompacter {
     }
 
     // Assignment bekommt den Identifier als Value anstatt als Child
-    public static void valueToValue(AST tree, Grammar grammar) {
+    public static void valueToValue(SyntaxTree tree, Grammar grammar) {
         log("\nMoving values to values:");
         valueToValue(tree.getRoot(), grammar);
     }
 
-    private static void valueToValue(ASTNode root, Grammar grammar) {
-        final Collection<ASTNode> toRemove = new HashSet<>();
+    private static void valueToValue(SyntaxTreeNode root, Grammar grammar) {
+        final Collection<SyntaxTreeNode> toRemove = new HashSet<>();
 
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             valueToValue(child, grammar);
 
             if (!grammar.hasValToVal(root, child)) {

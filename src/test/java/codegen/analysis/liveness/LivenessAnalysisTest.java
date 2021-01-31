@@ -11,8 +11,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import parser.StupsParser;
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 import parser.grammar.Grammar;
 import typechecker.TypeChecker;
 
@@ -40,18 +40,18 @@ class LivenessAnalysisTest {
         stupsGrammar = grammar;
     }
 
-    private static AST lexParseProgram(String prog) {
+    private static SyntaxTree lexParseProgram(String prog) {
         final Lexer lex = new StupsLexer(CharStreams.fromString(prog));
 
-        final AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
-        tree.postprocess(stupsGrammar);
+        final SyntaxTree tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+        final SyntaxTree ast = SyntaxTree.toAbstractSyntaxTree(tree, stupsGrammar);
 
-        return tree;
+        return ast;
     }
 
     private static LivenessAnalysis initLivenessAnalysis(String program) {
-        final AST tree = lexParseProgram(program);
-        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final SyntaxTree tree = lexParseProgram(program);
+        final Map<SyntaxTreeNode, String> nodeTable = TypeChecker.validate(tree);
         final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
         final FlowGraph graph = gen.generateGraph();
         final DataFlowGraph dataGraph = DataFlowGraph.fromFlowGraph(graph);

@@ -6,7 +6,7 @@ import org.antlr.v4.runtime.Lexer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import parser.StupsParser;
-import parser.ast.AST;
+import parser.ast.SyntaxTree;
 import parser.grammar.Grammar;
 import typechecker.SymbolAlreadyDefinedException;
 import typechecker.TypeTable;
@@ -33,14 +33,14 @@ class TypeTableTest {
         parser = StupsParser.fromGrammar(grammar);
     }
 
-    private static AST getTree(String program) {
+    private static SyntaxTree getTree(String program) {
         try {
             final Path path = Paths.get(TypeTableTest.class.getClassLoader().getResource("examplePrograms/" + program).toURI());
             final String programCode = Files.readString(path, StandardCharsets.US_ASCII);
             final Lexer lex = new StupsLexer(CharStreams.fromString(programCode));
-            final AST tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
-            tree.postprocess(grammar);
-            return tree;
+            final SyntaxTree tree = parser.parse(lex.getAllTokens(), lex.getVocabulary());
+            final SyntaxTree ast = SyntaxTree.toAbstractSyntaxTree(tree, grammar);
+            return ast;
         } catch (Exception ignore) {
             ignore.printStackTrace();
         }
@@ -50,7 +50,7 @@ class TypeTableTest {
 
     @Test
     void testSingleSymbol() {
-        final AST tree = getTree("SingleSymbol.stups");
+        final SyntaxTree tree = getTree("SingleSymbol.stups");
 
         final TypeTable table = TypeTable.fromAST(tree);
 
@@ -60,7 +60,7 @@ class TypeTableTest {
 
     @Test
     void testMultipleSymbol() {
-        final AST tree = getTree("MultipleSymbol.stups");
+        final SyntaxTree tree = getTree("MultipleSymbol.stups");
 
         final TypeTable table = TypeTable.fromAST(tree);
 
@@ -75,14 +75,14 @@ class TypeTableTest {
 
     @Test
     void testExistingSymbol() {
-        final AST tree = getTree("ExistingSymbol.stups");
+        final SyntaxTree tree = getTree("ExistingSymbol.stups");
 
         assertThatThrownBy(() -> TypeTable.fromAST(tree)).isInstanceOf(SymbolAlreadyDefinedException.class);
     }
 
     @Test
     void testExistingSymbol2() {
-        final AST tree = getTree("ExistingSymbol2.stups");
+        final SyntaxTree tree = getTree("ExistingSymbol2.stups");
 
         assertThatThrownBy(() -> TypeTable.fromAST(tree)).isInstanceOf(SymbolAlreadyDefinedException.class);
     }

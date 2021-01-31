@@ -1,7 +1,7 @@
 package typechecker;
 
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,7 +53,7 @@ public class TypeTable {
                                                  Map.entry("NOT_EQUAL", Arrays.asList("INTEGER_TYPE", "BOOLEAN_TYPE", "STRING_TYPE")));
     }
 
-    public static TypeTable fromAST(AST tree) {
+    public static TypeTable fromAST(SyntaxTree tree) {
         System.out.println(" - Building TypeTable...");
         final Map<String, String> tableOut = new HashMap<>();
 
@@ -64,13 +64,13 @@ public class TypeTable {
         return new TypeTable(tableOut);
     }
 
-    private static void scanTree(ASTNode root, Map<? super String, String> table) {
-        for (ASTNode child : root.getChildren()) {
+    private static void scanTree(SyntaxTreeNode root, Map<? super String, String> table) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             scanTree(child, table);
         }
 
         if ("declaration".equals(root.getName())) {
-            final ASTNode child = root.getChildren().get(0);
+            final SyntaxTreeNode child = root.getChildren().get(0);
 
             log("Adding Entry " + child.getValue() + " -> " + root.getValue());
             final String oldEntry = table.put(child.getValue(), root.getValue());

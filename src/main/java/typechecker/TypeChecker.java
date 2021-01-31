@@ -1,7 +1,7 @@
 package typechecker;
 
-import parser.ast.AST;
-import parser.ast.ASTNode;
+import parser.ast.SyntaxTree;
+import parser.ast.SyntaxTreeNode;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -20,9 +20,9 @@ public final class TypeChecker {
 
     // TODO: nodeTable?
     // Wirft exception bei typeerror, return nodeTable?
-    public static Map<ASTNode, String> validate(AST tree) {
+    public static Map<SyntaxTreeNode, String> validate(SyntaxTree tree) {
         final TypeTable table = TypeTable.fromAST(tree);
-        final Map<ASTNode, String> nodeTable = new HashMap<>();
+        final Map<SyntaxTreeNode, String> nodeTable = new HashMap<>();
 
         System.out.println(" - Validating syntax-tree...");
 
@@ -34,8 +34,8 @@ public final class TypeChecker {
         return nodeTable;
     }
 
-    private static void validate(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
-        for (ASTNode child : root.getChildren()) {
+    private static void validate(SyntaxTreeNode root, TypeTable table, Map<SyntaxTreeNode, String> nodeTable) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             validate(child, table, nodeTable);
         }
 
@@ -55,7 +55,7 @@ public final class TypeChecker {
         } else if ("par_expr".equals(root.getName())) {
             // Nodetable Eintrag für Klammern
 
-            final ASTNode centerChild = root.getChildren().get(1);
+            final SyntaxTreeNode centerChild = root.getChildren().get(1);
 
             nodeTable.put(root, nodeTable.get(centerChild));
         } else if ("IDENTIFIER".equals(root.getName())) {
@@ -73,10 +73,10 @@ public final class TypeChecker {
         }
     }
 
-    private static void validateAssignment(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
+    private static void validateAssignment(SyntaxTreeNode root, TypeTable table, Map<SyntaxTreeNode, String> nodeTable) {
         final String identifier = root.getValue();
         final String identifierType = table.getSymbolType(identifier);
-        final ASTNode literalNode = root.getChildren().get(0);
+        final SyntaxTreeNode literalNode = root.getChildren().get(0);
         final String literalType = nodeTable.get(literalNode);
 
         log("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType);
@@ -88,12 +88,12 @@ public final class TypeChecker {
         }
     }
 
-    private static void validateExpression(ASTNode root, TypeTable table, Map<ASTNode, String> nodeTable) {
+    private static void validateExpression(SyntaxTreeNode root, TypeTable table, Map<SyntaxTreeNode, String> nodeTable) {
         final String op = root.getValue();
 
         log("Validating Expression: " + root.getValue());
 
-        if (!root.hasChildren()) {
+        if (root.isEmpty()) {
             // Keine Kinder
 
             System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] without arguments");
@@ -115,7 +115,7 @@ public final class TypeChecker {
         }
 
         final List<String> requiredType = table.getMethodArgumentType(op);
-        for (ASTNode child : root.getChildren()) {
+        for (SyntaxTreeNode child : root.getChildren()) {
             // Jedes Child muss korrekten Typ zurückgeben
 
             final String childReturnType = nodeTable.get(child);
@@ -137,8 +137,8 @@ public final class TypeChecker {
         }
 
         if ("EQUAL".equals(op) || "NOT_EQUAL".equals(op)) {
-            final ASTNode left = root.getChildren().get(0);
-            final ASTNode right = root.getChildren().get(1);
+            final SyntaxTreeNode left = root.getChildren().get(0);
+            final SyntaxTreeNode right = root.getChildren().get(1);
 
             if (!nodeTable.get(left).equals(nodeTable.get(right))) {
                 System.out.println("Line " + root.getLine() + " Typeerror: Can't use [" + op + "] with arguments of type [" + nodeTable.get(left) + "] and [" + nodeTable.get(right) + "]");

@@ -17,21 +17,21 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ASTCompacterTest {
+class SyntaxTreeCompacterTest {
 
     private static Grammar grammar;
     private static StupsParser parser;
 
     @BeforeAll
     static void init() throws IOException, URISyntaxException {
-        final Path path = Paths.get(ASTCompacterTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Path path = Paths.get(SyntaxTreeCompacterTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
     }
 
-    private static AST getTree(String program) {
+    private static SyntaxTree getTree(String program) {
         try {
-            final Path path = Paths.get(ASTCompacterTest.class.getClassLoader().getResource("examplePrograms/" + program).toURI());
+            final Path path = Paths.get(SyntaxTreeCompacterTest.class.getClassLoader().getResource("examplePrograms/" + program).toURI());
             final String programCode = Files.readString(path, StandardCharsets.US_ASCII);
             final Lexer lex = new StupsLexer(CharStreams.fromString(programCode));
             return parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -44,7 +44,7 @@ class ASTCompacterTest {
 
     @Test
     void testDeleteChildren() {
-        final AST tree = getTree("GeneralOperator.stups");
+        final SyntaxTree tree = getTree("GeneralOperator.stups");
         final long before = tree.size();
 
         ASTCompacter.deleteChildren(tree, grammar);
@@ -54,7 +54,7 @@ class ASTCompacterTest {
 
     @Test
     void testPromote() {
-        final AST tree = getTree("GeneralOperator.stups");
+        final SyntaxTree tree = getTree("GeneralOperator.stups");
         final long before = tree.size();
 
         ASTCompacter.promote(tree, grammar);
@@ -64,7 +64,7 @@ class ASTCompacterTest {
 
     @Test
     void testDeleteEmpty() {
-        final AST tree = getTree("GeneralOperator.stups");
+        final SyntaxTree tree = getTree("GeneralOperator.stups");
         ASTCompacter.deleteChildren(tree, grammar);
         final long before = tree.size();
 
@@ -75,7 +75,7 @@ class ASTCompacterTest {
 
     @Test
     void testClean() {
-        final AST tree = getTree("GeneralOperator.stups");
+        final SyntaxTree tree = getTree("GeneralOperator.stups");
 
         ASTCompacter.clean(tree, grammar);
 
