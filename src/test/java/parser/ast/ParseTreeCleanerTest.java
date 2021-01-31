@@ -17,21 +17,21 @@ import java.nio.file.Paths;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SyntaxTreeCompacterTest {
+class ParseTreeCleanerTest {
 
     private static Grammar grammar;
     private static StupsParser parser;
 
     @BeforeAll
     static void init() throws IOException, URISyntaxException {
-        final Path path = Paths.get(SyntaxTreeCompacterTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Path path = Paths.get(ParseTreeCleanerTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
         grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
     }
 
     private static SyntaxTree getTree(String program) {
         try {
-            final Path path = Paths.get(SyntaxTreeCompacterTest.class.getClassLoader().getResource("examplePrograms/" + program).toURI());
+            final Path path = Paths.get(ParseTreeCleanerTest.class.getClassLoader().getResource("examplePrograms/" + program).toURI());
             final String programCode = Files.readString(path, StandardCharsets.US_ASCII);
             final Lexer lex = new StupsLexer(CharStreams.fromString(programCode));
             return parser.parse(lex.getAllTokens(), lex.getVocabulary());
@@ -47,7 +47,7 @@ class SyntaxTreeCompacterTest {
         final SyntaxTree tree = getTree("GeneralOperator.stups");
         final long before = tree.size();
 
-        ASTCompacter.deleteChildren(tree, grammar);
+        ParseTreeCleaner.deleteChildren(tree, grammar);
 
         assertThat(before - tree.size()).isEqualTo(3);
     }
@@ -57,7 +57,7 @@ class SyntaxTreeCompacterTest {
         final SyntaxTree tree = getTree("GeneralOperator.stups");
         final long before = tree.size();
 
-        ASTCompacter.promote(tree, grammar);
+        ParseTreeCleaner.promote(tree, grammar);
 
         assertThat(before - tree.size()).isEqualTo(14);
     }
@@ -65,10 +65,10 @@ class SyntaxTreeCompacterTest {
     @Test
     void testDeleteEmpty() {
         final SyntaxTree tree = getTree("GeneralOperator.stups");
-        ASTCompacter.deleteChildren(tree, grammar);
+        ParseTreeCleaner.deleteChildren(tree, grammar);
         final long before = tree.size();
 
-        ASTCompacter.deleteIfEmpty(tree, grammar);
+        ParseTreeCleaner.deleteIfEmpty(tree, grammar);
 
         assertThat(before - tree.size()).isEqualTo(2);
     }
@@ -77,7 +77,7 @@ class SyntaxTreeCompacterTest {
     void testClean() {
         final SyntaxTree tree = getTree("GeneralOperator.stups");
 
-        ASTCompacter.clean(tree, grammar);
+        ParseTreeCleaner.clean(tree, grammar);
 
         assertThat(tree.size()).isEqualTo(28);
     }

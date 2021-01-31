@@ -23,8 +23,8 @@ public class SyntaxTree {
     public static SyntaxTree toAbstractSyntaxTree(SyntaxTree concreteSyntaxTree, Grammar grammar) {
         final SyntaxTree abstractSyntaxTree = concreteSyntaxTree.deepCopy();
 
-        ASTCompacter.clean(abstractSyntaxTree, grammar);
-        ASTBalancer.balance(abstractSyntaxTree);
+        ParseTreeCleaner.clean(abstractSyntaxTree, grammar);
+        SyntaxTreeRebalancer.rebalance(abstractSyntaxTree);
         System.out.println("Tree processing successful.");
 
         return abstractSyntaxTree;

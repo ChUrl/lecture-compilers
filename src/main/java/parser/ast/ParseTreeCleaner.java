@@ -7,28 +7,42 @@ import java.util.HashSet;
 
 import static util.Logger.log;
 
-public final class ASTCompacter {
+/**
+ * Wendet in der Grammatik definierte Regeln auf einen Parsebaum an.
+ * Dies ist der erste Schritt zum Abstrakten Syntaxbaum.
+ *
+ * <ul>
+ *     <li>Löscht redundante Knoten</li>
+ *     <li>Löscht leere Knoten</li>
+ *     <li>Komprimiert Äste, welche nur Informationen hochpropagieren</li>
+ *     <li>Führt Umbenennungen durch</li>
+ *     <li>Verschiebt Informationen in Knoten-Namen und -Wert</li>
+ * </ul>
+ */
+public final class ParseTreeCleaner {
 
-    private ASTCompacter() {}
+    private ParseTreeCleaner() {}
 
-    public static void clean(SyntaxTree tree, Grammar grammar) {
-        deleteChildren(tree, grammar);
-        deleteIfEmpty(tree, grammar);
-        promote(tree, grammar);
+    public static void clean(SyntaxTree parseTree, Grammar grammar) {
+        deleteChildren(parseTree, grammar);
+        deleteIfEmpty(parseTree, grammar);
+        promote(parseTree, grammar);
 
-        renameTo(tree, grammar);
-        nameToValue(tree, grammar);
-        valueToValue(tree, grammar);
+        renameTo(parseTree, grammar);
+        nameToValue(parseTree, grammar);
+        valueToValue(parseTree, grammar);
 
-        log("\nCleaned Tree:\n" + tree);
+        log("\nCleaned Tree:\n" + parseTree);
         log("-".repeat(100));
         System.out.println(" - Compressing syntax-tree...");
     }
 
-    // Entfernt [promote]-able Nodes (Reicht Werte nach oben)
-    public static void promote(SyntaxTree tree, Grammar grammar) {
+    /**
+     * Es werden Werte nach oben gereicht von [promote]-able Nodes.
+     */
+    public static void promote(SyntaxTree parseTree, Grammar grammar) {
         log("\nPromoting nodes:");
-        promote(tree.getRoot(), grammar);
+        promote(parseTree.getRoot(), grammar);
     }
 
     private static void promote(SyntaxTreeNode root, Grammar grammar) {
@@ -49,17 +63,19 @@ public final class ASTCompacter {
             root.setValue(child.getValue());
             root.setChildren(child.getChildren());
 
-            child.setValue("REMOVE"); // If both childs have the same identity both are removed
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
         }
 
         root.getChildren().removeAll(toRemove);
     }
 
-    // Entfernt [delIfEmpty] Nodes (löscht Nodes ohne Inhalt)
-    public static void deleteIfEmpty(SyntaxTree tree, Grammar grammar) {
+    /**
+     * Löscht leere Knoten mit [delIfEmpty].
+     */
+    public static void deleteIfEmpty(SyntaxTree parseTree, Grammar grammar) {
         log("\nDeleting empty nodes:");
-        deleteIfEmpty(tree.getRoot(), grammar);
+        deleteIfEmpty(parseTree.getRoot(), grammar);
     }
 
     private static void deleteIfEmpty(SyntaxTreeNode root, Grammar grammar) {
@@ -74,17 +90,19 @@ public final class ASTCompacter {
 
             log("Removing " + child.getName());
 
-            child.setValue("REMOVE"); // If both childs have the same identity both are removed
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
         }
 
         root.getChildren().removeAll(toRemove);
     }
 
-    // Löscht redundante Informationen in [delChildren]-Nodes (z.b. IF-child von COND) und Epsilon-Nodes
-    public static void deleteChildren(SyntaxTree tree, Grammar grammar) {
+    /**
+     * Löscht redundante Informationen in [delChildren]-Nodes (z.b. IF-child von COND) und Epsilon-Nodes.
+     */
+    public static void deleteChildren(SyntaxTree parseTree, Grammar grammar) {
         log("Removing redundant children:");
-        deleteChildren(tree.getRoot(), grammar);
+        deleteChildren(parseTree.getRoot(), grammar);
     }
 
     private static void deleteChildren(SyntaxTreeNode root, Grammar grammar) {
@@ -99,17 +117,19 @@ public final class ASTCompacter {
 
             log("Removing " + root.getName() + " -> " + child.getName());
 
-            child.setValue("REMOVE"); // If both childs have the same identity both are removed
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
         }
 
         root.getChildren().removeAll(toRemove);
     }
 
-    // Umbenennungen
-    private static void renameTo(SyntaxTree tree, Grammar grammar) {
+    /**
+     * Führt Umbenennungen durch.
+     */
+    private static void renameTo(SyntaxTree parseTree, Grammar grammar) {
         log("\nRenaming nodes:");
-        renameTo(tree.getRoot(), grammar);
+        renameTo(parseTree.getRoot(), grammar);
     }
 
     private static void renameTo(SyntaxTreeNode root, Grammar grammar) {
@@ -126,9 +146,12 @@ public final class ASTCompacter {
         }
     }
 
-    public static void nameToValue(SyntaxTree tree, Grammar grammar) {
+    /**
+     * Verschiebt Knotennamen von [nametoval]-Nodes in Parent-Values und löscht das Child.
+     */
+    public static void nameToValue(SyntaxTree parseTree, Grammar grammar) {
         log("\nMoving names to values:");
-        nameToValue(tree.getRoot(), grammar);
+        nameToValue(parseTree.getRoot(), grammar);
     }
 
     private static void nameToValue(SyntaxTreeNode root, Grammar grammar) {
@@ -146,17 +169,21 @@ public final class ASTCompacter {
 
             root.setValue(child.getName());
 
-            child.setValue("REMOVE"); // If both childs have the same identity both are removed
+            child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
         }
 
         root.getChildren().removeAll(toRemove);
     }
 
-    // Assignment bekommt den Identifier als Value anstatt als Child
-    public static void valueToValue(SyntaxTree tree, Grammar grammar) {
+    /**
+     * [valtoval]-Nodes bekommen den Child-Namen als Value anstatt als Child.
+     * Wird z.B. durchgeführt bei Assignments: Der Assignment-Node bekommt den
+     * Variablennamen als Wert anstatt als Child-Node.
+     */
+    public static void valueToValue(SyntaxTree parseTree, Grammar grammar) {
         log("\nMoving values to values:");
-        valueToValue(tree.getRoot(), grammar);
+        valueToValue(parseTree.getRoot(), grammar);
     }
 
     private static void valueToValue(SyntaxTreeNode root, Grammar grammar) {
@@ -165,36 +192,31 @@ public final class ASTCompacter {
         for (SyntaxTreeNode child : root.getChildren()) {
             valueToValue(child, grammar);
 
-            if (!grammar.hasValToVal(root, child)) {
-                continue;
-            }
-
-            if (!root.getValue().isBlank()) {
-                // Do not overwrite
+            if (!grammar.hasValToVal(root, child) || !root.getValue().isBlank()) {
                 continue;
             }
 
             if (root.getChildren().size() == 2
                 && root.getChildren().get(0).getName().equals(root.getChildren().get(1).getName())) {
-                // Special case where variable is assigned another variable
+                // Case where variable is assigned another variable with the same name
 
-                log("Special case: Var to var assignment");
                 log("Moving " + root.getChildren().get(1).getValue() + " to value of " + root.getName());
                 log(root.toString());
 
                 root.setValue(root.getChildren().get(1).getValue());
 
-                root.getChildren().get(1).setValue("REMOVE"); // If both childs have the same identity both are removed
+                root.getChildren().get(1).setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
                 toRemove.add(root.getChildren().get(1));
 
-                continue;
+            } else {
+                // Usual case where an expression is assigned
+
+                log("Moving " + child.getValue() + " to value of " + root.getName());
+                log(root.toString());
+
+                root.setValue(child.getValue());
+                toRemove.add(child);
             }
-
-            log("Moving " + child.getValue() + " to value of " + root.getName());
-            log(root.toString());
-
-            root.setValue(child.getValue());
-            toRemove.add(child);
         }
 
         root.getChildren().removeAll(toRemove);

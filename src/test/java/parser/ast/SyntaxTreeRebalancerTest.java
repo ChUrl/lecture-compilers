@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class SyntaxTreeBalancerTest {
+class SyntaxTreeRebalancerTest {
 
     //expr
     //├── expr: SUB
@@ -84,7 +84,7 @@ class SyntaxTreeBalancerTest {
     void testTree1Flip() {
         final SyntaxTree tree = tree1();
 
-        ASTBalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
         assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("expr");
@@ -94,8 +94,8 @@ class SyntaxTreeBalancerTest {
     void testTree1Flip2x() {
         final SyntaxTree tree = tree1();
 
-        ASTBalancer.flip(tree);
-        ASTBalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
 
         assertThat(tree).isEqualTo(tree1());
     }
@@ -104,7 +104,7 @@ class SyntaxTreeBalancerTest {
     void testTree2Flip() {
         final SyntaxTree tree = tree2();
 
-        ASTBalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
 
         assertThat(tree.getRoot().getChildren().get(0).getName()).isEqualTo("INTEGER_LIT");
         assertThat(tree.getRoot().getChildren().get(1).getName()).isEqualTo("expr");
@@ -116,8 +116,8 @@ class SyntaxTreeBalancerTest {
     void testTree2Flip2x() {
         final SyntaxTree tree = tree2();
 
-        ASTBalancer.flip(tree);
-        ASTBalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
 
         assertThat(tree).isEqualTo(tree2());
     }
@@ -125,9 +125,9 @@ class SyntaxTreeBalancerTest {
     @Test
     void testTree1LeftPrecedence() {
         final SyntaxTree tree = tree1();
-        ASTBalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
 
-        ASTBalancer.leftPrecedence(tree);
+        SyntaxTreeRebalancer.leftPrecedence(tree);
 
         assertThat(tree.size()).isEqualTo(3);
         assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
@@ -136,9 +136,9 @@ class SyntaxTreeBalancerTest {
     @Test
     void testTree2LeftPrecedence() {
         final SyntaxTree tree = tree2();
-        ASTBalancer.flip(tree);
+        SyntaxTreeRebalancer.flip(tree);
 
-        ASTBalancer.leftPrecedence(tree);
+        SyntaxTreeRebalancer.leftPrecedence(tree);
 
         assertThat(tree.size()).isEqualTo(5);
         assertThat(tree.getRoot().getValue()).isEqualTo("SUB");
@@ -147,14 +147,14 @@ class SyntaxTreeBalancerTest {
     @Test
     void testTree2OperatorPrecedence() {
         final SyntaxTree tree = tree2();
-        ASTBalancer.flip(tree);
-        ASTBalancer.leftPrecedence(tree);
+        SyntaxTreeRebalancer.flip(tree);
+        SyntaxTreeRebalancer.leftPrecedence(tree);
 
         final SyntaxTree tree1 = tree2();
-        ASTBalancer.flip(tree1);
-        ASTBalancer.leftPrecedence(tree1);
+        SyntaxTreeRebalancer.flip(tree1);
+        SyntaxTreeRebalancer.leftPrecedence(tree1);
 
-        ASTBalancer.operatorPrecedence(tree);
+        SyntaxTreeRebalancer.operatorPrecedence(tree);
 
         assertThat(tree).isEqualTo(tree1);
     }
@@ -162,12 +162,12 @@ class SyntaxTreeBalancerTest {
     @Test
     void testTree3OperatorPrecedence() {
         final SyntaxTree tree = tree3();
-        ASTBalancer.flip(tree);
-        ASTBalancer.leftPrecedence(tree);
+        SyntaxTreeRebalancer.flip(tree);
+        SyntaxTreeRebalancer.leftPrecedence(tree);
 
         assertThat(tree.getRoot().getValue()).isEqualTo("MUL");
 
-        ASTBalancer.operatorPrecedence(tree);
+        SyntaxTreeRebalancer.operatorPrecedence(tree);
 
         assertThat(tree.size()).isEqualTo(5);
         assertThat(tree.getRoot().getValue()).isEqualTo("SUB");

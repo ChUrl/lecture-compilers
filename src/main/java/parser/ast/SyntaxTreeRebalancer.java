@@ -6,11 +6,19 @@ import java.util.Set;
 
 import static util.Logger.log;
 
-public final class ASTBalancer {
+/**
+ * Ein SyntaxTree wird an bestimmten Stellen rotiert, sodass bestimmte Eigenschaften
+ * korrekt repräsentiert werden (Operatorpräzedenz, Linkassoziativität etc.).
+ */
+public final class SyntaxTreeRebalancer {
 
-    private static final Map<String, Integer> priority;
-    private static final Set<String> unary;
-    private static final Set<String> commutative;
+    /**
+     * Jedem Operator wird eine Priorität zugewiesen, 0 ist die höchste.
+     */
+    private static final Map<String, Integer> operatorPriority;
+
+    private static final Set<String> unaryOperators;
+    private static final Set<String> commutativeOperators;
 
     //!: Operatorpräzedenz
     // 0 - Unary: -, +, !
@@ -21,44 +29,56 @@ public final class ASTBalancer {
     // 5 - Logical AND: &&
     // 6 - Logical OR: ||
     static {
-        priority = Map.ofEntries(Map.entry("NOT", 0),
-                                 Map.entry("MUL", 1),
-                                 Map.entry("DIV", 1),
-                                 Map.entry("MOD", 1),
-                                 Map.entry("ADD", 2),
-                                 Map.entry("SUB", 2),
-                                 Map.entry("LESS", 3),
-                                 Map.entry("LESS_EQUAL", 3),
-                                 Map.entry("GREATER", 3),
-                                 Map.entry("GREATER_EQUAL", 3),
-                                 Map.entry("EQUAL", 4),
-                                 Map.entry("NOT_EQUAL", 4),
-                                 Map.entry("AND", 5),
-                                 Map.entry("OR", 6));
+        operatorPriority = Map.ofEntries(Map.entry("NOT", 0),
+                                         Map.entry("MUL", 1),
+                                         Map.entry("DIV", 1),
+                                         Map.entry("MOD", 1),
+                                         Map.entry("ADD", 2),
+                                         Map.entry("SUB", 2),
+                                         Map.entry("LESS", 3),
+                                         Map.entry("LESS_EQUAL", 3),
+                                         Map.entry("GREATER", 3),
+                                         Map.entry("GREATER_EQUAL", 3),
+                                         Map.entry("EQUAL", 4),
+                                         Map.entry("NOT_EQUAL", 4),
+                                         Map.entry("AND", 5),
+                                         Map.entry("OR", 6));
 
-        unary = Set.of("NOT", "ADD", "SUB");
+        unaryOperators = Set.of("NOT", "ADD", "SUB");
 
-        commutative = Set.of("ADD", "MUL", "EQUAL", "NOT_EQUAL", "AND", "OR");
+        commutativeOperators = Set.of("ADD", "MUL", "EQUAL", "NOT_EQUAL", "AND", "OR");
     }
 
-    private ASTBalancer() {}
+    private SyntaxTreeRebalancer() {}
 
-    public static void balance(SyntaxTree tree) {
-        flip(tree);
-        leftPrecedence(tree);
-        operatorPrecedence(tree);
-        flipCommutativeExpr(tree);
+    /**
+     * Ein Abstrakter Syntaxbaum wird umbalanciert.
+     *
+     * <ul>
+     *     <li>Baum wird gespiegelt, damit die Ausdrücke vorwárts laufen (Tiefste Ebenen müssen nach links)</li>
+     *     <li>Linkspräzedenz wird durch Links-Rotationen durchgesetzt</li>
+     *     <li>Operatorpräzedenz wird durch Rechtsrotationen durchgesetzt</li>
+     *     <li>Kommutative Ausdrücke werden gespiegelt, damit die tiefen Teilausdrücke zuerst berechnet werden</li>
+     * </ul>
+     */
+    public static void rebalance(SyntaxTree abstractSyntaxTree) {
+        flip(abstractSyntaxTree);
+        leftPrecedence(abstractSyntaxTree);
+        operatorPrecedence(abstractSyntaxTree);
+        flipCommutativeExpr(abstractSyntaxTree);
 
-        log(tree.toString());
+        log(abstractSyntaxTree.toString());
         log("-".repeat(100));
 
         System.out.println(" - Balancing syntax-tree...");
     }
 
-    // Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen
-    public static void flip(SyntaxTree tree) {
+    /**
+     * Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen.
+     */
+    public static void flip(SyntaxTree abstractSyntaxTree) {
         log("Flipping tree for ltr evaluation");
-        flip(tree.getRoot());
+        flip(abstractSyntaxTree.getRoot());
     }
 
     private static void flip(SyntaxTreeNode root) {
@@ -69,9 +89,12 @@ public final class ASTBalancer {
         Collections.reverse(root.getChildren());
     }
 
-    public static void flipCommutativeExpr(SyntaxTree tree) {
+    /**
+     * Kommutative Ausdrücke werden gespiegelt, damit die tiefen Teilexpressions zuerst berechnet werden.
+     */
+    public static void flipCommutativeExpr(SyntaxTree abstractSyntaxTree) {
         log("Flipping commutative expressions for stack efficiency");
-        flipCommutativeExpr(tree.getRoot());
+        flipCommutativeExpr(abstractSyntaxTree.getRoot());
     }
 
     private static void flipCommutativeExpr(SyntaxTreeNode root) {
@@ -79,9 +102,12 @@ public final class ASTBalancer {
             flipCommutativeExpr(child);
         }
 
-        if ("expr".equals(root.getName()) && commutative.contains(root.getValue())) {
+        if ("expr".equals(root.getName()) && commutativeOperators.contains(root.getValue())) {
+            // Ausdruck ist kommutativ
+
             if (root.getChildren().size() == 2 && root.getChildren().get(0).size() < root.getChildren().get(1).size()) {
                 // Make the bigger subtree the left one
+
                 log("Flipping " + root.getName() + ": " + root.getValue() + " for stack efficiency.");
                 log(root.toString());
 
@@ -90,14 +116,15 @@ public final class ASTBalancer {
         }
     }
 
-    // Führt Linksrotationen durch
-    // Es werden EXPR-Nodes (2 Childs, 1 davon EXPR, Kein Wert) solange wie möglich linksrotiert
-    public static void leftPrecedence(SyntaxTree tree) {
+    /**
+     * Führt Linksrotationen durch für Linkspräzedenz.
+     * Es werden EXPR-Nodes (2 Childs, 1 davon EXPR, Kein Wert) solange wie möglich linksrotiert.
+     */
+    public static void leftPrecedence(SyntaxTree abstractSyntaxTree) {
         log("Left-rotating expressions for left-precedence");
-        leftPrecedence(tree.getRoot());
+        leftPrecedence(abstractSyntaxTree.getRoot());
     }
 
-    // Es wird solange rotiert bis die letzte "Rotation" durchgeführt wurde
     private static void leftPrecedence(SyntaxTreeNode root) {
         for (SyntaxTreeNode child : root.getChildren()) {
             leftPrecedence(child);
@@ -116,7 +143,12 @@ public final class ASTBalancer {
         } while (change);
     }
 
-    // Die Letzte Rotation ist keine richtige Rotation, dort wird false zurückgegeben
+    /**
+     * Führt eine Linksrotation durch.
+     * Diese ist nicht regulär, da der Operator linksvererbt wird.
+     *
+     * @return Es wird false zurückgegeben, sobald keine weitere Rotation mehr möglich ist.
+     */
     private static boolean specialLeftRotate(SyntaxTreeNode root) {
         log("Special-Left-Rotation around " + root.getName());
         log(root.toString());
@@ -157,13 +189,18 @@ public final class ASTBalancer {
         return root.getChildren().size() == 1;
     }
 
-    public static void operatorPrecedence(SyntaxTree tree) {
+    /**
+     * Führt Rechtsrotationen durch für Operatorpräzedenz.
+     * Es wird solange rechtsrotiert, bis alle Operatoren mit hoher Priorität tiefer stehen
+     * als die Operatoren mit niedriger Priorität.
+     */
+    public static void operatorPrecedence(SyntaxTree abstractSyntaxTree) {
         log("Right-rotating expressions for operator-precedence");
 
         boolean changed;
 
         do {
-            changed = operatorPrecedence(tree.getRoot());
+            changed = operatorPrecedence(abstractSyntaxTree.getRoot());
         } while (changed);
     }
 
@@ -182,6 +219,9 @@ public final class ASTBalancer {
         return changed;
     }
 
+    /**
+     * Ermittelt, ob der ParentNode höhere Priorität als der ChildNode hat.
+     */
     private static boolean preceding(SyntaxTreeNode parent, SyntaxTreeNode child) {
         if (!"expr".equals(parent.getName()) || parent.getValue().isEmpty()
             || !"expr".equals(child.getName()) || child.getValue().isEmpty()) {
@@ -189,13 +229,13 @@ public final class ASTBalancer {
         }
 
         // Unary operators have the highest precedence
-        if (child.getChildren().size() == 1 && unary.contains(child.getValue())) {
+        if (child.getChildren().size() == 1 && unaryOperators.contains(child.getValue())) {
             return false;
         }
 
         // Less equals higher
         {
-            return priority.get(parent.getValue()) < priority.get(child.getValue());
+            return operatorPriority.get(parent.getValue()) < operatorPriority.get(child.getValue());
         }
     }
 
