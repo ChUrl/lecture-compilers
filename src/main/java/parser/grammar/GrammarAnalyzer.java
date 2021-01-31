@@ -16,16 +16,25 @@ import static util.Logger.log;
 import static util.Logger.logIfTrue;
 import static util.Logger.logNullable;
 
-public class GrammarAnalyzer {
+public final class GrammarAnalyzer {
 
     private final Grammar grammar;
 
+    /**
+     * Das first-Set enthält für jedes Nichtterminalsymbol alle Terminalsymbole, die als erstes bei diesen
+     * Nichtterminal auftreten können.
+     */
     private final Map<String, Set<String>> first;
+
+    /**
+     * Das follow-Set enhält für jedes Nichtterminalsymbol alle Terminalsymbole, die direkt auf dieses
+     * Nichtterminal folgen können.
+     */
     private final Map<String, Set<String>> follow;
 
     private final ParsingTable table;
 
-    public GrammarAnalyzer(Grammar grammar) {
+    private GrammarAnalyzer(Grammar grammar) {
         this.grammar = grammar;
 
         log("Analyzing Grammar:\n");
@@ -39,6 +48,10 @@ public class GrammarAnalyzer {
         this.table = this.initParseTable();
 
         System.out.println("Grammar analysis successful.");
+    }
+
+    public static GrammarAnalyzer fromGrammar(Grammar grammar) {
+        return new GrammarAnalyzer(grammar);
     }
 
     private Map<String, Set<String>> initFirst() {

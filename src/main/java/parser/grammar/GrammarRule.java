@@ -2,6 +2,9 @@ package parser.grammar;
 
 import java.util.Objects;
 
+/**
+ * Repräsentation einer Produktionsregel der Form leftside -> rightside.
+ */
 public class GrammarRule {
 
     private final String leftside;
@@ -20,18 +23,16 @@ public class GrammarRule {
         return this.rightside;
     }
 
-    public String[] getSymbols() {
-        return this.rightside.split(" ");
-    }
-
     @Override
-    public boolean equals(Object obj) {
-        if (obj instanceof GrammarRule) {
-            return this.leftside.equals(((GrammarRule) obj).leftside)
-                   && this.rightside.equals(((GrammarRule) obj).rightside);
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
-
-        return false;
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        final GrammarRule that = (GrammarRule) o;
+        return this.leftside.equals(that.leftside) && this.rightside.equals(that.rightside);
     }
 
     @Override

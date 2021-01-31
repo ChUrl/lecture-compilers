@@ -18,7 +18,7 @@ public final class TypeChecker {
 
     private TypeChecker() {}
 
-    // TODO: nodeTable?
+    // TODO: merge nodeTable into typetable?
     // Wirft exception bei typeerror, return nodeTable?
     public static Map<SyntaxTreeNode, String> validate(SyntaxTree tree) {
         final TypeTable table = TypeTable.fromAST(tree);

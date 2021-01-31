@@ -24,7 +24,7 @@ public class StupsParser {
     }
 
     public static StupsParser fromGrammar(Grammar grammar) {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar);
         return new StupsParser(analyzer.getTable());
     }
 

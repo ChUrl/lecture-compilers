@@ -10,12 +10,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+/**
+ * Repräsentation einer LL(1)-ParsingTabelle.
+ * Jeder Kombination aus Nichtterminal und Terminal wird ein neues Symbol aus dem Alphabet zugewiesen.
+ */
 public class ParsingTable {
 
-    private static final Pattern X = Pattern.compile("X");
     private final Grammar grammar;
     private final Map<Entry<String, String>, String> parsetable;
 
@@ -36,6 +38,9 @@ public class ParsingTable {
         return this.grammar.getTerminals();
     }
 
+    // Printing + Overrides
+
+    // TODO: This mess
     @Override
     public String toString() {
         final StringBuilder output = new StringBuilder();
@@ -74,7 +79,7 @@ public class ParsingTable {
         output.append(" ".repeat(margins.get("NTERM")))
               .append("| ");
         for (String terminal : inputSymbols) {
-            format.format(X.matcher("%-Xs ").replaceAll(String.valueOf(margins.get(terminal))), terminal);
+            format.format("%-Xs ".replace("X", String.valueOf(margins.get(terminal))), terminal);
         }
         output.append("|\n");
 
@@ -88,11 +93,11 @@ public class ParsingTable {
               .append("\n");
 
         for (String nonterminal : this.grammar.getNonterminals()) {
-            format.format(X.matcher("%-Xs| ").replaceAll(String.valueOf(margins.get("NTERM"))), nonterminal);
+            format.format("%-Xs| ".replace("X", String.valueOf(margins.get("NTERM"))), nonterminal);
 
             for (String terminal : inputSymbols) {
                 final String prod = this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
-                format.format(X.matcher("%-Xs ").replaceAll(String.valueOf(margins.get(terminal))), prod == null ? " ".repeat(9) : prod);
+                format.format("%-Xs ".replace("X", String.valueOf(margins.get(terminal))), prod == null ? " ".repeat(9) : prod);
             }
             output.append("|\n");
         }

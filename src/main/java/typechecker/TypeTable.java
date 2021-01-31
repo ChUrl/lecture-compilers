@@ -11,13 +11,27 @@ import java.util.Map;
 
 import static util.Logger.log;
 
-public class TypeTable {
+/**
+ * Speichert die Datentypen von Symbolen und Funktionen in einem Programm.
+ */
+public final class TypeTable {
 
+    /**
+     * Weist jeder deklarierter Variable ihren Typ zu.
+     */
     private final Map<String, String> symbolTable;
+
+    /**
+     * Weist jedem Operator einen Rückgabetyp zu.
+     */
     private final Map<String, String> methodReturnTable;
+
+    /**
+     * Weist jedem Operator die Typen seiner Argumente zu.
+     */
     private final Map<String, List<String>> methodArgumentTable;
 
-    public TypeTable(Map<String, String> symbolTable) {
+    private TypeTable(Map<String, String> symbolTable) {
         this.symbolTable = Collections.unmodifiableMap(symbolTable);
 
         // Enthält die Return-Types der Operatoren
@@ -55,18 +69,18 @@ public class TypeTable {
 
     public static TypeTable fromAST(SyntaxTree tree) {
         System.out.println(" - Building TypeTable...");
-        final Map<String, String> tableOut = new HashMap<>();
+        final Map<String, String> symbolTable = new HashMap<>();
 
         log("Creating TypeTable");
-        scanTree(tree.getRoot(), tableOut);
+        initSymbolTable(tree.getRoot(), symbolTable);
         log("-".repeat(100));
 
-        return new TypeTable(tableOut);
+        return new TypeTable(symbolTable);
     }
 
-    private static void scanTree(SyntaxTreeNode root, Map<? super String, String> table) {
+    private static void initSymbolTable(SyntaxTreeNode root, Map<String, String> table) {
         for (SyntaxTreeNode child : root.getChildren()) {
-            scanTree(child, table);
+            initSymbolTable(child, table);
         }
 
         if ("declaration".equals(root.getName())) {
@@ -81,6 +95,8 @@ public class TypeTable {
             }
         }
     }
+
+    // Getters
 
     public String getSymbolType(String sym) {
         return this.symbolTable.get(sym);
