@@ -10,6 +10,7 @@ import parser.ast.AST;
 import parser.ast.ASTNode;
 import parser.grammar.Grammar;
 import typechecker.TypeChecker;
+import util.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,6 +45,8 @@ public final class StupsCompiler {
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
         final FlowGraph graph = gen.generateGraph();
 
+        Logger.call(graph::printToImage);
+
         // Codegeneration + Output
         final String outputName = filename.replaceFirst("\\.stups", ".j");
         final String sourceCode = graph.toString();
@@ -73,7 +76,12 @@ public final class StupsCompiler {
 
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
         final FlowGraph graph = gen.generateGraph();
-        final DataFlowGraph dataFlowGraph = DataFlowGraph.fromSourceGraph(graph);
+
+        Logger.call(graph::printToImage);
+
+        final DataFlowGraph dataFlowGraph = DataFlowGraph.fromFlowGraph(graph);
+
+        Logger.call(dataFlowGraph::printToImage);
 
         final LivenessAnalysis liveness = LivenessAnalysis.fromDataFlowGraph(dataFlowGraph, gen.getVarMap());
         liveness.doLivenessAnalysis();

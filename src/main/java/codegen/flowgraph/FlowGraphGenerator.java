@@ -4,7 +4,7 @@ import codegen.CodeGenerationException;
 import codegen.analysis.StackSizeAnalyzer;
 import parser.ast.AST;
 import parser.ast.ASTNode;
-import util.Logger;
+import typechecker.TypeChecker;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -22,6 +22,9 @@ import static util.Logger.log;
  */
 public final class FlowGraphGenerator {
 
+    /**
+     * Mappt die {@link ASTNode}-Namen auf entsprechende Methoden für die Codeerzeugung.
+     */
     private static final Map<String, Method> methodMap;
 
     static {
@@ -49,9 +52,20 @@ public final class FlowGraphGenerator {
     }
 
     private final AST tree;
-    private final Map<String, Integer> varMap;
+
+    /**
+     * Enthält den Rückgabetypen von jedem Expression-Node.
+     * Wird erstellt im {@link TypeChecker}.
+     */
     private final Map<ASTNode, String> nodeTypeMap;
+
+    /**
+     * Enthält die Mappings vom Symbol/Variablennamen auf die Position in der JVM-Locals-Tabelle.
+     */
+    private final Map<String, Integer> varMap;
+
     private final FlowGraph graph;
+
     private int labelCounter;
 
     private FlowGraphGenerator(Map<String, Integer> varMap, AST tree, Map<ASTNode, String> nodeTypeMap, FlowGraph graph) {
@@ -61,18 +75,16 @@ public final class FlowGraphGenerator {
         this.graph = graph;
     }
 
+    /**
+     * @param source Das Source-File, welches compiliert wird (Optionaler Jasmin-Parameter)
+     */
     public static FlowGraphGenerator fromAST(AST tree, Map<ASTNode, String> nodeTypeMap, String source) {
-        if (!tree.getRoot().hasChildren()) {
+        if (tree.isEmpty()) {
             throw new CodeGenerationException("Empty File can't be compiled");
         }
 
         final Map<String, Integer> varMap = initVarMap(tree);
-
-        final String bytecodeVersion = "49.0";
-        final String clazz = tree.getRoot().getChildren().get(1).getValue();
-        final int stackSize = StackSizeAnalyzer.runStackModel(tree);
-        final int localCount = varMap.size() + 1;
-        final FlowGraph graph = new FlowGraph(bytecodeVersion, source, clazz, stackSize, localCount);
+        final FlowGraph graph = initFlowGraph(tree, varMap, source);
 
         return new FlowGraphGenerator(varMap, tree, nodeTypeMap, graph);
     }
@@ -80,25 +92,38 @@ public final class FlowGraphGenerator {
     private static Map<String, Integer> initVarMap(AST tree) {
         final Map<String, Integer> varMap = new HashMap<>();
 
-        // Assign variables to map: Symbol -> jasminLocalVarNr.
-        int varCount = 0;
         final Deque<ASTNode> stack = new ArrayDeque<>();
         stack.push(tree.getRoot());
+
+        int currentVarNumber = 0;
+
+        // Assign variables to map: Symbol -> jasminLocalVarNr.
         while (!stack.isEmpty()) {
             final ASTNode current = stack.pop();
 
             if ("declaration".equals(current.getName())) {
-                varCount++;
-                varMap.put(current.getChildren().get(0).getValue(), varCount);
+                // New variables only come from declarations
+
+                currentVarNumber++;
+                varMap.put(current.getChildren().get(0).getValue(), currentVarNumber);
                 log("New local " + current.getValue() + " variable "
                     + current.getChildren().get(0).getValue()
-                    + " assigned to slot " + varCount + ".");
+                    + " assigned to slot " + currentVarNumber + ".");
             }
 
             current.getChildren().forEach(stack::push);
         }
 
         return Collections.unmodifiableMap(varMap);
+    }
+
+    private static FlowGraph initFlowGraph(AST tree, Map<String, Integer> varMap, String source) {
+        final String bytecodeVersion = "49.0";
+        final String clazz = tree.getRoot().getChildren().get(1).getValue();
+        final int stackSize = StackSizeAnalyzer.runStackModel(tree);
+        final int localCount = varMap.size() + 1;
+
+        return new FlowGraph(bytecodeVersion, source, clazz, stackSize, localCount);
     }
 
     /**
@@ -112,9 +137,8 @@ public final class FlowGraphGenerator {
         // Skip the first 2 identifiers: ClassName, MainArgs
         this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
         this.graph.purgeEmptyBlocks();
-        Logger.call(this.graph::printToImage);
 
-        log("\n\nSourceGraph print:\n" + "-".repeat(100) + "\n" + this.graph.print() + "-".repeat(100));
+        log("\n\nSourceGraph print:\n" + "-".repeat(100) + "\n" + this.graph + "-".repeat(100));
         System.out.println("Graph-generation successful.");
 
         return this.graph;
@@ -136,9 +160,6 @@ public final class FlowGraphGenerator {
             root.getChildren().forEach(this::generateNode);
         }
     }
-
-    // ifeq - if value is 0
-    // ifne - if value is not 0
 
     /**
      * Erzeugt den Teilbaum für einen If-Knoten.

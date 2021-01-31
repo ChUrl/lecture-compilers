@@ -119,4 +119,8 @@ public class ASTNode {
 
         return newNode;
     }
+
+    public boolean isEmpty() {
+        return this.children.isEmpty();
+    }
 }

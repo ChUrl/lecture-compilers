@@ -20,6 +20,10 @@ public class AST {
         return this.root.size();
     }
 
+    public boolean isEmpty() {
+        return this.root.isEmpty();
+    }
+
     public void postprocess(Grammar grammar) {
         ASTCompacter.clean(this, grammar);
         ASTBalancer.balance(this);
@@ -29,6 +33,8 @@ public class AST {
     public AST deepCopy() {
         return new AST(this.root.deepCopy());
     }
+
+    // Overrides
 
     @Override
     public boolean equals(Object obj) {
