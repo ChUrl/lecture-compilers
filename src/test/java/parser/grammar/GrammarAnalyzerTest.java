@@ -106,7 +106,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar0() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar0);
 
         assertThat(analyzer.getFirst().get("S")).containsOnly("i", "a");
         assertThat(analyzer.getFirst().get("E")).containsOnly("b");
@@ -114,7 +114,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar1() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar1);
 
         assertThat(analyzer.getFirst().get("S")).containsOnly("id", "(");
         assertThat(analyzer.getFirst().get("E2")).containsOnly("+", Grammar.EPSILON_SYMBOL);
@@ -125,7 +125,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFirstGrammar2() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar2);
 
         assertThat(analyzer.getFirst().get("X")).containsOnly("c", "a", Grammar.EPSILON_SYMBOL);
         assertThat(analyzer.getFirst().get("Y")).containsOnly("c", Grammar.EPSILON_SYMBOL);
@@ -134,7 +134,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar0() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar0);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar0);
 
         assertThat(analyzer.getFollow().get("S")).containsOnly("$");
         assertThat(analyzer.getFollow().get("E")).containsOnly("t");
@@ -142,7 +142,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar1() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar1);
 
         assertThat(analyzer.getFollow().get("S")).containsOnly(")", "$");
         assertThat(analyzer.getFollow().get("E2")).containsOnly(")", "$");
@@ -153,7 +153,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testFollowGrammar2() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar2);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar2);
 
         assertThat(analyzer.getFollow().get("X")).containsOnly("a", "c", "d");
         assertThat(analyzer.getFollow().get("Y")).containsOnly("a", "c", "d");
@@ -162,7 +162,7 @@ class GrammarAnalyzerTest {
 
     @Test
     void testTableGrammar1() {
-        final GrammarAnalyzer analyzer = new GrammarAnalyzer(grammar1);
+        final GrammarAnalyzer analyzer = GrammarAnalyzer.fromGrammar(grammar1);
         final ParsingTable table = analyzer.getTable();
 
         assertThat(table.get("S", "id")).isEqualTo("T E2");
