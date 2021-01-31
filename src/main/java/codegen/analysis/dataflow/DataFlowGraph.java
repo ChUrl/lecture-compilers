@@ -3,11 +3,8 @@ package codegen.analysis.dataflow;
 import codegen.flowgraph.FlowBasicBlock;
 import codegen.flowgraph.FlowGraph;
 import codegen.flowgraph.FlowInstruction;
+import util.GraphvizCaller;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -128,21 +125,7 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
         dot.append("}");
 
-        final String dotOut = dot.toString();
-
-        final Path dotFile = Paths.get(System.getProperty("user.dir") + "/DataFlowGraph.dot");
-        try {
-            Files.writeString(dotFile, dotOut);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        final ProcessBuilder dotCompile = new ProcessBuilder("dot", "-Tsvg", "-oDataFlowGraph.svg", "DataFlowGraph.dot");
-        try {
-            dotCompile.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        GraphvizCaller.callGraphviz(dot, "DataFlowGraph");
 
         return "Finished.";
     }

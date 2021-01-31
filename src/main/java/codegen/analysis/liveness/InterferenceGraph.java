@@ -2,12 +2,9 @@ package codegen.analysis.liveness;
 
 import codegen.analysis.dataflow.DataFlowGraph;
 import codegen.analysis.dataflow.DataFlowNode;
+import util.GraphvizCaller;
 import util.Logger;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -89,7 +86,7 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
             for (InterferenceNode neigh : node.getNeighbourSet()) {
                 if (!dot.toString().contains(neigh.getSymbol() + " -> " + node.getSymbol())) {
                     // No double lines
-                   
+
                     dot.append(node.getSymbol()).append(" -> ").append(neigh.getSymbol()).append(" [arrowhead=\"none\"];\n");
                 }
             }
@@ -97,21 +94,7 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
         dot.append("}");
 
-        final String dotOut = dot.toString();
-
-        final Path dotFile = Paths.get(System.getProperty("user.dir") + "/InterferenceGraph.dot");
-        try {
-            Files.writeString(dotFile, dotOut);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        final ProcessBuilder dotCompile = new ProcessBuilder("dot", "-Tsvg", "-oInterferenceGraph.svg", "InterferenceGraph.dot");
-        try {
-            dotCompile.start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        GraphvizCaller.callGraphviz(dot, "InterferenceGraph");
 
         return "Finished.";
     }
