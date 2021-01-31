@@ -10,11 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-public final class DataFlowGraph {
+public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
+    // TODO: Why use list, its a graph
     private final List<DataFlowNode> graph;
 
     private DataFlowGraph(List<DataFlowNode> graph) {
@@ -25,8 +27,8 @@ public final class DataFlowGraph {
     public static DataFlowGraph fromSourceGraph(FlowGraph srcGraph) {
         final List<DataFlowNode> graph = new LinkedList<>();
 
-        for (FlowBasicBlock block : srcGraph.getBasicBlocks()) {
-            for (FlowInstruction inst : block.getInstructions()) {
+        for (FlowBasicBlock block : srcGraph) {
+            for (FlowInstruction inst : block) {
                 graph.add(DataFlowNode.fromFlowNode(inst, block));
             }
         }
@@ -37,8 +39,8 @@ public final class DataFlowGraph {
     }
 
     private static void initSuccPred(FlowGraph srcGraph, List<DataFlowNode> graph) {
-        for (FlowBasicBlock block : srcGraph.getBasicBlocks()) {
-            for (FlowInstruction inst : block.getInstructions()) {
+        for (FlowBasicBlock block : srcGraph) {
+            for (FlowInstruction inst : block) {
                 final DataFlowNode current = getNodeByInstruction(inst, graph);
 
                 for (FlowInstruction pred : block.getPredecessors(inst)) {
@@ -66,8 +68,12 @@ public final class DataFlowGraph {
                     .orElse(null);
     }
 
-    public List<DataFlowNode> getNodes() {
-        return this.graph;
+    public int indexOf(DataFlowNode node) {
+        return this.graph.indexOf(node);
+    }
+
+    public int size() {
+        return this.graph.size();
     }
 
     // Printing
@@ -136,5 +142,12 @@ public final class DataFlowGraph {
         }
 
         return "Finished.";
+    }
+
+    // Overrides
+
+    @Override
+    public Iterator<DataFlowNode> iterator() {
+        return this.graph.iterator();
     }
 }

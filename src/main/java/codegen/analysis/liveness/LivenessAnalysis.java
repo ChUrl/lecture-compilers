@@ -28,8 +28,9 @@ public final class LivenessAnalysis {
         do {
             change = false;
 
-            for (DataFlowNode node : graph.getNodes()) {
-                if (graph.getNodes().indexOf(node) == graph.getNodes().size() - 1) {
+            for (DataFlowNode node : graph) {
+                // TODO: Indexof mega unnötig
+                if (graph.indexOf(node) == graph.size() - 1) {
                     // Skip END
 
                     continue;
@@ -39,10 +40,11 @@ public final class LivenessAnalysis {
             }
         } while (change);
 
+        // TODO: Indexof mega unnötig
         Logger.log("IN, OUT Sets:");
-        for (DataFlowNode node : graph.getNodes()) {
-            Logger.log(graph.getNodes().indexOf(node) + ": " + node.getInst() + " IN: " + node.getIn());
-            Logger.log(graph.getNodes().indexOf(node) + ": " + node.getInst() + " OUT: " + node.getOut());
+        for (DataFlowNode node : graph) {
+            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " IN: " + node.getIn());
+            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " OUT: " + node.getOut());
         }
         Logger.log("\n");
     }
@@ -79,7 +81,7 @@ public final class LivenessAnalysis {
         int colors = 0;
         int currentColor;
 
-        for (InterferenceNode node : this.interferenceGraph.getNodes()) {
+        for (InterferenceNode node : this.interferenceGraph) {
 
             currentColor = 1;
 

@@ -2,12 +2,13 @@ package codegen.flowgraph;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class FlowBasicBlock {
+public class FlowBasicBlock implements Iterable<FlowInstruction> {
 
     private final String id;
     private final String label;
@@ -51,24 +52,12 @@ public class FlowBasicBlock {
                                                   instruction, args));
     }
 
-    public List<FlowInstruction> getInstructions() {
-        return this.instructions;
-    }
-
     public void addSuccessor(FlowBasicBlock block) {
         this.successors.add(block);
     }
 
-    public void addSuccessors(Set<FlowBasicBlock> successors) {
-        this.successors.addAll(successors);
-    }
-
     public void addPredecessor(FlowBasicBlock block) {
         this.predecessors.add(block);
-    }
-
-    public void addPredecessors(Set<FlowBasicBlock> predecessors) {
-        this.predecessors.addAll(predecessors);
     }
 
     public Set<FlowBasicBlock> getSuccessorSet() {
@@ -135,7 +124,7 @@ public class FlowBasicBlock {
         return null;
     }
 
-    // Print + Overrides
+    // Printing
 
     public String printInst() {
         return this.instructions.stream()
@@ -145,6 +134,8 @@ public class FlowBasicBlock {
                                 .map(inst -> inst.replace(">", "greater"))
                                 .collect(Collectors.joining());
     }
+
+    // Overrides
 
     @Override
     public int hashCode() {
@@ -173,5 +164,10 @@ public class FlowBasicBlock {
 
         return this.label + ":\n"
                + linesString;
+    }
+
+    @Override
+    public Iterator<FlowInstruction> iterator() {
+        return this.instructions.iterator();
     }
 }

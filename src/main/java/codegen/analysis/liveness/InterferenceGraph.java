@@ -9,11 +9,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public final class InterferenceGraph {
+public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
+    // TODO: Why use list, its a graph
     private final List<InterferenceNode> nodes;
 
     private InterferenceGraph(List<InterferenceNode> nodes) {
@@ -29,7 +31,7 @@ public final class InterferenceGraph {
         }
 
         // Determine neighbours
-        for (DataFlowNode node : graph.getNodes()) {
+        for (DataFlowNode node : graph) {
             Logger.log("NODE " + node.getInst() + " - OUT: " + node.getOut());
 
             for (String left : node.getOut()) {
@@ -56,12 +58,6 @@ public final class InterferenceGraph {
                                 .filter(node -> node.getSymbol().equals(symbol))
                                 .findFirst()
                                 .orElse(null);
-    }
-
-    // Getters, Setters
-
-    public List<InterferenceNode> getNodes() {
-        return this.nodes;
     }
 
     // Printing
@@ -112,5 +108,12 @@ public final class InterferenceGraph {
         }
 
         return "Finished.";
+    }
+
+    // Overrides
+
+    @Override
+    public Iterator<InterferenceNode> iterator() {
+        return this.nodes.iterator();
     }
 }

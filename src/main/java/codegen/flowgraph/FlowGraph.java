@@ -9,12 +9,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class FlowGraph {
+public class FlowGraph implements Iterable<FlowBasicBlock> {
 
     private final FlowGraphHead head;
     private final List<FlowBasicBlock> basicBlocks;
@@ -122,8 +123,6 @@ public class FlowGraph {
         this.basicBlocks.removeAll(toRemove);
     }
 
-    // Getters, Setters
-
     private FlowBasicBlock getBlockByLabel(String label) {
         return this.basicBlocks.stream()
                                .filter(block -> block.getLabel().equals(label))
@@ -135,11 +134,7 @@ public class FlowGraph {
         return this.basicBlocks.get(this.basicBlocks.size() - 1);
     }
 
-    public List<FlowBasicBlock> getBasicBlocks() {
-        return this.basicBlocks;
-    }
-
-    // Print + Overrides
+    // Printing
 
     public String print() {
         final String blocksString = this.basicBlocks.stream()
@@ -222,6 +217,8 @@ public class FlowGraph {
         return "Finished.";
     }
 
+    // Overrides
+
     @Override
     public String toString() {
         final String blocksString = this.basicBlocks.stream()
@@ -233,4 +230,8 @@ public class FlowGraph {
                + this.tail;
     }
 
+    @Override
+    public Iterator<FlowBasicBlock> iterator() {
+        return this.basicBlocks.iterator();
+    }
 }
