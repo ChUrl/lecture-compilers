@@ -102,41 +102,12 @@ class FlowGraphGeneratorTest {
         return out.toString().replaceFirst("\n", "");
     }
 
+    // Arithmetic programs
+
     private static String buildArithmeticProg(String expr) {
         return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
                + expr
                + ";\n\t\tSystem.out.println(i);\n\t}\n}";
-    }
-
-    private static String buildIfElseProgram(String expr, String condition, String ifBlock, String elseBlock) {
-        String elseBlc = "else {\n\t\t\t" + elseBlock + ";\n\t\t}";
-        if (elseBlock == null) {
-            elseBlc = "";
-        }
-
-        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
-               + expr
-               + ";\n\t\tif ("
-               + condition
-               + ") {\n\t\t\t"
-               + ifBlock
-               + ";\n\t\t} " + elseBlc + "\n\t\tSystem.out.println(i);\n\t}\n}";
-    }
-
-    private static String buildLoopProgram(String expr, String condition, String body) {
-        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
-               + expr
-               + ";\n\t\twhile ("
-               + condition
-               + ") {\n\t\t\t"
-               + body
-               + ";\n\t\t}\n\t\tSystem.out.println(i);\n\t}\n}";
-    }
-
-    private static String buildLogicProgram(String expr) {
-        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tboolean b = "
-               + expr
-               + ";\n\t\tSystem.out.println(b);\n\t}\n}";
     }
 
     private static Stream<Arguments> compileArithmeticProgramsArgs() {
@@ -169,6 +140,33 @@ class FlowGraphGeneratorTest {
         );
     }
 
+    private static String buildIfElseProgram(String expr, String condition, String ifBlock, String elseBlock) {
+        String elseBlc = "else {\n\t\t\t" + elseBlock + ";\n\t\t}";
+        if (elseBlock == null) {
+            elseBlc = "";
+        }
+
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
+               + expr
+               + ";\n\t\tif ("
+               + condition
+               + ") {\n\t\t\t"
+               + ifBlock
+               + ";\n\t\t} " + elseBlc + "\n\t\tSystem.out.println(i);\n\t}\n}";
+    }
+
+    // Conditional programs
+
+    private static String buildLoopProgram(String expr, String condition, String body) {
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tint i = "
+               + expr
+               + ";\n\t\twhile ("
+               + condition
+               + ") {\n\t\t\t"
+               + body
+               + ";\n\t\t}\n\t\tSystem.out.println(i);\n\t}\n}";
+    }
+
     private static Stream<Arguments> compileIfElseProgramsArgs() {
         return Stream.of(
                 Arguments.of("10", "i == 10", "i = 1", "i = -1", 1), // 1
@@ -181,6 +179,69 @@ class FlowGraphGeneratorTest {
                 Arguments.of("10", "i != 10", "i = 1", null, 10),
                 Arguments.of("10", "i == 10", "i = 1", null, 1)
         );
+    }
+
+    public static Stream<Arguments> compileLoopProgramsArgs() {
+        return Stream.of(
+                Arguments.of("0", "i <= 5", "System.out.println(i); i = i + 1", "0\n1\n2\n3\n4\n5\n6"),
+                Arguments.of("5 - 9", "i != 0", "System.out.println(i); i = i + 1", "-4\n-3\n-2\n-1\n0"),
+                Arguments.of("0", "i < 0", "System.out.println(i); i = i + 1", "0"),
+                Arguments.of("2", "i <= 5", "System.out.println(i); i = i * i", "2\n4\n16")
+        );
+    }
+
+    // Loop programs
+
+    private static String buildLogicProgram(String expr) {
+        return "class TestOutput {\n\tpublic static void main(String[] args) {\n\t\tboolean b = "
+               + expr
+               + ";\n\t\tSystem.out.println(b);\n\t}\n}";
+    }
+
+    public static Stream<Arguments> compileProgramsArgs() {
+        return Stream.of(
+                Arguments.of("EmptyMain.stups", ""), // 1
+                Arguments.of("GeneralComment.stups", "Test"),
+                Arguments.of("GeneralIfElse.stups", "x ist kleiner als y.\nx und y sind gleich gross."),
+                Arguments.of("Println.stups", "Hey\ntrue\n5\n1\nHey\nfalse"),
+                Arguments.of("CompileAllInOne1.stups", "0\nfalse\nELSE"), // 5
+                Arguments.of("Fibonacci.stups", "1\n2\n3\n5\n8\n13\n21\n34"),
+                Arguments.of("Factorial.stups", "1\n2\n6\n24\n120"),
+                Arguments.of("Squares.stups", "1\n4\n9\n16\n25\n36\n49\n64\n81\n100"),
+                Arguments.of("Multiplication.stups", "5\n10\n15\n20")
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource("compileArithmeticProgramsArgs")
+    void compileArithmeticProgramsTest(String prog, int result) {
+        final String program = buildArithmeticProg(prog);
+        System.out.println(program);
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
+        final FlowGraph srcProg = gen.generateGraph();
+
+        compileJasmin(srcProg.toString());
+        assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
+    }
+
+    // Logic Programs
+
+    @ParameterizedTest
+    @MethodSource("compileIfElseProgramsArgs")
+    void compileIfElseProgramsTest(String expr, String condition, String ifBlock, String elseBlock, int result) {
+        final String program = buildIfElseProgram(expr, condition, ifBlock, elseBlock);
+        System.out.println(program);
+
+        final AST tree = lexParseProgram(program);
+        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
+        final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
+        final FlowGraph srcProg = gen.generateGraph();
+
+        compileJasmin(srcProg.toString());
+        assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
     }
 
     private static Stream<Arguments> compileLogicProgramsArgs() {
@@ -211,59 +272,6 @@ class FlowGraphGeneratorTest {
         );
     }
 
-    public static Stream<Arguments> compileLoopProgramsArgs() {
-        return Stream.of(
-                Arguments.of("0", "i <= 5", "System.out.println(i); i = i + 1", "0\n1\n2\n3\n4\n5\n6"),
-                Arguments.of("5 - 9", "i != 0", "System.out.println(i); i = i + 1", "-4\n-3\n-2\n-1\n0"),
-                Arguments.of("0", "i < 0", "System.out.println(i); i = i + 1", "0"),
-                Arguments.of("2", "i <= 5", "System.out.println(i); i = i * i", "2\n4\n16")
-        );
-    }
-
-    public static Stream<Arguments> compileProgramsArgs() {
-        return Stream.of(
-                Arguments.of("EmptyMain.stups", ""), // 1
-                Arguments.of("GeneralComment.stups", "Test"),
-                Arguments.of("GeneralIfElse.stups", "x ist kleiner als y.\nx und y sind gleich gross."),
-                Arguments.of("Println.stups", "Hey\ntrue\n5\n1\nHey\nfalse"),
-                Arguments.of("CompileAllInOne1.stups", "0\nfalse\nELSE"), // 5
-                Arguments.of("Fibonacci.stups", "1\n2\n3\n5\n8\n13\n21\n34"),
-                Arguments.of("Factorial.stups", "1\n2\n6\n24\n120"),
-                Arguments.of("Squares.stups", "1\n4\n9\n16\n25\n36\n49\n64\n81\n100"),
-                Arguments.of("Multiplication.stups", "5\n10\n15\n20")
-        );
-    }
-
-    @ParameterizedTest
-    @MethodSource("compileArithmeticProgramsArgs")
-    void compileArithmeticProgramsTest(String prog, int result) {
-        final String program = buildArithmeticProg(prog);
-        System.out.println(program);
-
-        final AST tree = lexParseProgram(program);
-        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, "TestOutpu");
-        final FlowGraph srcProg = gen.generateGraph();
-
-        compileJasmin(srcProg.toString());
-        assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
-    }
-
-    @ParameterizedTest
-    @MethodSource("compileIfElseProgramsArgs")
-    void compileIfElseProgramsTest(String expr, String condition, String ifBlock, String elseBlock, int result) {
-        final String program = buildIfElseProgram(expr, condition, ifBlock, elseBlock);
-        System.out.println(program);
-
-        final AST tree = lexParseProgram(program);
-        final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
-        final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
-        final FlowGraph srcProg = gen.generateGraph();
-
-        compileJasmin(srcProg.toString());
-        assertThat(Integer.parseInt(executeCompiledProgram())).isEqualTo(result);
-    }
-
     @ParameterizedTest
     @MethodSource("compileLogicProgramsArgs")
     void compileLogicProgramsTest(String expr, boolean result) {
@@ -278,6 +286,8 @@ class FlowGraphGeneratorTest {
         compileJasmin(srcProg.toString());
         assertThat(Boolean.parseBoolean(executeCompiledProgram())).isEqualTo(result);
     }
+
+    // General programs
 
     @ParameterizedTest
     @MethodSource("compileLoopProgramsArgs")
