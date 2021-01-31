@@ -8,6 +8,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 
+/**
+ * Die Liveness-Analyse bestimmt die mindestanzahl an benötigten Registern für ein Programm.
+ * Anhand eines {@link DataFlowGraph} wird ein {@link InterferenceGraph} erstellt.
+ * Dieser wird gefärbt, jede Farbe entspricht einem Register.
+ */
 public final class LivenessAnalysis {
 
     private final InterferenceGraph interferenceGraph;
@@ -37,12 +42,12 @@ public final class LivenessAnalysis {
                     continue;
                 }
 
-                change = change || updateNodeInOut(node);
+                change = change || calculateLivenessInOutNode(node);
             }
         } while (change);
     }
 
-    private static boolean updateNodeInOut(DataFlowNode dataFlowNode) {
+    private static boolean calculateLivenessInOutNode(DataFlowNode dataFlowNode) {
         boolean change;
 
         for (DataFlowNode succ : dataFlowNode.getSuccessorSet()) {
