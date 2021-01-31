@@ -92,16 +92,16 @@ public final class DataFlowNode {
         return Collections.unmodifiableSet(this.predecessors);
     }
 
-    public void addPredecessor(DataFlowNode node) {
-        this.predecessors.add(node);
+    public boolean addPredecessor(DataFlowNode node) {
+        return this.predecessors.add(node);
     }
 
     public Set<DataFlowNode> getSuccessorSet() {
         return Collections.unmodifiableSet(this.successors);
     }
 
-    public void addSuccessor(DataFlowNode node) {
-        this.successors.add(node);
+    public boolean addSuccessor(DataFlowNode node) {
+        return this.successors.add(node);
     }
 
     public Set<String> getUseSet() {

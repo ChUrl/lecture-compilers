@@ -8,9 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -28,7 +28,7 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
     }
 
     public static DataFlowGraph fromFlowGraph(FlowGraph flowGraph) {
-        final List<DataFlowNode> dataFlowNodes = new LinkedList<>();
+        final List<DataFlowNode> dataFlowNodes = new ArrayList<>();
 
         // Initialize all DataFlowNodes
         for (FlowBasicBlock basicBlock : flowGraph) {
@@ -84,7 +84,7 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
         return this.dataFlowNodes.size();
     }
 
-    private Stream<DataFlowNode> stream() {
+    public Stream<DataFlowNode> stream() {
         return this.dataFlowNodes.stream();
     }
 
