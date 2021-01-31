@@ -54,7 +54,7 @@ class LivenessAnalysisTest {
         final Map<ASTNode, String> nodeTable = TypeChecker.validate(tree);
         final FlowGraphGenerator gen = FlowGraphGenerator.fromAST(tree, nodeTable, "TestOutput");
         final FlowGraph graph = gen.generateGraph();
-        final DataFlowGraph dataGraph = DataFlowGraph.fromSourceGraph(graph);
+        final DataFlowGraph dataGraph = DataFlowGraph.fromFlowGraph(graph);
 
         return LivenessAnalysis.fromDataFlowGraph(dataGraph, gen.getVarMap());
     }

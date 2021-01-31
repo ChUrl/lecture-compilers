@@ -15,7 +15,6 @@ import java.util.Map;
 
 public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
-    // TODO: Why use list, its a graph
     private final List<InterferenceNode> nodes;
 
     private InterferenceGraph(List<InterferenceNode> nodes) {
@@ -32,14 +31,14 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
         // Determine neighbours
         for (DataFlowNode node : graph) {
-            Logger.log("NODE " + node.getInst() + " - OUT: " + node.getOut());
+            Logger.log("NODE " + node.getInst() + " - OUT: " + node.getOutSet());
 
-            for (String left : node.getOut()) {
+            for (String left : node.getOutSet()) {
                 if (left.isBlank()) {
                     continue;
                 }
 
-                for (String right : node.getOut()) {
+                for (String right : node.getOutSet()) {
                     if (right.isBlank()) {
                         continue;
                     }

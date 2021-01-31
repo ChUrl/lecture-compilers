@@ -43,8 +43,8 @@ public final class LivenessAnalysis {
         // TODO: Indexof mega unnötig
         Logger.log("IN, OUT Sets:");
         for (DataFlowNode node : graph) {
-            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " IN: " + node.getIn());
-            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " OUT: " + node.getOut());
+            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " IN: " + node.getInSet());
+            Logger.log(graph.indexOf(node) + ": " + node.getInst() + " OUT: " + node.getOutSet());
         }
         Logger.log("\n");
     }
@@ -52,16 +52,16 @@ public final class LivenessAnalysis {
     private static boolean updateInOut(DataFlowNode node) {
         boolean change;
 
-        for (DataFlowNode succ : node.getSuccessors()) {
+        for (DataFlowNode succ : node.getSuccessorSet()) {
             // A variable going live into the successor implies it going live out of the predecessor
 
-            node.addOut(succ.getIn());
+            node.addOut(succ.getInSet());
         }
 
-        final Set<String> addIN = new HashSet<>(node.getOut()); // Copy important
-        addIN.removeAll(node.getDef()); // If a variable that is live-out is defined in the node, it doesn't have to be live-in
+        final Set<String> addIN = new HashSet<>(node.getOutSet()); // Copy important
+        addIN.removeAll(node.getDefSet()); // If a variable that is live-out is defined in the node, it doesn't have to be live-in
 
-        change = node.addIn(node.getUse()); // A variable being used implies it going in live
+        change = node.addIn(node.getUseSet()); // A variable being used implies it going in live
         change = change || node.addIn(addIN); // A variable that is live-out and isn't defined in the node must be live-in
 
         return change;

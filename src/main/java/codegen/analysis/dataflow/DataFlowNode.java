@@ -1,26 +1,53 @@
 package codegen.analysis.dataflow;
 
-import codegen.flowgraph.FlowBasicBlock;
 import codegen.flowgraph.FlowInstruction;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
+/**
+ * Die Datenflussrepräsentation einer Instruktion.
+ */
 public final class DataFlowNode {
 
+    // General graph structure information
     private final String id;
-    private final String blockId;
-    private final String inst;
-    private final String use;
-    private final String def;
-    private final Set<String> in;
-    private final Set<String> out;
     private final Set<DataFlowNode> predecessors;
     private final Set<DataFlowNode> successors;
 
-    private DataFlowNode(String id, String blockId, String inst, String use, String def) {
+    /**
+     * Die Instruction, welche auch die zugehörige {@link FlowInstruction} enthält.
+     */
+    private final String inst;
+
+    /**
+     * Die Variable, die von diesem Block verwendet wird.
+     * Da wir keinen 3-Address-Code, sondern Jasmin-Assembler haben, ist das maximal eine.
+     */
+    private final String use;
+
+    /**
+     * Die Variable, die von diesem Block definiert wird.
+     * Da wir keinen 3-Address-Code, sondern Jasmin-Assembler haben, ist das maximal eine.
+     */
+    private final String def;
+
+    /**
+     * Alle Variablen, welche live in diesem Node ankommen.
+     */
+    private final Set<String> in;
+
+    /**
+     * Alle Variablen , welche diesen Node live verlassen.
+     */
+    private final Set<String> out;
+
+    private DataFlowNode(String id, String inst, String use, String def) {
         this.id = id;
-        this.blockId = blockId;
         this.inst = inst;
         this.use = use;
         this.def = def;
@@ -30,7 +57,7 @@ public final class DataFlowNode {
         this.successors = new HashSet<>();
     }
 
-    public static DataFlowNode fromFlowNode(FlowInstruction srcInst, FlowBasicBlock block) {
+    public static DataFlowNode fromFlowNode(FlowInstruction srcInst) {
         final String instType = switch (srcInst.getInstruction()) {
             case "aload", "iload" -> "use";
             case "astore", "istore" -> "def";
@@ -48,74 +75,95 @@ public final class DataFlowNode {
             def = srcInst.getArgs()[0];
         }
 
-        return new DataFlowNode(srcInst.getId(), block.getId(), srcInst.getInstruction(), use, def);
+        return new DataFlowNode(srcInst.getId(), srcInst.getInstruction(), use, def);
     }
+
+    // Getters, Setters
 
     public String getId() {
         return this.id;
-    }
-
-    public String getBlockId() {
-        return this.blockId;
-    }
-
-    public Set<String> getUse() {
-        return Set.of(this.use);
-    }
-
-    public Set<String> getDef() {
-        return Set.of(this.def);
-    }
-
-    public Set<String> getIn() {
-        return this.in;
-    }
-
-    public Set<String> getOut() {
-        return this.out;
     }
 
     public String getInst() {
         return this.inst;
     }
 
+    public Set<DataFlowNode> getPredecessorSet() {
+        return Collections.unmodifiableSet(this.predecessors);
+    }
+
     public void addPredecessor(DataFlowNode node) {
         this.predecessors.add(node);
     }
 
-    public Set<DataFlowNode> getPredecessors() {
-        return this.predecessors;
-    }
-
-    public Set<DataFlowNode> getSuccessors() {
-        return this.successors;
+    public Set<DataFlowNode> getSuccessorSet() {
+        return Collections.unmodifiableSet(this.successors);
     }
 
     public void addSuccessor(DataFlowNode node) {
         this.successors.add(node);
     }
 
-    public void addOut(Set<String> out) {
-        if (out.isEmpty()) {
-            return;
-        }
-
-        if (out.stream().allMatch(String::isEmpty)) {
-            return;
-        }
-
-        this.out.addAll(out);
+    public Set<String> getUseSet() {
+        return Set.of(this.use);
     }
 
-    public boolean addIn(Set<String> in) {
+    public Set<String> getDefSet() {
+        return Set.of(this.def);
+    }
+
+    public Set<String> getInSet() {
+        return Collections.unmodifiableSet(this.in);
+    }
+
+    public boolean addIn(Collection<String> in) {
         if (in.isEmpty()) {
             return false;
         }
 
-        if (in.stream().allMatch(String::isEmpty)) {
+        if (in.stream().allMatch(String::isBlank)) {
             return false;
         }
 
-        return this.in.addAll(in);
+        return this.in.addAll(in.stream()
+                                .filter(string -> !string.isBlank())
+                                .collect(Collectors.toSet()));
+    }
+
+    public Set<String> getOutSet() {
+        return Collections.unmodifiableSet(this.out);
+    }
+
+    public void addOut(Collection<String> out) {
+        if (out.isEmpty()) {
+            return;
+        }
+
+        if (out.stream().allMatch(String::isBlank)) {
+            return;
+        }
+
+        this.out.addAll(out.stream()
+                           .filter(string -> !string.isBlank())
+                           .collect(Collectors.toSet()));
+    }
+
+    // Overrides
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(this.id, this.inst);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || this.getClass() != o.getClass()) {
+            return false;
+        }
+        final DataFlowNode that = (DataFlowNode) o;
+        return this.id.equals(that.id) && this.inst.equals(that.inst);
     }
 }

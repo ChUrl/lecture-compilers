@@ -3,7 +3,6 @@ package codegen.analysis.dataflow;
 import codegen.flowgraph.FlowBasicBlock;
 import codegen.flowgraph.FlowGraph;
 import codegen.flowgraph.FlowInstruction;
-import util.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -13,73 +12,86 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
 
+/**
+ * Die Instruktionen repräsentiert durch einen Graphen.
+ */
 public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
-    // TODO: Why use list, its a graph
-    private final List<DataFlowNode> graph;
+    // List for easy indexing
+    private final List<DataFlowNode> dataFlowNodes;
 
-    private DataFlowGraph(List<DataFlowNode> graph) {
-        this.graph = Collections.unmodifiableList(graph);
-        Logger.call(this::printToImage);
+    private DataFlowGraph(List<DataFlowNode> dataFlowNodes) {
+        this.dataFlowNodes = Collections.unmodifiableList(dataFlowNodes);
     }
 
-    public static DataFlowGraph fromSourceGraph(FlowGraph srcGraph) {
-        final List<DataFlowNode> graph = new LinkedList<>();
+    public static DataFlowGraph fromFlowGraph(FlowGraph flowGraph) {
+        final List<DataFlowNode> dataFlowNodes = new LinkedList<>();
 
-        for (FlowBasicBlock block : srcGraph) {
-            for (FlowInstruction inst : block) {
-                graph.add(DataFlowNode.fromFlowNode(inst, block));
+        // Initialize all DataFlowNodes
+        for (FlowBasicBlock basicBlock : flowGraph) {
+            for (FlowInstruction instruction : basicBlock) {
+                dataFlowNodes.add(DataFlowNode.fromFlowNode(instruction));
             }
         }
 
-        initSuccPred(srcGraph, graph);
+        final DataFlowGraph dataFlowGraph = new DataFlowGraph(dataFlowNodes);
+        initNodePosition(flowGraph, dataFlowGraph);
 
-        return new DataFlowGraph(graph);
+        return dataFlowGraph;
     }
 
-    private static void initSuccPred(FlowGraph srcGraph, List<DataFlowNode> graph) {
-        for (FlowBasicBlock block : srcGraph) {
-            for (FlowInstruction inst : block) {
-                final DataFlowNode current = getNodeByInstruction(inst, graph);
+    /**
+     * Jeder {@link DataFlowNode} im {@link DataFlowGraph} wird anhand des {@link FlowGraph} positioniert.
+     * Dabei werden für den Node die Predecessors und Successors gesetzt.
+     */
+    private static void initNodePosition(FlowGraph flowGraph, DataFlowGraph dataFlowGraph) {
+        for (FlowBasicBlock basicBlock : flowGraph) {
+            for (FlowInstruction instruction : basicBlock) {
 
-                for (FlowInstruction pred : block.getPredecessors(inst)) {
-                    final DataFlowNode currentPred = getNodeByInstruction(pred, graph);
+                final Optional<DataFlowNode> currentNode = getNodeByInstructionId(instruction, dataFlowGraph);
 
-                    current.addPredecessor(currentPred);
-                    currentPred.addSuccessor(current);
+                if (currentNode.isEmpty()) {
+                    continue;
                 }
 
-                for (FlowInstruction succ : block.getSuccessors(inst)) {
-                    final DataFlowNode currentSucc = getNodeByInstruction(succ, graph);
+                for (FlowInstruction predecessor : basicBlock.getInstructionPredecessorSet(instruction)) {
+                    final Optional<DataFlowNode> currentPredecessor = getNodeByInstructionId(predecessor, dataFlowGraph);
+                    currentPredecessor.ifPresent(dataFlowNode -> currentNode.get().addPredecessor(dataFlowNode));
+                }
 
-                    Logger.log("INST: " + current.getInst() + ", SUCC: " + currentSucc.getInst());
-                    current.addSuccessor(currentSucc);
-                    currentSucc.addPredecessor(current);
+                for (FlowInstruction successor : basicBlock.getInstructionSuccessorSet(instruction)) {
+                    final Optional<DataFlowNode> currentSuccessor = getNodeByInstructionId(successor, dataFlowGraph);
+                    currentSuccessor.ifPresent(dataFlowNode -> currentNode.get().addSuccessor(dataFlowNode));
                 }
             }
         }
     }
 
-    private static DataFlowNode getNodeByInstruction(FlowInstruction inst, List<DataFlowNode> graph) {
-        return graph.stream()
-                    .filter(node -> node.getId().equals(inst.getId()))
-                    .findFirst()
-                    .orElse(null);
+    private static Optional<DataFlowNode> getNodeByInstructionId(FlowInstruction instruction, DataFlowGraph dataFlowGraph) {
+        return dataFlowGraph.stream()
+                            .filter(node -> node.getId().equals(instruction.getId()))
+                            .findFirst();
     }
 
     public int indexOf(DataFlowNode node) {
-        return this.graph.indexOf(node);
+        return this.dataFlowNodes.indexOf(node);
     }
 
     public int size() {
-        return this.graph.size();
+        return this.dataFlowNodes.size();
+    }
+
+    private Stream<DataFlowNode> stream() {
+        return this.dataFlowNodes.stream();
     }
 
     // Printing
 
     public String printToImage() {
-        if (this.graph.isEmpty()) {
+        if (this.dataFlowNodes.isEmpty()) {
             return "Empty Graph";
         }
 
@@ -88,10 +100,10 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
         dot.append("digraph dfd {\n")
            .append("node[shape=Mrecord]\n");
 
-        for (DataFlowNode node : this.graph) {
+        for (DataFlowNode node : this.dataFlowNodes) {
             dot.append(node.getId())
                .append(" [label=\"{<f0> ")
-               .append(this.graph.indexOf(node))
+               .append(this.dataFlowNodes.indexOf(node))
                .append("|<f1> ")
                .append(node.getInst())
                .append("}\"];\n");
@@ -100,26 +112,13 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
         dot.append("START[label=\"START\"];\n")
            .append("END[label=\"END\"];\n");
 
-        dot.append("START -> ").append(this.graph.get(0).getId()).append(";\n");
-        dot.append(this.graph.get(this.graph.size() - 1).getId()).append(" -> END;\n");
+        dot.append("START -> ").append(this.dataFlowNodes.get(0).getId()).append(";\n");
+        dot.append(this.dataFlowNodes.get(this.dataFlowNodes.size() - 1).getId()).append(" -> END;\n");
 
-        for (DataFlowNode node : this.graph) {
-            // Successors
-            for (DataFlowNode succ : node.getSuccessors()) {
-                if (!dot.toString().contains(node.getId() + " -> " + succ.getId())) {
-                    // No duplicate arrows
+        for (DataFlowNode node : this.dataFlowNodes) {
+            for (DataFlowNode successor : node.getSuccessorSet()) {
 
-                    dot.append(node.getId()).append(" -> ").append(succ.getId()).append(";\n");
-                }
-            }
-
-            // Predecessors
-            for (DataFlowNode pred : node.getPredecessors()) {
-                if (!dot.toString().contains(pred.getId() + " -> " + node.getId())) {
-                    // No duplicates
-
-                    dot.append(pred.getId()).append(" -> ").append(node.getId()).append(";\n");
-                }
+                dot.append(node.getId()).append(" -> ").append(successor.getId()).append(";\n");
             }
         }
 
@@ -148,6 +147,6 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
     @Override
     public Iterator<DataFlowNode> iterator() {
-        return this.graph.iterator();
+        return this.dataFlowNodes.iterator();
     }
 }
