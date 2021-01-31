@@ -1,5 +1,3 @@
-START: S
-EPS: epsilon
 TERM: a i t b
 NTERM: S E
 

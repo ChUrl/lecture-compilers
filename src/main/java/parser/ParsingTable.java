@@ -28,20 +28,12 @@ public class ParsingTable {
         return this.parsetable.get(new SimpleEntry<>(nonterminal, terminal));
     }
 
-    public String getStartSymbol() {
-        return this.grammar.getStartSymbol();
-    }
-
     public Set<String> getNonterminals() {
         return this.grammar.getNonterminals();
     }
 
     public Set<String> getTerminals() {
         return this.grammar.getTerminals();
-    }
-
-    public String getEpsilon() {
-        return this.grammar.getEpsilonSymbol();
     }
 
     @Override

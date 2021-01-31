@@ -46,9 +46,9 @@ public class GrammarAnalyzer {
 
         // Die Methode funktioniert erst, nachdem first initialisiert ist.
         // Deshalb hier doppelt.
-        final Predicate<String> nullable = sym -> sym.equals(this.grammar.getEpsilonSymbol())
+        final Predicate<String> nullable = sym -> sym.equals(Grammar.EPSILON_SYMBOL)
                                                   || sym.isBlank()
-                                                  || firstOut.get(sym).contains(this.grammar.getEpsilonSymbol());
+                                                  || firstOut.get(sym).contains(Grammar.EPSILON_SYMBOL);
         final Predicate<String[]> allNullable = split -> split.length == 0
                                                          || Arrays.stream(split).allMatch(nullable);
 
@@ -76,7 +76,7 @@ public class GrammarAnalyzer {
                 for (String rightside : this.grammar.getRightsides(leftside)) {
                     // ...and X -> Y1 Y2 ... Yk is a production...
 
-                    if (!rightside.equals(this.grammar.getEpsilonSymbol())) {
+                    if (!rightside.equals(Grammar.EPSILON_SYMBOL)) {
                         // ...for some k >= 1...
 
                         final String[] split = rightside.split(" ");
@@ -94,7 +94,7 @@ public class GrammarAnalyzer {
 
                                 // Because a != epsilon
                                 final Set<String> firstYiNoEps = firstOut.get(split[i]).stream()
-                                                                         .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                                                         .filter(sym -> !sym.equals(Grammar.EPSILON_SYMBOL))
                                                                          .collect(Collectors.toSet());
 
                                 final boolean changeNow = firstOut.get(leftside).addAll(firstYiNoEps);
@@ -106,21 +106,21 @@ public class GrammarAnalyzer {
                             if (i == split.length - 1 && allNullable.test(split)) {
                                 // 2. (b) If epsilon is in first(Y1) ... first(Yk), then add epsilon to first(X).
 
-                                final boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                                final boolean changeNow = firstOut.get(leftside).add(Grammar.EPSILON_SYMBOL);
                                 change = change || changeNow;
 
-                                logIfTrue(changeNow, "First: Added " + this.grammar.getEpsilonSymbol() + " to " + leftside + " (All are nullable)");
+                                logIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to " + leftside + " (All are nullable)");
                             }
                         }
                     }
 
-                    if (rightside.equals(this.grammar.getEpsilonSymbol())) {
+                    if (rightside.equals(Grammar.EPSILON_SYMBOL)) {
                         // 3. If X -> epsilon is a production, then add epsilon to first(X).
 
-                        final boolean changeNow = firstOut.get(leftside).add(this.grammar.getEpsilonSymbol());
+                        final boolean changeNow = firstOut.get(leftside).add(Grammar.EPSILON_SYMBOL);
                         change = change || changeNow;
 
-                        logIfTrue(changeNow, "First: Added " + this.grammar.getEpsilonSymbol() + " to " + leftside + " (X -> EPS exists)");
+                        logIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to " + leftside + " (X -> EPS exists)");
                     }
                 }
             }
@@ -143,7 +143,7 @@ public class GrammarAnalyzer {
         }
 
         // 1. Place $ in follow(S), where S is the start symbol, and $ is the input right endmarker
-        followOut.get(this.grammar.getStartSymbol()).add("$");
+        followOut.get(Grammar.START_SYMBOL).add("$");
 
         boolean change;
 
@@ -176,7 +176,7 @@ public class GrammarAnalyzer {
                             if (this.allNullable(sub)) {
 
                                 final Set<String> firstXkNoEps = this.first(split[k]).stream()
-                                                                     .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                                                     .filter(sym -> !sym.equals(Grammar.EPSILON_SYMBOL))
                                                                      .collect(Collectors.toSet());
 
                                 final boolean changeNow = followOut.get(split[i - 1]).addAll(firstXkNoEps);
@@ -241,7 +241,7 @@ public class GrammarAnalyzer {
 
                 final Set<String> followLeftside = this.follow(leftside);
 
-                if (firstRightside.contains(this.grammar.getEpsilonSymbol())) {
+                if (firstRightside.contains(Grammar.EPSILON_SYMBOL)) {
                     // 2. If epsilon in first(a), then...
 
                     for (String sym : followLeftside) {
@@ -276,8 +276,8 @@ public class GrammarAnalyzer {
 
     public boolean nullable(String sym) {
         return sym.isBlank()
-               || sym.equals(this.grammar.getEpsilonSymbol())
-               || this.first.get(sym).contains(this.grammar.getEpsilonSymbol());
+               || sym.equals(Grammar.EPSILON_SYMBOL)
+               || this.first.get(sym).contains(Grammar.EPSILON_SYMBOL);
     }
 
     public boolean allNullable(String[] split) {
@@ -304,7 +304,7 @@ public class GrammarAnalyzer {
                 // X1 ... Xi-1 are nullable, so first(X1 ... Xn) contains first(Xi)
 
                 final Set<String> firstXiNoEps;
-                if (split.length == 1 && split[0].equals(this.grammar.getEpsilonSymbol())) {
+                if (split.length == 1 && split[0].equals(Grammar.EPSILON_SYMBOL)) {
                     // Stream collect has to be evaluated, doesn't work on empty stream
 
                     firstXiNoEps = Collections.emptySet();
@@ -312,7 +312,7 @@ public class GrammarAnalyzer {
                     // Only non-epsilon symbols
 
                     firstXiNoEps = this.first(split[i]).stream()
-                                       .filter(sym -> !sym.equals(this.grammar.getEpsilonSymbol()))
+                                       .filter(sym -> !sym.equals(Grammar.EPSILON_SYMBOL))
                                        .collect(Collectors.toSet());
                 }
 
@@ -321,7 +321,7 @@ public class GrammarAnalyzer {
                 if (i == split.length - 1 && this.allNullable(split)) {
                     // Finally, add epsilon to first(X1 X2 ... Xn) if, for all i, epsilon is in first(Xi).
 
-                    firstOut.add(this.grammar.getEpsilonSymbol());
+                    firstOut.add(Grammar.EPSILON_SYMBOL);
                 }
             }
         }

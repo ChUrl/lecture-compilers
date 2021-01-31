@@ -26,10 +26,7 @@ class GrammarTest {
         final Path path = getPath("SimpleGrammar0.grammar");
 
         final Grammar grammar = Grammar.fromFile(path);
-        assert grammar != null;
 
-        assertThat(grammar.getEpsilonSymbol()).isEqualTo("epsilon");
-        assertThat(grammar.getStartSymbol()).isEqualTo("S");
         assertThat(grammar.getTerminals()).containsOnly("a", "i", "t", "b");
         assertThat(grammar.getNonterminals()).containsOnly("S", "E");
         assertThat(grammar.getRules()).containsOnly(new GrammarRule("S", "a"),
@@ -42,14 +39,11 @@ class GrammarTest {
         final Path path = getPath("SimpleGrammar1.grammar");
 
         final Grammar grammar = Grammar.fromFile(path);
-        assert grammar != null;
 
-        assertThat(grammar.getEpsilonSymbol()).isEqualTo("epsilon");
-        assertThat(grammar.getStartSymbol()).isEqualTo("E");
         assertThat(grammar.getTerminals()).containsOnly("id", "+", "*", "(", ")");
-        assertThat(grammar.getNonterminals()).containsOnly("E", "E2", "T", "T2", "F");
-        assertThat(grammar.getRules()).contains(new GrammarRule("E", "T", "E2"),
+        assertThat(grammar.getNonterminals()).containsOnly("S", "E2", "T", "T2", "F");
+        assertThat(grammar.getRules()).contains(new GrammarRule("S", "T", "E2"),
                                                 new GrammarRule("E2", "+", "T", "E2"),
-                                                new GrammarRule("E2", "epsilon"));
+                                                new GrammarRule("E2", Grammar.EPSILON_SYMBOL));
     }
 }

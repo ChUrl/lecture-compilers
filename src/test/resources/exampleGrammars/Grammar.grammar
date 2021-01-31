@@ -1,7 +1,4 @@
-START: s
-EPS: eps
-
-// START, EPS, NTERM, TERM are reserved
+// NTERM, TERM are reserved
 
 // Some Grammar-Symbols have to be named this way:
 // assignment, declaration (for TypeTable creation)
@@ -11,7 +8,7 @@ EPS: eps
 // Nonterminals:
 NTERM: val type
 NTERM: op unary arith_op logic_op compare_op
-NTERM: s class_cnt block_cnt
+NTERM: S class_cnt block_cnt
 NTERM: statement stmt print
 NTERM: declaration assignment
 NTERM: par_expr expr expr_2 expr_f
@@ -64,7 +61,7 @@ compare_op[promote] -> LESS | LESS_EQUAL | GREATER | GREATER_EQUAL | EQUAL | NOT
 // -------------------------------------------------------------------------------------------------
 
 // START -> class IDENTIFIER { class_cnt }
-s[promote] -> CLASS IDENTIFIER L_BRACE class_cnt R_BRACE | eps
+S[promote] -> CLASS IDENTIFIER L_BRACE class_cnt R_BRACE | eps
 
 // class_cnt -> public static void main(String[] args) { block_cnt }
 class_cnt[promote delifempty] -> PUBLIC STATIC VOID_TYPE IDENTIFIER_MAIN L_PAREN STRING_TYPE L_BRACKET R_BRACKET IDENTIFIER R_PAREN L_BRACE block_cnt R_BRACE | eps

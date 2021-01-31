@@ -1,13 +1,11 @@
-START: E
-EPS: epsilon
 TERM: id + * ( )
-NTERM: E E2 T T2 F
+NTERM: S E2 T T2 F
 
 // Leerzeilen sind egal
 // Man kann Line-Comments schreiben und Produktionen verodern
 
-E -> T E2
-E2 -> + T E2 | EPS
+S -> T E2
+E2 -> + T E2 | eps
 T -> F T2
-T2 -> * F T2 | EPS
-F -> ( E ) | id
+T2 -> * F T2 | eps
+F -> ( S ) | id

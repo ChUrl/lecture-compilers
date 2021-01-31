@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -13,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static parser.grammar.GrammarAction.DELCHILD;
@@ -22,30 +22,56 @@ import static parser.grammar.GrammarAction.NAMETOVAL;
 import static parser.grammar.GrammarAction.PROMOTE;
 import static parser.grammar.GrammarAction.RENAMETO;
 import static parser.grammar.GrammarAction.VALTOVAL;
-import static parser.grammar.GrammarAction.values;
 import static util.Logger.log;
 
+/**
+ * Repräsentiert die Parse-Grammatik und die Kontextaktionen.
+ */
 public class Grammar {
 
-    private static final Pattern EPS = Pattern.compile("EPS");
-    private static final Pattern ARROW = Pattern.compile("->");
+    // Grammar
+    public static final String START_SYMBOL = "S";
+    public static final String EPSILON_SYMBOL = "eps";
+
     private final Set<String> terminals;
     private final Set<String> nonterminals;
-    private final String startSymbol;
-    private final String epsilonSymbol;
 
     // Actions
-    private final Map<GrammarAction, Set<String>> actions;
+
+    /**
+     * Jeder Kontextaktion werden alle leftsides zugewiesen, welche diese Aktion ausführen.
+     */
+    private final Map<GrammarAction, Set<String>> actionMap;
+
+    /**
+     * Jeder leftside mit [renameto=name] wird der entsprechende neue Name zugewiesen.
+     */
     private final Map<String, String> renameMappings;
+
+    /**
+     * Jeder leftside mit [nametoval=children] werden die entpsrechenden Children zugewiesen,
+     * deren Namen in die Parentvalue gschoben werden.
+     */
     private final Map<String, List<String>> nameToValMappings;
+
+    /**
+     * Jeder leftside mit [valtoval=children] werden die entpsrechenden Children zugewiesen,
+     * deren Values in die Parentvalue gschoben werden.
+     */
     private final Map<String, List<String>> valToValMappings;
+
+    /**
+     * Jeder Leftside mit [delchild=children] werden die entpsrechenden Children zugewiesen, welche entfernt werden.
+     */
     private final Map<String, List<String>> delChildMappings;
 
+    /**
+     * Die eigentlichen Produktionsregeln der Form leftside -> rightside.
+     */
     private final Set<GrammarRule> rules;
 
     public Grammar(Set<String> terminals, Set<String> nonterminals,
-                   String startSymbol, String epsilonSymbol,
-                   Map<GrammarAction, Set<String>> actions,
+                   Map<GrammarAction, Set<String>> actionMap,
                    Map<String, String> renameMappings,
                    Map<String, List<String>> nameToValMappings,
                    Map<String, List<String>> valToValMappings,
@@ -55,10 +81,8 @@ public class Grammar {
         this.terminals = Collections.unmodifiableSet(terminals);
         this.nonterminals = Collections.unmodifiableSet(nonterminals);
         this.rules = Collections.unmodifiableSet(rules);
-        this.startSymbol = startSymbol;
-        this.epsilonSymbol = epsilonSymbol;
 
-        this.actions = Collections.unmodifiableMap(actions);
+        this.actionMap = Collections.unmodifiableMap(actionMap);
         this.renameMappings = Collections.unmodifiableMap(renameMappings);
         this.nameToValMappings = Collections.unmodifiableMap(nameToValMappings);
         this.valToValMappings = Collections.unmodifiableMap(valToValMappings);
@@ -69,140 +93,196 @@ public class Grammar {
         System.out.println(" - Reading parser-grammar...");
         List<String> lines = Files.readAllLines(path);
 
+        // Remove Whitespace + Comments
         lines = lines.stream()
                      .map(String::trim)
                      .filter(line -> !(line.isBlank() || line.startsWith("//")))
                      .collect(Collectors.toUnmodifiableList());
 
-        try {
-            // Grammar
-            String startSymbol = "";
-            String epsilonSymbol = "";
-            final Set<String> terminals = new HashSet<>();
-            final Set<String> nonterminals = new HashSet<>();
-            final Set<GrammarRule> rules = new HashSet<>();
+        // Grammar
+        final Set<String> terminals = new HashSet<>();
+        final Set<String> nonterminals = new HashSet<>();
+        final Set<GrammarRule> rules = new HashSet<>();
 
-            // Actions
-            final Map<GrammarAction, Set<String>> actions = new EnumMap<>(GrammarAction.class);
-            final Map<String, String> renameMappings = new HashMap<>();
-            final Map<String, List<String>> nameToValMappings = new HashMap<>();
-            final Map<String, List<String>> valToValMappings = new HashMap<>();
-            final Map<String, List<String>> delChildMappings = new HashMap<>();
+        // Actions
+        final Map<GrammarAction, Set<String>> actionMap = new EnumMap<>(GrammarAction.class);
+        final Map<String, String> renameMappings = new HashMap<>();
+        final Map<String, List<String>> nameToValMappings = new HashMap<>();
+        final Map<String, List<String>> valToValMappings = new HashMap<>();
+        final Map<String, List<String>> delChildMappings = new HashMap<>();
 
-            for (GrammarAction action : values()) {
-                actions.put(action, new HashSet<>());
-            }
-
-            // Init for validity check
-            final Set<String> actionSet = Arrays.stream(values())
-                                                .map(Enum::toString)
-                                                .collect(Collectors.toUnmodifiableSet());
-
-            log("Parsing Grammar from File:");
-            for (String line : lines) {
-
-                log("Parsed: " + line);
-
-                // Parse Keywords
-                if (line.startsWith("START:")) {
-
-                    startSymbol = line.split(" ")[1];
-                } else if (line.startsWith("EPS:")) {
-
-                    epsilonSymbol = line.split(" ")[1];
-                } else if (line.startsWith("TERM:")) {
-
-                    terminals.addAll(Arrays.stream(line.split(" ")).skip(1).collect(Collectors.toSet()));
-                } else if (line.startsWith("NTERM:")) {
-
-                    nonterminals.addAll(Arrays.stream(line.split(" ")).skip(1).collect(Collectors.toSet()));
-                } else {
-                    // Parse Grammar Rules + Actions
-
-                    // "S[...] -> E T2 | EPS" wird zu leftside = "S[...]" und rightside = "E T2 | eps"
-                    final String[] split = ARROW.split(EPS.matcher(line).replaceAll(epsilonSymbol));
-                    String leftside = split[0].trim();
-                    final String rightside = split[1].trim();
-
-                    if (leftside.indexOf('[') >= 0 && leftside.indexOf(']') >= 0) {
-                        // Handle actions if they are given
-
-                        final int open = leftside.indexOf('[');
-                        final int close = leftside.indexOf(']');
-
-                        // Aus "S[C R=...]" wird flags = {"C", "R=..."}
-                        final String[] flags = leftside.substring(open + 1, close).split(" ");
-                        final Set<String> flagSet = Arrays.stream(flags)
-                                                          .map(String::trim)
-                                                          .filter(flag -> !flag.isEmpty())
-                                                          .collect(Collectors.toUnmodifiableSet());
-
-                        // Check for action validity
-                        for (String flag : flagSet) {
-                            if (!actionSet.contains(flag.split("=")[0].toUpperCase())) {
-                                throw new GrammarParseException("Invalid Action: " + flag);
-                            }
-                        }
-
-                        // "S[C R=...]" wird zu "S"
-                        leftside = leftside.substring(0, open).trim();
-
-                        // Register actions, flagSet = {"C", "R=..."}
-                        for (String flag : flagSet) {
-                            final String[] flagSplit = flag.split("=");
-                            final GrammarAction action = GrammarAction.valueOf(flagSplit[0].toUpperCase());
-
-                            actions.get(action).add(leftside.trim());
-                            log("Registered " + flag + ": " + leftside.trim());
-
-                            if (flagSplit.length > 1) {
-                                // Handle Action with arguments
-
-                                // "R=A,B,C" -> argSplit = {"A", "B", "C"}
-                                final int argStart = flag.indexOf('=');
-                                final String[] argSplit = flag.substring(argStart + 1).split(",");
-
-                                switch (action) {
-                                    case DELCHILD -> delChildMappings.put(leftside, Arrays.asList(argSplit));
-                                    case VALTOVAL -> valToValMappings.put(leftside, Arrays.asList(argSplit));
-                                    case NAMETOVAL -> nameToValMappings.put(leftside, Arrays.asList(argSplit));
-                                    case RENAMETO -> renameMappings.put(leftside, argSplit[0]);
-                                }
-                            }
-                        }
-                    }
-
-                    // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
-                    final String[] prods = rightside.split("\\|");
-
-                    for (String prod : prods) {
-                        final GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
-                        rules.add(rule);
-
-                    }
-                }
-            }
-
-            log("\n" + actions);
-            log("-".repeat(100));
-            System.out.println("Grammar parsed successfully.");
-
-            return new Grammar(terminals, nonterminals,
-                               startSymbol, epsilonSymbol,
-                               actions,
-                               renameMappings,
-                               nameToValMappings,
-                               valToValMappings,
-                               delChildMappings,
-                               rules);
-        } catch (Exception e) {
-            log("Die Grammatik kann nicht gelesen werden!");
-            log(path.toString());
-            e.printStackTrace();
+        // Init actionMap
+        for (GrammarAction action : GrammarAction.values()) {
+            actionMap.put(action, new HashSet<>());
         }
 
-        return null;
+        log("Parsing Grammar from File:");
+        for (String currentLine : lines) {
+
+            log("Parsed: " + currentLine);
+
+            // Parse Keywords
+            if (currentLine.startsWith("TERM:")) {
+
+                terminals.addAll(Arrays.stream(currentLine.split(" ")).skip(1).collect(Collectors.toSet()));
+            } else if (currentLine.startsWith("NTERM:")) {
+
+                nonterminals.addAll(Arrays.stream(currentLine.split(" ")).skip(1).collect(Collectors.toSet()));
+            } else {
+                // Parse regular lines
+
+                parseRegularLine(currentLine, actionMap,
+                                 delChildMappings, valToValMappings, nameToValMappings, renameMappings,
+                                 rules);
+            }
+        }
+
+        log("\n" + actionMap);
+        log("-".repeat(100));
+        System.out.println("Grammar parsed successfully.");
+
+        return new Grammar(terminals, nonterminals,
+                           actionMap, renameMappings, nameToValMappings,
+                           valToValMappings, delChildMappings, rules);
     }
+
+
+    /**
+     * Es wird eine normale Zeile der Form leftside[actions] -> rightside geparst.
+     * Die Produktionsregeln sowie die Kontextaktionen werden registriert.
+     */
+    private static void parseRegularLine(String currentLine,
+                                         Map<GrammarAction, Set<String>> actions,
+                                         Map<String, List<String>> delChildMappings,
+                                         Map<String, List<String>> valToValMappings,
+                                         Map<String, List<String>> nameToValMappings,
+                                         Map<String, String> renameMappings,
+                                         Collection<GrammarRule> rules) {
+
+        // "S[...] -> E T2 | eps" wird zu leftside = "S[...]" und rightside = "E T2 | eps"
+        final String[] split = currentLine.split("->");
+        String leftside = split[0].trim();
+        final String rightside = split[1].trim();
+
+        final int open = leftside.indexOf('[');
+        final int close = leftside.indexOf(']');
+
+        if (open >= 0 && close >= 0) {
+            // Handle actions if they are given
+
+            final Set<String> actionSet = parseActionSet(leftside, open, close);
+
+            // Validate Actions
+            throwOnInvalidActionSet(actionSet);
+
+            // "S[C R=...]" wird zu "S"
+            leftside = leftside.substring(0, open).trim();
+
+            // Register actions, flagSet = {"C", "R=..."}
+            for (String flag : actionSet) {
+                registerAction(flag, leftside, actions,
+                               delChildMappings, valToValMappings, nameToValMappings, renameMappings);
+            }
+        }
+
+        registerProductionRules(leftside, rightside, rules);
+    }
+
+    /**
+     * Es wird die Menge an Kontextaktionen [action1,action2,...] ermittelt.
+     */
+    private static Set<String> parseActionSet(String leftside, int open, int close) {
+        // Aus "S[C R=...]" wird flags = {"C", "R=..."}
+        final String[] flags = leftside.substring(open + 1, close).split(" ");
+
+        return Arrays.stream(flags)
+                     .map(String::trim)
+                     .filter(flag -> !flag.isEmpty())
+                     .collect(Collectors.toUnmodifiableSet());
+    }
+
+    /**
+     * Es wird eine beliebige Kontextaktion geparst und der entsprechenden Map hinzugefügt.
+     */
+    private static void registerAction(String flag, String leftside,
+                                       Map<GrammarAction, Set<String>> actions,
+                                       Map<String, List<String>> delChildMappings,
+                                       Map<String, List<String>> valToValMappings,
+                                       Map<String, List<String>> nameToValMappings,
+                                       Map<String, String> renameMappings) {
+
+        final String[] flagSplit = flag.split("=");
+        final GrammarAction action = GrammarAction.valueOf(flagSplit[0].toUpperCase());
+
+        registerRegularAction(action, leftside, flag, actions);
+
+        if (flagSplit.length > 1) {
+
+            registerActionArguments(flag, action, leftside,
+                                    delChildMappings, valToValMappings, nameToValMappings, renameMappings);
+        }
+    }
+
+    /**
+     * Es wird ein Eintrag in der action-Map mit der entsprechenden leftside hinzugefügt.
+     */
+    private static void registerRegularAction(GrammarAction action, String leftside, String flag,
+                                              Map<GrammarAction, Set<String>> actions) {
+
+        actions.get(action).add(leftside.trim());
+        log("Registered " + flag + ": " + leftside.trim());
+    }
+
+    /**
+     * Es wird eine Kontextaktion der Form [action=arguments] geparst und der entsprechenden Map hinzugefügt.
+     */
+    private static void registerActionArguments(String flag, GrammarAction action, String leftside,
+                                                Map<String, List<String>> delChildMappings,
+                                                Map<String, List<String>> valToValMappings,
+                                                Map<String, List<String>> nameToValMappings,
+                                                Map<String, String> renameMappings) {
+
+        // "R=A,B,C" -> argSplit = {"A", "B", "C"}
+        final int argStart = flag.indexOf('=');
+        final String[] argSplit = flag.substring(argStart + 1).split(",");
+
+        switch (action) {
+            case DELCHILD -> delChildMappings.put(leftside, Arrays.asList(argSplit));
+            case VALTOVAL -> valToValMappings.put(leftside, Arrays.asList(argSplit));
+            case NAMETOVAL -> nameToValMappings.put(leftside, Arrays.asList(argSplit));
+            case RENAMETO -> renameMappings.put(leftside, argSplit[0]);
+            default -> throw new GrammarParseException("Unexpected value for arguments: " + action);
+        }
+    }
+
+    /**
+     * Der Regelmenge wird eine neue Regel der Form leftside -> rightside hinzugefügt.
+     * Ist rightside dabei verodert, also leftside -> right1 | right2 | right3, dann
+     * wird rightside gesplittet.
+     */
+    private static void registerProductionRules(String leftside, String rightside, Collection<GrammarRule> rules) {
+        // "E T2 | epsilon" wird zu prods[0] = "E T2" und prods[1] = "epsilon"
+        final String[] prods = rightside.split("\\|");
+
+        for (String prod : prods) {
+            final GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
+            rules.add(rule);
+        }
+    }
+
+    private static void throwOnInvalidActionSet(Iterable<String> flagSet) {
+        final Set<String> actionSet = Arrays.stream(GrammarAction.values())
+                                            .map(Enum::toString)
+                                            .collect(Collectors.toUnmodifiableSet());
+
+        for (String flag : flagSet) {
+            if (!actionSet.contains(flag.split("=")[0].toUpperCase())) {
+                throw new GrammarParseException("Invalid Action: " + flag);
+            }
+        }
+    }
+
+    // Getters
 
     public Set<String> getTerminals() {
         return this.terminals;
@@ -212,18 +292,13 @@ public class Grammar {
         return this.nonterminals;
     }
 
-    public String getStartSymbol() {
-        return this.startSymbol;
-    }
-
-    public String getEpsilonSymbol() {
-        return this.epsilonSymbol;
-    }
-
     public Set<GrammarRule> getRules() {
         return this.rules;
     }
 
+    /**
+     * Ermittelt alle möglichen Produktionen, welche zu einer leftside gehören können.
+     */
     public Set<String> getRightsides(String leftside) {
         return this.rules.stream()
                          .filter(rule -> rule.getLeftside().equals(leftside))
@@ -249,10 +324,9 @@ public class Grammar {
                && root.getValue().isEmpty();
     }
 
-    private boolean canPromoteChild(String sym) {
-        return this.actions.get(PROMOTE).contains(sym);
+    private boolean canPromoteChild(String rootName) {
+        return this.actionMap.get(PROMOTE).contains(rootName);
     }
-
 
     /**
      * Checkt auch auf Anzahl der Kinder und vorhandene Value.
@@ -263,10 +337,9 @@ public class Grammar {
                && root.isEmpty();
     }
 
-    public boolean canDeleteIfEmpty(String sym) {
-        return this.actions.get(DELIFEMPTY).contains(sym);
+    public boolean canDeleteIfEmpty(String rootName) {
+        return this.actionMap.get(DELIFEMPTY).contains(rootName);
     }
-
 
     /**
      * Checkt auch auf Anzahl der Kinder.
@@ -277,39 +350,36 @@ public class Grammar {
                && child.isEmpty();
     }
 
-    public boolean canDeleteChild(String parent, String child) {
-        return (this.actions.get(DELCHILD).contains(parent)
-                && this.delChildMappings.get(parent).contains(child))
-               || (child.equals(this.epsilonSymbol));
+    public boolean canDeleteChild(String parentName, String childName) {
+        return (this.actionMap.get(DELCHILD).contains(parentName)
+                && this.delChildMappings.get(parentName).contains(childName))
+               || (Grammar.EPSILON_SYMBOL.equals(childName));
     }
-
 
     public boolean canBeRenamed(SyntaxTreeNode root) {
         return this.canBeRenamed(root.getName());
     }
 
-    public boolean canBeRenamed(String sym) {
-        return this.actions.get(RENAMETO).contains(sym);
+    public boolean canBeRenamed(String rootName) {
+        return this.actionMap.get(RENAMETO).contains(rootName);
     }
 
     public String getNewName(SyntaxTreeNode root) {
         return this.getNewName(root.getName());
     }
 
-    public String getNewName(String sym) {
-        return this.renameMappings.get(sym);
+    public String getNewName(String rootName) {
+        return this.renameMappings.get(rootName);
     }
-
 
     public boolean hasValToVal(SyntaxTreeNode parent, SyntaxTreeNode child) {
         return this.hasValToVal(parent.getName(), child.getName());
     }
 
-    public boolean hasValToVal(String parent, String child) {
-        return this.actions.get(VALTOVAL).contains(parent)
-               && this.valToValMappings.get(parent).contains(child);
+    public boolean hasValToVal(String parentName, String childName) {
+        return this.actionMap.get(VALTOVAL).contains(parentName)
+               && this.valToValMappings.get(parentName).contains(childName);
     }
-
 
     /**
      * Checkt auch auf bereits existierende Values.
@@ -319,8 +389,8 @@ public class Grammar {
                && parent.getValue().isEmpty();
     }
 
-    public boolean canMoveNameToVal(String parent, String child) {
-        return this.actions.get(NAMETOVAL).contains(parent)
-               && this.nameToValMappings.get(parent).contains(child);
+    public boolean canMoveNameToVal(String parentName, String childName) {
+        return this.actionMap.get(NAMETOVAL).contains(parentName)
+               && this.nameToValMappings.get(parentName).contains(childName);
     }
 }

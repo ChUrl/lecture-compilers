@@ -39,7 +39,7 @@ public class StupsParser {
 
     public SyntaxTree parse(List<? extends Token> token, Vocabulary voc) {
         System.out.println(" - Parsing program...");
-        final SyntaxTreeNode root = new SyntaxTreeNode(this.parsetable.getStartSymbol(), 0);
+        final SyntaxTreeNode root = new SyntaxTreeNode(Grammar.START_SYMBOL, 0);
         final SyntaxTree tree = new SyntaxTree(root);
         final Deque<SyntaxTreeNode> stack = new ArrayDeque<>();
         stack.push(root);
@@ -69,7 +69,7 @@ public class StupsParser {
 
             final String prod = this.parsetable.get(top, currentTokenSym);
 
-            if (top.equals(this.parsetable.getEpsilon())) {
+            if (top.equals(Grammar.EPSILON_SYMBOL)) {
                 // Wenn auf dem Stack das Epsilonsymbol liegt
 
                 stack.pop();
