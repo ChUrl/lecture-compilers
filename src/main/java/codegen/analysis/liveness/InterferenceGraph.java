@@ -12,57 +12,62 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 
 public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
-    private final List<InterferenceNode> nodes;
+    private final List<InterferenceNode> interferenceNodes;
 
-    private InterferenceGraph(List<InterferenceNode> nodes) {
-        this.nodes = nodes;
+    private InterferenceGraph(List<InterferenceNode> interferenceNodes) {
+        this.interferenceNodes = interferenceNodes;
     }
 
-    public static InterferenceGraph fromDataFlowGraph(DataFlowGraph graph, Map<String, Integer> varMap) {
-        final List<InterferenceNode> interferenceGraph = new ArrayList<>();
+    public static InterferenceGraph fromDataFlowGraph(DataFlowGraph dataFlowGraph, Map<String, Integer> varMap) {
+        final List<InterferenceNode> interferenceNodes = new ArrayList<>();
 
         // Init graph
-        for (Map.Entry<String, Integer> var : varMap.entrySet()) {
-            interferenceGraph.add(new InterferenceNode(var.getValue().toString()));
+        for (int symbol : varMap.values()) {
+            interferenceNodes.add(new InterferenceNode(symbol));
         }
 
+        final InterferenceGraph interferenceGraph = new InterferenceGraph(interferenceNodes);
+
         // Determine neighbours
-        for (DataFlowNode node : graph) {
-            Logger.log("NODE " + node.getInst() + " - OUT: " + node.getOutSet());
+        for (DataFlowNode node : dataFlowGraph) {
 
             for (String left : node.getOutSet()) {
-                if (left.isBlank()) {
-                    continue;
-                }
-
                 for (String right : node.getOutSet()) {
-                    if (right.isBlank()) {
-                        continue;
+
+                    final Optional<InterferenceNode> leftNode = getNodeBySymbol(left, interferenceGraph);
+                    final Optional<InterferenceNode> rightNode = getNodeBySymbol(right, interferenceGraph);
+
+                    if (leftNode.isPresent() && rightNode.isPresent()) {
+                        final boolean change = leftNode.get().addNeighbour(rightNode.get());
+                        Logger.logIfTrue(change, "Added interference neighbour: " + left + " -> " + right);
                     }
 
-                    getNodeBySymbol(left, interferenceGraph).addNeighbour(getNodeBySymbol(right, interferenceGraph));
-                    Logger.log("Add interference neighbour: " + left + " <-> " + right);
                 }
             }
         }
 
-        return new InterferenceGraph(interferenceGraph);
+        return interferenceGraph;
     }
 
-    private static InterferenceNode getNodeBySymbol(String symbol, List<InterferenceNode> interferenceGraph) {
+    private static Optional<InterferenceNode> getNodeBySymbol(String symbol, InterferenceGraph interferenceGraph) {
         return interferenceGraph.stream()
                                 .filter(node -> node.getSymbol().equals(symbol))
-                                .findFirst()
-                                .orElse(null);
+                                .findFirst();
+    }
+
+    public Stream<InterferenceNode> stream() {
+        return this.interferenceNodes.stream();
     }
 
     // Printing
 
     public String printToImage() {
-        if (this.nodes.isEmpty()) {
+        if (this.interferenceNodes.isEmpty()) {
             return "Empty Graph";
         }
 
@@ -71,7 +76,7 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
         dot.append("digraph dfd {\n")
            .append("node[shape=Mrecord]\n");
 
-        for (InterferenceNode node : this.nodes) {
+        for (InterferenceNode node : this.interferenceNodes) {
             dot.append(node.getSymbol())
                .append(" [label=\"{<f0> Symbol: ")
                .append(node.getSymbol())
@@ -80,9 +85,11 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
                .append("}\"];\n");
         }
 
-        for (InterferenceNode node : this.nodes) {
-            for (InterferenceNode neigh : node.getNeighbours()) {
-                if (!dot.toString().contains(neigh.getSymbol() + " -> " + node.getSymbol())) { // No double lines
+        for (InterferenceNode node : this.interferenceNodes) {
+            for (InterferenceNode neigh : node.getNeighbourSet()) {
+                if (!dot.toString().contains(neigh.getSymbol() + " -> " + node.getSymbol())) {
+                    // No double lines
+                   
                     dot.append(node.getSymbol()).append(" -> ").append(neigh.getSymbol()).append(" [arrowhead=\"none\"];\n");
                 }
             }
@@ -113,6 +120,6 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
     @Override
     public Iterator<InterferenceNode> iterator() {
-        return this.nodes.iterator();
+        return this.interferenceNodes.iterator();
     }
 }

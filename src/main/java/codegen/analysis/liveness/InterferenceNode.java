@@ -4,16 +4,34 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+/**
+ * Repräsentiert eine Variable und ihre Farbe im Interferenzgraph.
+ */
 public class InterferenceNode {
 
+    /**
+     * Der Name der Variable.
+     */
     private final String symbol;
+    /**
+     * Alle Nachbarn dieses Nodes.
+     * Benachbart bedeutet, dass beide Variablen zu gleichen Zeiten live sind.
+     * Benachbarte Variablen können sich kein Register teilen.
+     */
     private final Set<InterferenceNode> neighbours;
+    /**
+     * Der Integer repräsentiert die "Farbe".
+     */
     private int color;
 
     public InterferenceNode(String symbol) {
         this.symbol = symbol;
         this.color = 0;
         this.neighbours = new HashSet<>();
+    }
+
+    public InterferenceNode(int symbol) {
+        this(String.valueOf(symbol));
     }
 
     // Getters, Setters
@@ -30,14 +48,16 @@ public class InterferenceNode {
         this.color = color;
     }
 
-    public void addNeighbour(InterferenceNode node) {
-        if (!node.equals(this)) {
-            this.neighbours.add(node);
-        }
+    public Set<InterferenceNode> getNeighbourSet() {
+        return this.neighbours;
     }
 
-    public Set<InterferenceNode> getNeighbours() {
-        return this.neighbours;
+    public boolean addNeighbour(InterferenceNode node) {
+        if (!node.equals(this)) {
+            return this.neighbours.add(node);
+        }
+
+        return false;
     }
 
     // Overrides
