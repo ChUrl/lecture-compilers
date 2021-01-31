@@ -407,6 +407,6 @@ public final class FlowGraphGenerator {
     // Getters, Setters
 
     public Map<String, Integer> getVarMap() {
-        return this.varMap;
+        return Collections.unmodifiableMap(this.varMap);
     }
 }
