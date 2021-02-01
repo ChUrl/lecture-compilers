@@ -6,50 +6,18 @@ import parser.ast.SyntaxTree;
 import parser.ast.SyntaxTreeNode;
 import typechecker.TypeChecker;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.Map;
 
-import static java.util.Map.entry;
 import static util.Logger.log;
 
 /**
  * Erzeugt den SourceCode in FlussGraph-Darstellung.
  */
 public final class FlowGraphGenerator {
-
-    /**
-     * Mappt die {@link SyntaxTreeNode}-Namen auf entsprechende Methoden für die Codeerzeugung.
-     */
-    private static final Map<String, Method> methodMap;
-
-    static {
-        // Init the method mappings: ASTNode.getName() -> FlowGraphGenerator.method
-        Map<String, Method> map;
-        try {
-            final Class<?> gen = FlowGraphGenerator.class;
-            map = Map.ofEntries(
-                    entry("cond", gen.getDeclaredMethod("condNode", SyntaxTreeNode.class)),
-                    entry("loop", gen.getDeclaredMethod("loopNode", SyntaxTreeNode.class)),
-                    entry("assignment", gen.getDeclaredMethod("assignNode", SyntaxTreeNode.class)),
-                    entry("expr", gen.getDeclaredMethod("exprNode", SyntaxTreeNode.class)),
-                    // Leafs
-                    entry("INTEGER_LIT", gen.getDeclaredMethod("intStringLiteralNode", SyntaxTreeNode.class)),
-                    entry("BOOLEAN_LIT", gen.getDeclaredMethod("boolLiteralNode", SyntaxTreeNode.class)),
-                    entry("STRING_LIT", gen.getDeclaredMethod("intStringLiteralNode", SyntaxTreeNode.class)),
-                    entry("IDENTIFIER", gen.getDeclaredMethod("identifierNode", SyntaxTreeNode.class)),
-                    entry("print", gen.getDeclaredMethod("printlnNode", SyntaxTreeNode.class))
-            );
-        } catch (NoSuchMethodException e) {
-            map = null;
-            e.printStackTrace();
-        }
-        methodMap = map;
-    }
 
     private final SyntaxTree tree;
 
@@ -146,18 +114,20 @@ public final class FlowGraphGenerator {
 
     /**
      * Erzeugt den FlussGraphen für die angegebene Wurzel.
-     * Der Wurzelname wird über die methodMap einer Methode zugewiesen.
+     * Der Wurzelname wird einer Methode zugewiesen.
      * Diese wird aufgerufen und erzeugt den entsprechenden Teilbaum.
      */
     private void generateNode(SyntaxTreeNode root) {
-        if (methodMap.containsKey(root.getName())) {
-            try {
-                methodMap.get(root.getName()).invoke(this, root);
-            } catch (IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
-        } else {
-            root.getChildren().forEach(this::generateNode);
+        switch (root.getName()) {
+            case "cond" -> this.condNode(root);
+            case "loop" -> this.loopNode(root);
+            case "assignment" -> this.assignNode(root);
+            case "expr" -> this.exprNode(root);
+            case "INTEGER_LIT", "STRING_LIT" -> this.intStringLiteralNode(root);
+            case "BOOLEAN_LIT" -> this.boolLiteralNode(root);
+            case "IDENTIFIER" -> this.identifierNode(root);
+            case "print" -> this.printlnNode(root);
+            default -> root.getChildren().forEach(this::generateNode);
         }
     }
 
