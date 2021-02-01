@@ -14,3 +14,4 @@ jasmin.jar
 TestClass.stups
 *.svg
 *.dot
+/TestClass.java

@@ -48,7 +48,8 @@ public final class StupsCompiler {
         Logger.call(graph::printToImage);
 
         // Codegeneration + Output
-        final String outputName = filename.replaceFirst("\\.stups", ".j");
+        final String fileExtension = filename.substring(filename.lastIndexOf('.') + 1);
+        final String outputName = filename.replaceFirst("\\." + fileExtension, ".j");
         final String sourceCode = graph.toString();
         try {
             final Path outputFile = Paths.get(System.getProperty("user.dir") + "/" + outputName);
