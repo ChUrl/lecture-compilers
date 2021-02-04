@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -15,7 +16,7 @@ import java.util.stream.Collectors;
 public final class DataFlowNode {
 
     // General graph structure information
-    private final String id;
+    private final UUID id;
     private final Set<DataFlowNode> predecessors;
     private final Set<DataFlowNode> successors;
 
@@ -46,7 +47,7 @@ public final class DataFlowNode {
      */
     private final Set<String> out;
 
-    private DataFlowNode(String id, String inst, String use, String def) {
+    private DataFlowNode(UUID id, String inst, String use, String def) {
         this.id = id;
         this.inst = inst;
         this.use = use;
@@ -80,7 +81,7 @@ public final class DataFlowNode {
 
     // Getters, Setters
 
-    public String getId() {
+    public UUID getId() {
         return this.id;
     }
 

@@ -78,8 +78,9 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
            .append("node[shape=Mrecord]\n");
 
         for (InterferenceNode node : this.interferenceNodes) {
-            dot.append(node.getSymbol())
-               .append(" [label=\"{<f0> Symbol: ")
+            dot.append("\"")
+               .append(node.getId())
+               .append("\" [label=\"{<f0> Symbol: ")
                .append(node.getSymbol())
                .append("|<f1> Color: ")
                .append(node.getColor())
@@ -88,10 +89,10 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
         for (InterferenceNode node : this.interferenceNodes) {
             for (InterferenceNode neigh : node.getNeighbourSet()) {
-                if (!dot.toString().contains(neigh.getSymbol() + " -> " + node.getSymbol())) {
+                if (!dot.toString().contains(neigh.getId() + "\" -> \"" + node.getId())) {
                     // No double lines
 
-                    dot.append(node.getSymbol()).append(" -> ").append(neigh.getSymbol()).append(" [arrowhead=\"none\"];\n");
+                    dot.append("\"").append(node.getId()).append("\" -> \"").append(neigh.getId()).append("\" [arrowhead=\"none\"];\n");
                 }
             }
         }

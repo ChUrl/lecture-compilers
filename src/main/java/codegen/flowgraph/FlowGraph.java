@@ -214,8 +214,9 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
            .append("node[shape=Mrecord]\n");
 
         for (FlowBasicBlock block : this.basicBlocks) {
-            dot.append(block.getId())
-               .append(" [label=\"{<f0> ")
+            dot.append("\"")
+               .append(block.getId())
+               .append("\" [label=\"{<f0> ")
                .append(this.basicBlocks.indexOf(block))
                .append(": ")
                .append(block.getLabel())
@@ -227,14 +228,14 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
         dot.append("START[label=\"START\"];\n")
            .append("END[label=\"END\"];\n");
 
-        dot.append("START -> ").append(this.basicBlocks.get(0).getId()).append(";\n");
-        dot.append(currentBlock.get().getId()).append(" -> END;\n");
+        dot.append("START -> \"").append(this.basicBlocks.get(0).getId()).append("\";\n");
+        dot.append("\"").append(currentBlock.get().getId()).append("\" -> END;\n");
 
         for (FlowBasicBlock block : this.basicBlocks) {
             // Successors
 
             for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
-                dot.append(block.getId()).append(" -> ").append(successor.getId()).append(";\n");
+                dot.append("\"").append(block.getId()).append("\" -> \"").append(successor.getId()).append("\";\n");
             }
         }
 

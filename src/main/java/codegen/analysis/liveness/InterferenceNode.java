@@ -4,11 +4,14 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Repräsentiert eine Variable und ihre Farbe im Interferenzgraph.
  */
 public class InterferenceNode {
+
+    private final UUID id;
 
     /**
      * Der Name der Variable.
@@ -26,6 +29,7 @@ public class InterferenceNode {
     private int color;
 
     public InterferenceNode(String symbol) {
+        this.id = UUID.randomUUID();
         this.symbol = symbol;
         this.color = 0;
         this.neighbours = new HashSet<>();
@@ -36,6 +40,10 @@ public class InterferenceNode {
     }
 
     // Getters, Setters
+
+    public UUID getId() {
+        return this.id;
+    }
 
     public String getSymbol() {
         return this.symbol;

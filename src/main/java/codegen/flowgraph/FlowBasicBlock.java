@@ -8,12 +8,13 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class FlowBasicBlock implements Iterable<FlowInstruction> {
 
     // Graph structure information
-    private final String id;
+    private final UUID id;
     private final Set<FlowBasicBlock> predecessors;
     private final Set<FlowBasicBlock> successors;
 
@@ -35,7 +36,7 @@ public class FlowBasicBlock implements Iterable<FlowInstruction> {
 
     public FlowBasicBlock(String label) {
         this.label = label;
-        this.id = String.valueOf(System.nanoTime());
+        this.id = UUID.randomUUID();
         this.instructions = new ArrayList<>();
         this.predecessors = new HashSet<>();
         this.successors = new HashSet<>();
@@ -55,7 +56,7 @@ public class FlowBasicBlock implements Iterable<FlowInstruction> {
 
     // Geteter, Setter
 
-    public String getId() {
+    public UUID getId() {
         return this.id;
     }
 
@@ -65,8 +66,7 @@ public class FlowBasicBlock implements Iterable<FlowInstruction> {
 
     public void addInstruction(String instruction, String... args) {
         this.instNr++;
-        this.instructions.add(new FlowInstruction(String.valueOf(Long.parseLong(this.id) + this.instNr),
-                                                  instruction, args));
+        this.instructions.add(new FlowInstruction(instruction, args));
     }
 
     public Set<FlowBasicBlock> getBlockSuccessorSet() {

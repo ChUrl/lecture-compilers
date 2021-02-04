@@ -1,11 +1,13 @@
 package codegen.flowgraph;
 
+import java.util.UUID;
+
 /**
  * Repräsentiert eine Instruction im {@link FlowGraph}.
  */
 public class FlowInstruction {
 
-    private final String id;
+    private final UUID id;
 
     /**
      * Die Instruction ist der Jasmin-Assembler Befehl.
@@ -13,13 +15,13 @@ public class FlowInstruction {
     private final String instruction;
     private final String[] args;
 
-    public FlowInstruction(String id, String instruction, String... args) {
-        this.id = id;
+    public FlowInstruction(String instruction, String... args) {
+        this.id = UUID.randomUUID();
         this.instruction = instruction;
         this.args = args;
     }
 
-    public String getId() {
+    public UUID getId() {
         return this.id;
     }
 

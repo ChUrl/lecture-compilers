@@ -107,8 +107,9 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
            .append("node[shape=Mrecord]\n");
 
         for (DataFlowNode node : this.dataFlowNodes) {
-            dot.append(node.getId())
-               .append(" [label=\"{<f0> ")
+            dot.append("\"")
+               .append(node.getId())
+               .append("\" [label=\"{<f0> ")
                .append(this.dataFlowNodes.indexOf(node))
                .append("|<f1> ")
                .append(node.getInst())
@@ -118,13 +119,13 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
         dot.append("START[label=\"START\"];\n")
            .append("END[label=\"END\"];\n");
 
-        dot.append("START -> ").append(this.dataFlowNodes.get(0).getId()).append(";\n");
-        dot.append(this.dataFlowNodes.get(this.dataFlowNodes.size() - 1).getId()).append(" -> END;\n");
+        dot.append("START -> \"").append(this.dataFlowNodes.get(0).getId()).append("\";\n");
+        dot.append("\"").append(this.dataFlowNodes.get(this.dataFlowNodes.size() - 1).getId()).append("\" -> END;\n");
 
         for (DataFlowNode node : this.dataFlowNodes) {
             for (DataFlowNode successor : node.getSuccessorSet()) {
 
-                dot.append(node.getId()).append(" -> ").append(successor.getId()).append(";\n");
+                dot.append("\"").append(node.getId()).append("\" -> \"").append(successor.getId()).append("\";\n");
             }
         }
 
