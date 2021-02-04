@@ -42,7 +42,8 @@ public final class TypeChecker {
 
             final String literalType = getLiteralType(root.getName());
 
-            Logger.logInfo("Type " + literalType + " for Node:\n" + root, TypeChecker.class);
+            Logger.logInfo("Register type \"" + literalType + "\" for node \"" + root.getName() + ": "
+                           + root.getValue() + "\"", TypeChecker.class);
 
             nodeTable.put(root, literalType);
             return;
@@ -51,7 +52,8 @@ public final class TypeChecker {
 
             final String exprType = table.getMethodReturnType(root.getValue());
 
-            Logger.logInfo("Type " + exprType + " for Node:\n" + root, TypeChecker.class);
+            Logger.logInfo("Register type \"" + exprType + "\" for node \"" + root.getName() + "\"\n"
+                           + root.nodePrint("\t\t"), TypeChecker.class);
 
             nodeTable.put(root, exprType);
         } else if ("par_expr".equals(root.getName())) {
@@ -65,7 +67,8 @@ public final class TypeChecker {
 
             final String identifierType = table.getSymbolType(root.getValue());
 
-            Logger.logInfo("Type " + identifierType + " for Node:\n" + root, TypeChecker.class);
+            Logger.logInfo("Register type \"" + identifierType + "\" for node \"" + root.getName() + ": "
+                           + root.getValue() + "\"", TypeChecker.class);
 
             nodeTable.put(root, identifierType);
         }
@@ -83,7 +86,7 @@ public final class TypeChecker {
         final SyntaxTreeNode literalNode = root.getChildren().get(0);
         final String literalType = nodeTable.get(literalNode);
 
-        Logger.logInfo("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType, TypeChecker.class);
+        Logger.logInfo("Validating assignment: \"" + identifier + "\" -> \"" + identifierType + "\" = \"" + literalType + "\"", TypeChecker.class);
 
         if (!literalType.equals(identifierType)) {
             Logger.logError("Line " + root.getLine() + " Typeerror: Can't assign [" + literalNode.getValue()
@@ -96,7 +99,7 @@ public final class TypeChecker {
     private static void validateExpression(SyntaxTreeNode root, TypeTable table, Map<SyntaxTreeNode, String> nodeTable) {
         final String op = root.getValue();
 
-        Logger.logInfo("Validating Expression: " + root.getValue(), TypeChecker.class);
+        Logger.logInfo("Validating expression: \"" + root.getValue() + "\"\n" + root.nodePrint("\t\t"), TypeChecker.class);
 
         if (root.isEmpty()) {
             // Keine Kinder

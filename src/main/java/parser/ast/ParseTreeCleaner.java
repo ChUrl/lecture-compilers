@@ -34,7 +34,7 @@ public final class ParseTreeCleaner {
         valueToValue(parseTree, grammar);
 
         Logger.logDebug("Successfully cleaned the parse-tree", ParseTreeCleaner.class);
-        Logger.logInfo("\nCleaned Tree:\n" + parseTree, ParseTreeCleaner.class);
+        Logger.logDebugSupplier(() -> parseTree.printToImage("ParseTreeCleaned"), ParseTreeCleaner.class);
     }
 
     /**
@@ -57,8 +57,8 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            Logger.logInfo("Promoting " + child.getName() + " -> " + root.getName(), ParseTreeCleaner.class);
-            Logger.logInfo(root.toString(), ParseTreeCleaner.class);
+            Logger.logInfo("Promoting child \"" + child.getName() + "\" to root \"" + root.getName() + "\"\n"
+                           + root.nodePrint("\t\t"), ParseTreeCleaner.class);
 
             root.setName(child.getName());
             root.setValue(child.getValue());
@@ -90,7 +90,7 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            Logger.logInfo("Removing " + child.getName(), ParseTreeCleaner.class);
+            Logger.logInfo("Removing node \"" + child.getName() + "\"", ParseTreeCleaner.class);
 
             child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
@@ -118,7 +118,8 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            Logger.logInfo("Removing " + root.getName() + " -> " + child.getName(), ParseTreeCleaner.class);
+            Logger.logInfo("Removing child \"" + child.getName() + "\" from root \"" + root.getName() + "\"\n"
+                           + root.nodePrint("\t\t"), ParseTreeCleaner.class);
 
             child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
@@ -144,7 +145,7 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            Logger.logInfo("Rename " + root.getName() + " to " + grammar.getNewName(root) + ".", ParseTreeCleaner.class);
+            Logger.logInfo("Renaming node \"" + root.getName() + "\" to \"" + grammar.getNewName(root) + "\"", ParseTreeCleaner.class);
 
             root.setName(grammar.getNewName(root));
         }
@@ -169,8 +170,8 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            Logger.logInfo("Moving " + child.getName() + " to value of " + root.getName(), ParseTreeCleaner.class);
-            Logger.logInfo(root.toString(), ParseTreeCleaner.class);
+            Logger.logInfo("Moving child-name \"" + child.getName() + "\" to parent-value of node \"" + root.getName() + "\"\n"
+                           + root.nodePrint("\t\t"), ParseTreeCleaner.class);
 
             root.setValue(child.getName());
 
@@ -206,8 +207,9 @@ public final class ParseTreeCleaner {
                 && root.getChildren().get(0).getName().equals(root.getChildren().get(1).getName())) {
                 // Case where variable is assigned another variable with the same name
 
-                Logger.logInfo("Moving " + root.getChildren().get(1).getValue() + " to value of " + root.getName(), ParseTreeCleaner.class);
-                Logger.logInfo(root.toString(), ParseTreeCleaner.class);
+                Logger.logInfo("Moving child-value \"" + root.getChildren().get(1).getValue()
+                               + "\" to parent-value of node \"" + root.getName() + "\"\n"
+                               + root.nodePrint("\t\t"), ParseTreeCleaner.class);
 
                 root.setValue(root.getChildren().get(1).getValue());
 
@@ -217,8 +219,8 @@ public final class ParseTreeCleaner {
             } else {
                 // Usual case where an expression is assigned
 
-                Logger.logInfo("Moving " + child.getValue() + " to value of " + root.getName(), ParseTreeCleaner.class);
-                Logger.logInfo(root.toString(), ParseTreeCleaner.class);
+                Logger.logInfo("Moving child value \"" + child.getValue() + "\" to parent-value of node \""
+                               + root.getName() + "\"\n" + root.nodePrint("\t\t"), ParseTreeCleaner.class);
 
                 root.setValue(child.getValue());
                 toRemove.add(child);

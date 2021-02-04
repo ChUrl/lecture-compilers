@@ -107,7 +107,7 @@ public final class LivenessAnalysis {
             Logger.logDebug("Successfully colored interference-graph", LivenessAnalysis.class);
         }
 
-        Logger.logInfoSupplier(this.interferenceGraph::printToImage, LivenessAnalysis.class);
+        Logger.logDebugSupplier(this.interferenceGraph::printToImage, LivenessAnalysis.class);
 
         return colors;
     }

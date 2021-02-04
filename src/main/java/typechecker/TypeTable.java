@@ -86,7 +86,7 @@ public final class TypeTable {
         if ("declaration".equals(root.getName())) {
             final SyntaxTreeNode child = root.getChildren().get(0);
 
-            Logger.logInfo("Adding Entry " + child.getValue() + " -> " + root.getValue(), TypeTable.class);
+            Logger.logInfo("Adding Entry: \"" + child.getValue() + "\" -> \"" + root.getValue() + "\"", TypeTable.class);
             final String oldEntry = table.put(child.getValue(), root.getValue());
 
             if (oldEntry != null) {

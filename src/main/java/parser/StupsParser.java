@@ -49,13 +49,11 @@ public class StupsParser {
 
         int inputPosition = 0;
 
-        Logger.logInfo("Input: " + token + "\n", StupsParser.class);
-
         // Parsing
         while (!stack.isEmpty()) {
             final String top = stack.peek().getName();
 
-            Logger.logInfo("Parsing Top Symbol: " + top, StupsParser.class);
+            Logger.logInfo("Parsing Top Symbol: \"" + top + "\"", StupsParser.class);
 
             final String currentTokenSym;
             int currentLine = 0;
@@ -76,16 +74,20 @@ public class StupsParser {
             if (top.equals(Grammar.EPSILON_SYMBOL)) {
                 // Wenn auf dem Stack das Epsilonsymbol liegt
 
+//                Logger.logInfo(" :: Skip epsilon", StupsParser.class);
+
                 stack.pop();
             } else if (top.equals(currentTokenSym)) {
                 // Wenn auf dem Stack ein Terminal liegt (dieses muss mit der Eingabe übereinstimmen)
+
+//                Logger.logInfo(" :: Skip terminal-symbol (Matches input)", StupsParser.class);
 
                 stack.pop();
                 inputPosition++;
             } else if (this.parsetable.getTerminals().contains(top)) {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
 
-                Logger.logError("\nLine " + currentLine + " Syntaxerror: Expected " + top + " but found "
+                Logger.logError("Line " + currentLine + " Syntaxerror: Expected " + top + " but found "
                                 + currentTokenSym, StupsParser.class);
                 Logger.logError(StupsParser.printSourceLine(currentLine, token), StupsParser.class);
 
@@ -93,7 +95,7 @@ public class StupsParser {
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
-                Logger.logError("\nLine " + currentLine + " Syntaxerror: Didn't expect " + currentTokenSym, StupsParser.class);
+                Logger.logError("Line " + currentLine + " Syntaxerror: Didn't expect " + currentTokenSym, StupsParser.class);
                 Logger.logError(StupsParser.printSourceLine(currentLine, token), StupsParser.class);
 
                 throw new ParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
@@ -101,7 +103,7 @@ public class StupsParser {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
 
-                Logger.logInfo("Used: " + top + " -> " + prod, StupsParser.class);
+                Logger.logInfo(" :: Used rule: \"" + top + " -> " + prod + "\"", StupsParser.class);
                 final SyntaxTreeNode pop = stack.pop();
 
                 final String[] split = prod.split(" ");
@@ -126,7 +128,6 @@ public class StupsParser {
         }
 
         Logger.logDebug("Successfully parsed the program and built the parse-tree", StupsParser.class);
-        Logger.logInfo("\nParsed AST:\n" + tree, StupsParser.class);
 
         return tree;
     }

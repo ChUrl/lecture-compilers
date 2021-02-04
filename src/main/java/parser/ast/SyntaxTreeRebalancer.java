@@ -70,7 +70,7 @@ public final class SyntaxTreeRebalancer {
         flipCommutativeExpr(abstractSyntaxTree);
 
         Logger.logDebug("Successfully rebalanced syntax-tree", SyntaxTreeRebalancer.class);
-        Logger.logInfo("AST after rebalancing:" + abstractSyntaxTree, SyntaxTreeRebalancer.class);
+        Logger.logDebugSupplier(() -> abstractSyntaxTree.printToImage("AbstractSyntaxTree"), SyntaxTreeRebalancer.class);
     }
 
     /**
@@ -110,8 +110,8 @@ public final class SyntaxTreeRebalancer {
             if (root.getChildren().size() == 2 && root.getChildren().get(0).size() < root.getChildren().get(1).size()) {
                 // Make the bigger subtree the left one
 
-                Logger.logInfo("Flipping " + root.getName() + ": " + root.getValue() + " for stack efficiency.", SyntaxTreeRebalancer.class);
-                Logger.logInfo(root.toString(), SyntaxTreeRebalancer.class);
+                Logger.logInfo("Flipping node \"" + root.getName() + ": " + root.getValue() + "\"\n"
+                               + root.nodePrint("\t\t"), SyntaxTreeRebalancer.class);
 
                 Collections.reverse(root.getChildren());
             }
@@ -153,8 +153,8 @@ public final class SyntaxTreeRebalancer {
      * @return Es wird false zurückgegeben, sobald keine weitere Rotation mehr möglich ist.
      */
     private static boolean specialLeftRotate(SyntaxTreeNode root) {
-        Logger.logInfo("Special-Left-Rotation around " + root.getName(), SyntaxTreeRebalancer.class);
-        Logger.logInfo(root.toString(), SyntaxTreeRebalancer.class);
+        Logger.logInfo("Special-left-rotation around node \"" + root.getName() + ": " + root.getValue() + "\"\n"
+                       + root.nodePrint("\t\t"), SyntaxTreeRebalancer.class);
 
         final SyntaxTreeNode left = root.getChildren().get(0);
         final SyntaxTreeNode right = root.getChildren().get(1);
@@ -245,8 +245,8 @@ public final class SyntaxTreeRebalancer {
     }
 
     private static void simpleRightRotate(SyntaxTreeNode root) {
-        Logger.logInfo("Right-Rotation around " + root.getName() + ": " + root.getValue(), SyntaxTreeRebalancer.class);
-        Logger.logInfo(root.toString(), SyntaxTreeRebalancer.class);
+        Logger.logInfo("Simple right-rotation around node \"" + root.getName() + ": " + root.getValue() + "\"\n"
+                       + root.nodePrint("\t\t"), SyntaxTreeRebalancer.class);
 
         final SyntaxTreeNode left = root.getChildren().get(0);
         final SyntaxTreeNode right = root.getChildren().get(1);

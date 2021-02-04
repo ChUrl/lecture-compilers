@@ -75,9 +75,8 @@ public final class FlowGraphGenerator {
 
                 currentVarNumber++;
                 varMap.put(current.getChildren().get(0).getValue(), currentVarNumber);
-                Logger.logInfo("New local " + current.getValue() + " variable "
-                               + current.getChildren().get(0).getValue()
-                               + " assigned to slot " + currentVarNumber + ".", FlowGraphGenerator.class);
+                Logger.logInfo("Assign local variable \"" + current.getChildren().get(0).getValue() + "\" -> \""
+                               + current.getValue() + "\" to slot " + currentVarNumber, FlowGraphGenerator.class);
             }
 
             current.getChildren().forEach(stack::push);
@@ -110,7 +109,6 @@ public final class FlowGraphGenerator {
         this.graph.purgeEmptyBlocks();
 
         Logger.logDebug("Source-graph generation complete", FlowGraphGenerator.class);
-        Logger.logInfo("\n\nSourceGraph print:\n" + "-".repeat(100) + "\n" + this.graph + "-".repeat(100), FlowGraphGenerator.class);
 
         return this.graph;
     }
@@ -138,7 +136,7 @@ public final class FlowGraphGenerator {
      * Erzeugt den Teilbaum für einen If-Knoten.
      */
     private void condNode(SyntaxTreeNode root) {
-        Logger.logInfo("Generating Conditional Node", FlowGraphGenerator.class);
+        Logger.logInfo("Generating conditional node", FlowGraphGenerator.class);
 
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
@@ -169,7 +167,7 @@ public final class FlowGraphGenerator {
      * Erzeugt den Teilbaum für einen While-Knoten.
      */
     private void loopNode(SyntaxTreeNode root) {
-        Logger.logInfo("Generating Loop Node", FlowGraphGenerator.class);
+        Logger.logInfo("Generating loop node", FlowGraphGenerator.class);
 
         final int currentLabel = this.labelCounter;
         this.labelCounter++;
@@ -196,7 +194,7 @@ public final class FlowGraphGenerator {
      * Die JVM-Stacksize wird dabei um 1 verringert, da istore/astore 1 Argument konsumieren.
      */
     private void assignNode(SyntaxTreeNode root) { //! Stack - 1
-        Logger.logInfo("Generating Assignment Node", FlowGraphGenerator.class);
+        Logger.logInfo("Generating assignment node", FlowGraphGenerator.class);
 
         this.generateNode(root.getChildren().get(0));
 
@@ -207,7 +205,7 @@ public final class FlowGraphGenerator {
             default -> throw new IllegalStateException("Unexpected value: " + type);
         };
 
-        Logger.logInfo("assign(): " + root.getName() + ": " + root.getValue() + " => " + inst, FlowGraphGenerator.class);
+        Logger.logInfo("assign(): Node \"" + root.getName() + ": " + root.getValue() + "\" => " + inst, FlowGraphGenerator.class);
 
         this.graph.addInstruction(inst, this.varMap.get(root.getValue()).toString());
     }
@@ -229,7 +227,7 @@ public final class FlowGraphGenerator {
      * bei binären Operatoren sinkt die Stackgröße um 1 (2 konsumiert, 1 Ergebnis).
      */
     private void intExpr(SyntaxTreeNode root) {
-        Logger.logInfo("Generating Integer Expression Node", FlowGraphGenerator.class);
+        Logger.logInfo("Generating integer expression node: \"" + root.getName() + ": " + root.getValue() + "\"", FlowGraphGenerator.class);
 
         String inst = "";
 
@@ -259,7 +257,7 @@ public final class FlowGraphGenerator {
             };
         }
 
-        Logger.logInfo("intExpr(): " + root.getName() + ": " + root.getValue() + " => " + inst, FlowGraphGenerator.class);
+        Logger.logInfo("intExpr(): Node \"" + root.getName() + ": " + root.getValue() + "\" => " + inst, FlowGraphGenerator.class);
 
         this.graph.addInstruction(inst);
     }
@@ -270,7 +268,7 @@ public final class FlowGraphGenerator {
      * bei binären Operatoren sinkt die Stackgröße um 1 (2 konsumiert, 1 Ergebnis).
      */
     private void boolExpr(SyntaxTreeNode node) {
-        Logger.logInfo("Generating Boolean Expression", FlowGraphGenerator.class);
+        Logger.logInfo("Generating boolean expression", FlowGraphGenerator.class);
 
         if (node.getChildren().size() == 1) { //! Stack + 1
             // Unary operator
@@ -342,14 +340,14 @@ public final class FlowGraphGenerator {
     // Leafs
 
     private void intStringLiteralNode(SyntaxTreeNode node) { //! Stack + 1
-        Logger.logInfo("intStringLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc", FlowGraphGenerator.class);
+        Logger.logInfo("intStringLiteral(): Node \"" + node.getName() + ": " + node.getValue() + "\" => ldc", FlowGraphGenerator.class);
 
         // bipush only pushes 1 byte as int
         this.graph.addInstruction("ldc", node.getValue());
     }
 
     private void boolLiteralNode(SyntaxTreeNode node) { //! Stack + 1
-        Logger.logInfo("booleanLiteral(): " + node.getName() + ": " + node.getValue() + " => ldc", FlowGraphGenerator.class);
+        Logger.logInfo("booleanLiteral(): Node \"" + node.getName() + ": " + node.getValue() + "\" => ldc", FlowGraphGenerator.class);
 
         final String val = "true".equals(node.getValue()) ? "1" : "0";
 
@@ -364,7 +362,7 @@ public final class FlowGraphGenerator {
             default -> throw new IllegalStateException("Unexpected value: " + type);
         };
 
-        Logger.logInfo("identifier(): " + node.getName() + ": " + node.getValue() + " => " + inst, FlowGraphGenerator.class);
+        Logger.logInfo("identifier(): Node \"" + node.getName() + ": " + node.getValue() + "\" => " + inst, FlowGraphGenerator.class);
 
         this.graph.addInstruction(inst, this.varMap.get(node.getValue()).toString());
     }
@@ -382,7 +380,7 @@ public final class FlowGraphGenerator {
 
         this.generateNode(expr);
 
-        Logger.logInfo("println(): " + expr.getName() + ": " + expr.getValue() + " => " + type, FlowGraphGenerator.class);
+        Logger.logInfo("println(): Node \"" + expr.getName() + ": " + expr.getValue() + "\" => " + type, FlowGraphGenerator.class);
 
         this.graph.addInstruction("invokevirtual", "java/io/PrintStream/println(" + type + ")V");
     }

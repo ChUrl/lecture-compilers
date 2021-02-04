@@ -98,7 +98,7 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
     public String printToImage() {
         if (this.dataFlowNodes.isEmpty()) {
-            return "Empty Graph";
+            return "Can't export empty graph: DataFLowGraph.svg";
         }
 
         final StringBuilder dot = new StringBuilder();
@@ -132,7 +132,7 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
         GraphvizCaller.callGraphviz(dot, "DataFlowGraph");
 
-        return "Finished.";
+        return "Successfully exported as image: DataFlowGraph.svg";
     }
 
     // Overrides

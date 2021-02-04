@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -13,12 +14,14 @@ import java.util.stream.Collectors;
  */
 public class SyntaxTreeNode {
 
+    private final UUID id;
     private final int line;
     private String name;
     private String value;
     private List<SyntaxTreeNode> children = new ArrayList<>();
 
     public SyntaxTreeNode(String name, int line) {
+        this.id = UUID.randomUUID();
         this.name = name;
         this.line = line;
         this.value = "";
@@ -82,6 +85,10 @@ public class SyntaxTreeNode {
         this.name = name;
     }
 
+    public UUID getId() {
+        return this.id;
+    }
+
     // Printing
 
     // toString() und treePrint() von hier: https://stackoverflow.com/a/8948691
@@ -102,6 +109,13 @@ public class SyntaxTreeNode {
                 next.treePrint(buffer, childrenPrefix + "└── ", childrenPrefix + "    ");
             }
         }
+    }
+
+    public String nodePrint(String prefix) {
+        return prefix + this.name + ": " + this.value + "\n"
+               + prefix + this.children.stream()
+                                       .map(child -> prefix + "└── " + child.name + ": " + child.value + "\n")
+                                       .collect(Collectors.joining()).trim();
     }
 
     // Overrides

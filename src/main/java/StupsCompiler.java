@@ -45,7 +45,7 @@ public final class StupsCompiler {
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
         final FlowGraph graph = gen.generateGraph();
 
-        Logger.logInfoSupplier(graph::printToImage, StupsCompiler.class);
+        Logger.logDebugSupplier(graph::printToImage, StupsCompiler.class);
 
         // Codegeneration + Output
         final String fileExtension = filename.substring(filename.lastIndexOf('.') + 1);
@@ -79,11 +79,11 @@ public final class StupsCompiler {
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
         final FlowGraph graph = gen.generateGraph();
 
-        Logger.logInfoSupplier(graph::printToImage, StupsCompiler.class);
+        Logger.logDebugSupplier(graph::printToImage, StupsCompiler.class);
 
         final DataFlowGraph dataFlowGraph = DataFlowGraph.fromFlowGraph(graph);
 
-        Logger.logInfoSupplier(dataFlowGraph::printToImage, StupsCompiler.class);
+        Logger.logDebugSupplier(dataFlowGraph::printToImage, StupsCompiler.class);
 
         final LivenessAnalysis liveness = LivenessAnalysis.fromDataFlowGraph(dataFlowGraph, gen.getVarMap());
         final int registers = liveness.doLivenessAnalysis();
@@ -129,7 +129,10 @@ public final class StupsCompiler {
         // Parsing + Typechecking of program
         final SyntaxTree parseTree = stupsParser.parse(lexer.getAllTokens(), lexer.getVocabulary());
 
+        Logger.logDebugSupplier(() -> parseTree.printToImage("ParseTree"), StupsCompiler.class);
+
         final SyntaxTree abstractSyntaxTree = SyntaxTree.toAbstractSyntaxTree(parseTree, grammar);
+
         final Map<SyntaxTreeNode, String> nodeTable = TypeChecker.validate(abstractSyntaxTree);
 
         return FlowGraphGenerator.fromAST(abstractSyntaxTree, nodeTable, filename);

@@ -69,7 +69,7 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
     public String printToImage() {
         if (this.interferenceNodes.isEmpty()) {
-            return "Empty Graph";
+            return "Can't export empty graph: Interference.svg";
         }
 
         final StringBuilder dot = new StringBuilder();
@@ -100,7 +100,7 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
         GraphvizCaller.callGraphviz(dot, "InterferenceGraph");
 
-        return "Finished.";
+        return "Successfully exported as Image: InterferenceGraph.svg";
     }
 
     // Overrides

@@ -1,7 +1,10 @@
 package parser.ast;
 
 import parser.grammar.Grammar;
+import util.GraphvizCaller;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Objects;
 
 /**
@@ -45,6 +48,52 @@ public class SyntaxTree {
 
     public boolean isEmpty() {
         return this.root.isEmpty();
+    }
+
+    public String printToImage(String filename) {
+        if (this.isEmpty()) {
+            return "Empty tree can't be exported to image: " + filename + ".svg";
+        }
+
+        final Deque<SyntaxTreeNode> stack = new ArrayDeque<>();
+        final StringBuilder dot = new StringBuilder();
+
+        dot.append("digraph tree {\n")
+           .append("node[shape=Mrecord]\n");
+
+        stack.push(this.root);
+        while (!stack.isEmpty()) {
+            final SyntaxTreeNode current = stack.pop();
+
+            dot.append("\"").append(current.getId()).append("\"")
+               .append(" [label=\"{<f0> ")
+               .append(current.getName())
+               .append("|<f1> ")
+               .append(current.getValue())
+               .append("}\"];\n");
+
+            current.getChildren().forEach(stack::push);
+        }
+
+        stack.push(this.root);
+        while (!stack.isEmpty()) {
+            final SyntaxTreeNode current = stack.pop();
+
+            for (SyntaxTreeNode child : current.getChildren()) {
+                dot.append("\"").append(current.getId()).append("\"")
+                   .append(" -> ")
+                   .append("\"").append(child.getId()).append("\"")
+                   .append("\n");
+            }
+
+            current.getChildren().forEach(stack::push);
+        }
+
+        dot.append("}");
+
+        GraphvizCaller.callGraphviz(dot, filename);
+
+        return "Successfully generated image of syntax-tree: " + filename + ".svg";
     }
 
     // Overrides

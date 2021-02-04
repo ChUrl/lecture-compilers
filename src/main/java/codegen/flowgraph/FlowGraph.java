@@ -48,13 +48,16 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
      * und zu Blöcken aus der {@link #predecessorMap} hergestellt.
      */
     public void addLabel(String label) {
-        Logger.logInfo("Adding Label: " + label, FlowGraph.class);
+        Logger.logInfo(" :: Adding label: \"" + label + "\"", FlowGraph.class);
 
         final FlowBasicBlock newBlock = new FlowBasicBlock(label);
 
         // Resolve missing successors/predecessors from jumps
         if (this.predecessorMap.containsKey(label)) {
-            Logger.logInfo("Handling PredecessorMap Entry: " + this.predecessorMap.get(label), FlowGraph.class);
+            Logger.logInfo(" :: Handling predecessor-map entry:\n\t\t\t"
+                           + this.predecessorMap.get(label).getLabel()
+                           + "\n\t\t\t[...]\n\t\t\t"
+                           + this.predecessorMap.get(label).getLastInstruction(), FlowGraph.class);
 
             this.predecessorMap.get(label).addSuccessorBlock(newBlock);
             newBlock.addPredecessorBlock(this.predecessorMap.get(label));
@@ -79,7 +82,7 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
      * @param jumpInstruction Der verwendete Sprungbefehl.
      */
     public void addJump(String jumpInstruction, String label) {
-        Logger.logInfo("Adding Jump to Label: " + label, FlowGraph.class);
+        Logger.logInfo(" :: Adding jump to label \"" + label + "\"", FlowGraph.class);
 
         this.addInstruction(jumpInstruction, label);
 
@@ -111,7 +114,9 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
             // Successor doesn't exist, so wait until it does
 
             // Current node is predecessor of label-block
-            Logger.logInfo("Adding Entry to PredecessorMap: " + currentBlock, FlowGraph.class);
+            currentBlock.ifPresent(flowBasicBlock -> Logger.logInfo(" :: Adding entry to predecessor-map: \n\t\t\t"
+                                                                    + flowBasicBlock.getLabel() + "\n\t\t\t[...]\n\t\t\t"
+                                                                    + flowBasicBlock.getLastInstruction(), FlowGraph.class));
             currentBlock.ifPresent(flowBasicBlock -> this.predecessorMap.put(label, flowBasicBlock));
         }
 
@@ -119,7 +124,7 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
     }
 
     public void addInstruction(String instruction, String... args) {
-        Logger.logInfo("Adding Instruction: " + instruction, FlowGraph.class);
+        Logger.logInfo(" :: Adding instruction \"" + instruction + "\"", FlowGraph.class);
 
         if (this.basicBlocks.isEmpty()) {
             this.basicBlocks.add(new FlowBasicBlock("START")); // First block doesn't exist
@@ -143,7 +148,7 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
         // Collect removable blocks
         for (FlowBasicBlock block : this.basicBlocks) {
             if (block.isEmpty()) {
-                Logger.logInfo("Marking Block " + this.basicBlocks.indexOf(block) + " as removable.", FlowGraph.class);
+                Logger.logInfo(" :: Marking block nr. " + this.basicBlocks.indexOf(block) + " as removable.", FlowGraph.class);
                 toRemove.add(block);
             }
         }
@@ -155,8 +160,8 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
             for (FlowBasicBlock predecessor : block.getBlockPredecessorSet()) {
                 for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
 
-                    Logger.logInfo("Rerouting Block " + this.basicBlocks.indexOf(predecessor)
-                                   + " to Block " + this.basicBlocks.indexOf(successor), FlowGraph.class);
+                    Logger.logInfo(" :: Rerouting block nr. " + this.basicBlocks.indexOf(predecessor)
+                                   + " to block nr. " + this.basicBlocks.indexOf(successor), FlowGraph.class);
                     predecessor.addSuccessorBlock(successor);
                     successor.addPredecessorBlock(predecessor);
                 }
@@ -200,7 +205,7 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
         final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
 
         if (this.basicBlocks.isEmpty() || currentBlock.isEmpty()) {
-            return "Empty Graph";
+            return "Can't export empty graph: FlowGraph.svg";
         }
 
         final StringBuilder dot = new StringBuilder();
@@ -237,7 +242,7 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
 
         GraphvizCaller.callGraphviz(dot, "FlowGraph");
 
-        return "Finished.";
+        return "Successfully exported the graph as Image: FlowGraph.svg";
     }
 
     // Overrides

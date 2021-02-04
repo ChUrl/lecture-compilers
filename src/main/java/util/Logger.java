@@ -8,7 +8,7 @@ public final class Logger {
 
     private static final boolean LOG_ENABLED = true;
     private static final boolean LOG_EXCEPTIONS = false;
-    private static final int LOG_LEVEL = 1; // 0 = ERROR, 1 = DEBUG, 2 = INFO
+    private static final int LOG_LEVEL = 2; // 0 = ERROR, 1 = DEBUG, 2 = INFO
 
     private static final Map<String, Boolean> packages;
 
@@ -21,14 +21,15 @@ public final class Logger {
                                  Map.entry("codegen.analysis", true),
                                  Map.entry("codegen.analysis.dataflow", true),
                                  Map.entry("codegen.analysis.liveness", true),
-                                 Map.entry("codegen", false));
+                                 Map.entry("codegen", true));
     }
 
     private Logger() {}
 
     private static void log(String message, Class clazz) {
         if (LOG_ENABLED
-            && packages.containsKey(clazz.getPackageName()) && packages.get(clazz.getPackageName()).equals(true)) {
+            && (packages.containsKey(clazz.getPackageName()) && packages.get(clazz.getPackageName()).equals(true))
+            || "StupsCompiler".equals(clazz.getName())) {
             System.out.printf("%-75s\t(%s)%n", message, clazz.getName());
 
         } else if (LOG_ENABLED && !packages.containsKey(clazz.getPackageName())) {

@@ -83,6 +83,7 @@ public final class GrammarAnalyzer {
                 for (String rightside : this.grammar.getRightsides(leftside)) {
                     // ...and X -> Y1 Y2 ... Yk is a production...
 
+
                     if (!rightside.equals(Grammar.EPSILON_SYMBOL)) {
                         // ...for some k >= 1...
 
@@ -107,8 +108,9 @@ public final class GrammarAnalyzer {
                                 final boolean changeNow = firstOut.get(leftside).addAll(firstYiNoEps);
                                 change = change || changeNow;
 
-                                Logger.logInfoIfTrue(changeNow, "First: Added " + firstYiNoEps + " to "
-                                                                + leftside + " (All before are nullable)", GrammarAnalyzer.class);
+                                Logger.logInfoIfTrue(changeNow, "Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                                Logger.logInfoIfTrue(changeNow, " :: Added " + firstYiNoEps + " to \"first("
+                                                                + leftside + ")\" (All before are nullable)", GrammarAnalyzer.class);
                             }
 
                             if (i == split.length - 1 && allNullable.test(split)) {
@@ -117,8 +119,9 @@ public final class GrammarAnalyzer {
                                 final boolean changeNow = firstOut.get(leftside).add(Grammar.EPSILON_SYMBOL);
                                 change = change || changeNow;
 
-                                Logger.logInfoIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to "
-                                                                + leftside + " (All are nullable)", GrammarAnalyzer.class);
+                                Logger.logInfoIfTrue(changeNow, "Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                                Logger.logInfoIfTrue(changeNow, " :: Added [" + Grammar.EPSILON_SYMBOL + "] to \"first("
+                                                                + leftside + ")\" (All are nullable)", GrammarAnalyzer.class);
                             }
                         }
                     }
@@ -129,15 +132,16 @@ public final class GrammarAnalyzer {
                         final boolean changeNow = firstOut.get(leftside).add(Grammar.EPSILON_SYMBOL);
                         change = change || changeNow;
 
-                        Logger.logInfoIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to "
-                                                        + leftside + " (X -> EPS exists)", GrammarAnalyzer.class);
+                        Logger.logInfoIfTrue(changeNow, "Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                        Logger.logInfoIfTrue(changeNow, " :: Added [" + Grammar.EPSILON_SYMBOL + "] to \"first("
+                                                        + leftside + ")\" (X -> EPS exists)", GrammarAnalyzer.class);
                     }
                 }
             }
         } while (change);
 
-        Logger.logDebug(" :: First-set initialized successfully", GrammarAnalyzer.class);
         Logger.logInfo("First Set: " + firstOut, GrammarAnalyzer.class);
+        Logger.logDebug(" :: First-set initialized successfully", GrammarAnalyzer.class);
 
         return firstOut;
     }
@@ -192,8 +196,9 @@ public final class GrammarAnalyzer {
                                 final boolean changeNow = followOut.get(split[i - 1]).addAll(firstXkNoEps);
                                 change = change || changeNow;
 
-                                Logger.logInfoIfTrue(changeNow, "Follow: Added " + firstXkNoEps + " to "
-                                                                + split[i - 1] + " (Dazwischen nullable)", GrammarAnalyzer.class);
+                                Logger.logInfoIfTrue(changeNow, "Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                                Logger.logInfoIfTrue(changeNow, " :: Added " + firstXkNoEps + " to \"follow("
+                                                                + split[i - 1] + ")\" (All nullable inbetween)", GrammarAnalyzer.class);
                             }
                         }
 
@@ -206,8 +211,9 @@ public final class GrammarAnalyzer {
                             final boolean changeNow = followOut.get(split[i - 1]).addAll(followOut.get(leftside));
                             change = change || changeNow;
 
-                            Logger.logInfoIfTrue(changeNow, "Follow: Added " + leftside + " to "
-                                                            + split[i - 1] + " (Dahinter nullable)", GrammarAnalyzer.class);
+                            Logger.logInfoIfTrue(changeNow, "Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                            Logger.logInfoIfTrue(changeNow, " :: Added " + leftside + " to \"follow("
+                                                            + split[i - 1] + ")\" (All following are nullable)", GrammarAnalyzer.class);
                         }
                     }
 
@@ -217,16 +223,17 @@ public final class GrammarAnalyzer {
                         final boolean changeNow = followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
                         change = change || changeNow;
 
-                        Logger.logInfoIfTrue(changeNow, "Follow: Added " + followOut.get(leftside) + " to "
-                                                        + split[split.length - 1] + " (Ende der Regel)", GrammarAnalyzer.class);
+                        Logger.logInfoIfTrue(changeNow, "Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                        Logger.logInfoIfTrue(changeNow, " :: Added " + followOut.get(leftside) + " to \"follow("
+                                                        + split[split.length - 1] + ")\" (Last item in production)", GrammarAnalyzer.class);
                     }
                 }
             }
 
         } while (change);
 
-        Logger.logDebug(" :: Follow-set initialized successfully", GrammarAnalyzer.class);
         Logger.logInfo("Follow Set: " + followOut, GrammarAnalyzer.class);
+        Logger.logDebug(" :: Follow-set initialized successfully", GrammarAnalyzer.class);
 
         return followOut;
     }
@@ -248,9 +255,10 @@ public final class GrammarAnalyzer {
 
                     final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
-                    Logger.logInfo("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym
-                                   + " in first of " + rightside + ")", GrammarAnalyzer.class);
-                    Logger.logInfoNullable(prev, "Overwritten " + prev + "!\n", GrammarAnalyzer.class);
+                    Logger.logInfo("Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                    Logger.logInfo(" :: Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym
+                                   + " in \"first(" + rightside + ")\")", GrammarAnalyzer.class);
+                    Logger.logInfoNullable(prev, " :: Overwritten " + prev + "!", GrammarAnalyzer.class);
                 }
 
                 final Set<String> followLeftside = this.follow(leftside);
@@ -263,9 +271,10 @@ public final class GrammarAnalyzer {
 
                         final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
-                        Logger.logInfo("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym
-                                       + " in follow of " + leftside + ")", GrammarAnalyzer.class);
-                        Logger.logInfoNullable(prev, "Overwritten " + prev + "!\n", GrammarAnalyzer.class);
+                        Logger.logInfo("Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                        Logger.logInfo(" :: Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym
+                                       + " in \"follow(" + leftside + ")\")", GrammarAnalyzer.class);
+                        Logger.logInfoNullable(prev, " :: Overwritten " + prev + "!", GrammarAnalyzer.class);
                     }
 
                     if (followLeftside.contains("$")) {
@@ -273,10 +282,11 @@ public final class GrammarAnalyzer {
 
                         final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
 
-                        Logger.logInfo("Add " + rightside + " to cell (" + leftside
-                                       + ", $) (epsilon in first of " + rightside + " and $ in follow of "
-                                       + leftside + ")", GrammarAnalyzer.class);
-                        Logger.logInfoNullable(prev, "Overwritten " + prev + "!\n", GrammarAnalyzer.class);
+                        Logger.logInfo("Rule: \"" + leftside + " -> " + rightside + "\"", GrammarAnalyzer.class);
+                        Logger.logInfo(" :: Add " + rightside + " to cell (" + leftside
+                                       + ", $) (epsilon in \"first(" + rightside + ")\" and $ in \"follow("
+                                       + leftside + ")\")", GrammarAnalyzer.class);
+                        Logger.logInfoNullable(prev, " :: Overwritten " + prev + "!", GrammarAnalyzer.class);
                     }
                 }
             }
@@ -284,8 +294,8 @@ public final class GrammarAnalyzer {
 
         final ParsingTable parsingTable = new ParsingTable(this.grammar, tableOut);
 
+        Logger.logInfo("ParsingTable:\n" + parsingTable, GrammarAnalyzer.class);
         Logger.logDebug(" :: Parse-table initialized successfully", GrammarAnalyzer.class);
-        Logger.logInfo("ParsingTable: " + parsingTable, GrammarAnalyzer.class);
 
         return parsingTable;
     }

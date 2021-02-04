@@ -118,15 +118,23 @@ public class Grammar {
         Logger.logDebug("Beginning grammar parsing", Grammar.class);
         for (String currentLine : lines) {
 
-            Logger.logInfo("Parsed: " + currentLine, Grammar.class);
+            Logger.logInfo("Parsing: \"" + currentLine + "\"", Grammar.class);
 
             // Parse Keywords
             if (currentLine.startsWith("TERM:")) {
 
                 terminals.addAll(Arrays.stream(currentLine.split(" ")).skip(1).collect(Collectors.toSet()));
+
+                Arrays.stream(currentLine.split(" "))
+                      .skip(1)
+                      .forEach(term -> Logger.logInfo(" :: Registered terminal symbol \"" + term + "\"", Grammar.class));
             } else if (currentLine.startsWith("NTERM:")) {
 
                 nonterminals.addAll(Arrays.stream(currentLine.split(" ")).skip(1).collect(Collectors.toSet()));
+
+                Arrays.stream(currentLine.split(" "))
+                      .skip(1)
+                      .forEach(nterm -> Logger.logInfo(" :: Registered nonterminal symbol \"" + nterm + "\"", Grammar.class));
             } else {
                 // Parse regular lines
 
@@ -136,7 +144,10 @@ public class Grammar {
             }
         }
 
-        Logger.logInfo("Registered actions: " + actionMap, Grammar.class);
+        Logger.logInfo("Grammar terminals: " + terminals, Grammar.class);
+        Logger.logInfo("Grammar nonterminals: " + nonterminals, Grammar.class);
+        Logger.logInfo("Grammar productions: " + rules, Grammar.class);
+        Logger.logInfo("Grammar actions: " + actionMap, Grammar.class);
         Logger.logDebug("Grammar parsed successfully", Grammar.class);
 
         return new Grammar(terminals, nonterminals,
@@ -169,8 +180,6 @@ public class Grammar {
             // Handle actions if they are given
 
             final Set<String> actionSet = parseActionSet(leftside, open, close);
-
-            Logger.logInfo("Current Line " + currentLine + " has Actions: " + actionSet, Grammar.class);
 
             // Validate Actions
             throwOnInvalidActionSet(actionSet);
@@ -230,7 +239,7 @@ public class Grammar {
                                        Map<GrammarAction, Set<String>> actions) {
 
         actions.get(action).add(leftside.trim());
-        Logger.logInfo("Registered " + flag + ": " + leftside.trim(), Grammar.class);
+        Logger.logInfo(" :: Registered action [" + flag + "] for \"" + leftside.trim() + "\"", Grammar.class);
     }
 
     /**
@@ -246,7 +255,8 @@ public class Grammar {
         final int argStart = flag.indexOf('=');
         final String[] argSplit = flag.substring(argStart + 1).split(",");
 
-        Logger.logInfo("Registered " + flag + " args: " + argSplit, Grammar.class);
+        Arrays.stream(argSplit)
+              .forEach(arg -> Logger.logInfo(" :: Action has arg " + arg, Grammar.class));
 
         switch (action) {
             case DELCHILD -> delChildMappings.put(leftside, Arrays.asList(argSplit));
@@ -270,7 +280,7 @@ public class Grammar {
             final GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
             rules.add(rule);
 
-            Logger.logInfo("Registered production " + rule, Grammar.class);
+            Logger.logInfo(" :: Registered production \"" + rule + "\"", Grammar.class);
         }
     }
 
