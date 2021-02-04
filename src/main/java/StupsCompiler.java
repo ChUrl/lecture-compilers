@@ -39,13 +39,13 @@ public final class StupsCompiler {
     }
 
     private static void compile(String filename) {
-        System.out.println("Beginning compilation.");
-        final long begin = System.nanoTime();
+        System.out.println("Kompiliere " + filename);
+//        final long begin = System.nanoTime();
 
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
         final FlowGraph graph = gen.generateGraph();
 
-        Logger.call(graph::printToImage);
+        Logger.logInfoSupplier(graph::printToImage, StupsCompiler.class);
 
         // Codegeneration + Output
         final String fileExtension = filename.substring(filename.lastIndexOf('.') + 1);
@@ -68,8 +68,9 @@ public final class StupsCompiler {
             return;
         }
 
-        final long end = System.nanoTime();
-        System.out.printf("%nCompilation completed in %dms.%n", (end - begin) / 1_000_000);
+        System.out.println("Kompilieren abgeschlossen.");
+//        final long end = System.nanoTime();
+//        System.out.printf("%nCompilation completed in %dms.%n", (end - begin) / 1_000_000);
     }
 
     private static void liveness(String filename) {
@@ -78,14 +79,17 @@ public final class StupsCompiler {
         final FlowGraphGenerator gen = getFlowGraphGen(filename);
         final FlowGraph graph = gen.generateGraph();
 
-        Logger.call(graph::printToImage);
+        Logger.logInfoSupplier(graph::printToImage, StupsCompiler.class);
 
         final DataFlowGraph dataFlowGraph = DataFlowGraph.fromFlowGraph(graph);
 
-        Logger.call(dataFlowGraph::printToImage);
+        Logger.logInfoSupplier(dataFlowGraph::printToImage, StupsCompiler.class);
 
         final LivenessAnalysis liveness = LivenessAnalysis.fromDataFlowGraph(dataFlowGraph, gen.getVarMap());
-        liveness.doLivenessAnalysis();
+        final int registers = liveness.doLivenessAnalysis();
+
+        System.out.println("Liveness-Analyse abgeschlossen.");
+        System.out.println("Registers: " + registers);
     }
 
     private static FlowGraphGenerator getFlowGraphGen(String filename) {

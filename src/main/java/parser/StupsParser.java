@@ -6,6 +6,7 @@ import parser.ast.SyntaxTree;
 import parser.ast.SyntaxTreeNode;
 import parser.grammar.Grammar;
 import parser.grammar.GrammarAnalyzer;
+import util.Logger;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -13,8 +14,9 @@ import java.util.Deque;
 import java.util.List;
 import java.util.Optional;
 
-import static util.Logger.log;
-
+/**
+ * Leitet eine Liste von Token nach einer Grammatik mit Hilfe einer {@link ParsingTable} ab.
+ */
 public class StupsParser {
 
     private final ParsingTable parsetable;
@@ -28,17 +30,18 @@ public class StupsParser {
         return new StupsParser(analyzer.getTable());
     }
 
-    private static void printSourceLine(int line, Collection<? extends Token> token) {
+    private static String printSourceLine(int line, Collection<? extends Token> token) {
         final Optional<String> srcLine = token.stream()
                                               .filter(tok -> tok.getLine() == line)
                                               .map(Token::getText)
                                               .reduce((s1, s2) -> s1 + " " + s2);
 
-        srcLine.ifPresent(s -> System.out.println("  :: " + s));
+        return "  :: " + srcLine.orElse("");
     }
 
     public SyntaxTree parse(List<? extends Token> token, Vocabulary voc) {
-        System.out.println(" - Parsing program...");
+        Logger.logDebug("Beginning program-parsing", StupsParser.class);
+
         final SyntaxTreeNode root = new SyntaxTreeNode(Grammar.START_SYMBOL, 0);
         final SyntaxTree tree = new SyntaxTree(root);
         final Deque<SyntaxTreeNode> stack = new ArrayDeque<>();
@@ -46,12 +49,13 @@ public class StupsParser {
 
         int inputPosition = 0;
 
-        log("\nParsing:");
-        log("Input: " + token + "\n");
+        Logger.logInfo("Input: " + token + "\n", StupsParser.class);
 
         // Parsing
         while (!stack.isEmpty()) {
             final String top = stack.peek().getName();
+
+            Logger.logInfo("Parsing Top Symbol: " + top, StupsParser.class);
 
             final String currentTokenSym;
             int currentLine = 0;
@@ -81,22 +85,23 @@ public class StupsParser {
             } else if (this.parsetable.getTerminals().contains(top)) {
                 // Wenn das Terminal auf dem Stack nicht mit der aktuellen Eingabe übereinstimmt
 
-                System.out.println("\nLine " + currentLine + " Syntaxerror: Expected " + top + " but found " + currentTokenSym);
-                StupsParser.printSourceLine(currentLine, token);
+                Logger.logError("\nLine " + currentLine + " Syntaxerror: Expected " + top + " but found "
+                                + currentTokenSym, StupsParser.class);
+                Logger.logError(StupsParser.printSourceLine(currentLine, token), StupsParser.class);
 
                 throw new ParseException("Invalid terminal on stack: " + top, tree);
             } else if (prod == null) {
                 // Wenn es für das aktuelle Terminal und das Nichtterminal auf dem Stack keine Regel gibt
 
-                System.out.println("\nLine " + currentLine + " Syntaxerror: Didn't expect " + currentTokenSym);
-                StupsParser.printSourceLine(currentLine, token);
+                Logger.logError("\nLine " + currentLine + " Syntaxerror: Didn't expect " + currentTokenSym, StupsParser.class);
+                Logger.logError(StupsParser.printSourceLine(currentLine, token), StupsParser.class);
 
                 throw new ParseException("No prod. for nonterminal " + top + ", terminal " + currentTokenSym, tree);
             } else {
                 // Wenn das Nichtterminal auf dem Stack durch (s)eine Produktion ersetzt werden kann
                 // Hier wird auch der AST aufgebaut
 
-                log("Used: " + top + " -> " + prod);
+                Logger.logInfo("Used: " + top + " -> " + prod, StupsParser.class);
                 final SyntaxTreeNode pop = stack.pop();
 
                 final String[] split = prod.split(" ");
@@ -120,10 +125,8 @@ public class StupsParser {
             }
         }
 
-        log("\nParsed AST:\n" + tree);
-        log("-".repeat(100) + "\n");
-
-        System.out.println("Parsing successful.");
+        Logger.logDebug("Successfully parsed the program and built the parse-tree", StupsParser.class);
+        Logger.logInfo("\nParsed AST:\n" + tree, StupsParser.class);
 
         return tree;
     }

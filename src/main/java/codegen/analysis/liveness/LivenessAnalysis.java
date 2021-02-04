@@ -30,6 +30,8 @@ public final class LivenessAnalysis {
     }
 
     private static void calculateLivenessInOut(DataFlowGraph dataFlowGraph) {
+        Logger.logDebug("Calculating in/out-sets", LivenessAnalysis.class);
+
         boolean change;
 
         do {
@@ -45,6 +47,8 @@ public final class LivenessAnalysis {
                 change = change || calculateLivenessInOutNode(node);
             }
         } while (change);
+
+        Logger.logDebug("Successfully calculated in/out-sets", LivenessAnalysis.class);
     }
 
     private static boolean calculateLivenessInOutNode(DataFlowNode dataFlowNode) {
@@ -70,15 +74,11 @@ public final class LivenessAnalysis {
      * Die Registeranzahl wird durch naive Färbung des InterferenzGraphen ermittelt.
      */
     public int doLivenessAnalysis() {
-        final int registers = this.colorInterferenceGraph();
-
-        System.out.println("\nRegisters: " + registers);
-
-        return registers;
+        return this.colorInterferenceGraph();
     }
 
     private int colorInterferenceGraph() {
-        Logger.log("Coloring Interference Graph\n");
+        Logger.logDebug("Coloring interference-graph", LivenessAnalysis.class);
 
         int colors = 0;
         int currentColor;
@@ -103,9 +103,11 @@ public final class LivenessAnalysis {
             if (currentColor > colors) {
                 colors = currentColor;
             }
+
+            Logger.logDebug("Successfully colored interference-graph", LivenessAnalysis.class);
         }
 
-        Logger.call(this.interferenceGraph::printToImage);
+        Logger.logInfoSupplier(this.interferenceGraph::printToImage, LivenessAnalysis.class);
 
         return colors;
     }

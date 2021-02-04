@@ -1,6 +1,7 @@
 package codegen.analysis;
 
 import parser.ast.SyntaxTreeNode;
+import util.Logger;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -37,6 +38,7 @@ public class StackModel {
     private void updateMax() {
         if (this.stack.size() > this.max) {
             this.max = this.stack.size();
+            Logger.logInfo(" :: New maximum: " + this.max, StackModel.class);
         }
     }
 

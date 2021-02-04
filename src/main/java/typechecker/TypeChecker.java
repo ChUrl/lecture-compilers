@@ -2,14 +2,13 @@ package typechecker;
 
 import parser.ast.SyntaxTree;
 import parser.ast.SyntaxTreeNode;
+import util.Logger;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static util.Logger.log;
 
 public final class TypeChecker {
 
@@ -19,18 +18,17 @@ public final class TypeChecker {
     private TypeChecker() {}
 
     // TODO: merge nodeTable into typetable?
-    // Wirft exception bei typeerror, return nodeTable?
+    // Wirft exception bei typeerror
     public static Map<SyntaxTreeNode, String> validate(SyntaxTree tree) {
         final TypeTable table = TypeTable.fromAST(tree);
         final Map<SyntaxTreeNode, String> nodeTable = new HashMap<>();
 
-        System.out.println(" - Validating syntax-tree...");
+        Logger.logDebug("Beginning typevalidation of abstract-syntax-tree", TypeChecker.class);
 
-        log("Typevalidation:");
         validate(tree.getRoot(), table, nodeTable);
-        log("-".repeat(100));
 
-        System.out.println("Typechecking successful.");
+        Logger.logDebug("Successfully typevalidated the abstract-syntax-tree", TypeChecker.class);
+
         return nodeTable;
     }
 
@@ -44,12 +42,16 @@ public final class TypeChecker {
 
             final String literalType = getLiteralType(root.getName());
 
+            Logger.logInfo("Type " + literalType + " for Node:\n" + root, TypeChecker.class);
+
             nodeTable.put(root, literalType);
             return;
         } else if ("expr".equals(root.getName())) {
             // NodeTable Eintrag für Expression hinzufügen
 
             final String exprType = table.getMethodReturnType(root.getValue());
+
+            Logger.logInfo("Type " + exprType + " for Node:\n" + root, TypeChecker.class);
 
             nodeTable.put(root, exprType);
         } else if ("par_expr".equals(root.getName())) {
@@ -62,6 +64,8 @@ public final class TypeChecker {
             // Nodedtable Eintrag fuer Identifier
 
             final String identifierType = table.getSymbolType(root.getValue());
+
+            Logger.logInfo("Type " + identifierType + " for Node:\n" + root, TypeChecker.class);
 
             nodeTable.put(root, identifierType);
         }
@@ -79,10 +83,11 @@ public final class TypeChecker {
         final SyntaxTreeNode literalNode = root.getChildren().get(0);
         final String literalType = nodeTable.get(literalNode);
 
-        log("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType);
+        Logger.logInfo("Validating Assignment: " + identifierType + ": " + identifier + " = " + literalType, TypeChecker.class);
 
         if (!literalType.equals(identifierType)) {
-            System.out.println("Line " + root.getLine() + " Typeerror: Can't assign [" + literalNode.getValue() + "] to [" + identifier + "]: " + identifierType);
+            Logger.logError("Line " + root.getLine() + " Typeerror: Can't assign [" + literalNode.getValue()
+                            + "] to [" + identifier + "]: " + identifierType, TypeChecker.class);
 
             throw new AssignmentTypeMismatchException("Trying to assign " + literalType + " to a " + identifierType + " variable.");
         }
@@ -91,25 +96,25 @@ public final class TypeChecker {
     private static void validateExpression(SyntaxTreeNode root, TypeTable table, Map<SyntaxTreeNode, String> nodeTable) {
         final String op = root.getValue();
 
-        log("Validating Expression: " + root.getValue());
+        Logger.logInfo("Validating Expression: " + root.getValue(), TypeChecker.class);
 
         if (root.isEmpty()) {
             // Keine Kinder
 
-            System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] without arguments");
+            Logger.logError("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] without arguments", TypeChecker.class);
 
             throw new OperatorUsageException("Versuche Operator " + op + " ohne Argumente aufzurufen.");
         } else if (root.getChildren().size() != 1 && "NOT".equals(op)) {
             // Unärer Operator mit  != 1 Child
             // SUB, ADD müssen nicht geprüft werden, da diese doppelt belegt sind mit ihrem binären Gegenstück
 
-            System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] with more than 1 argument");
+            Logger.logError("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] with more than 1 argument", TypeChecker.class);
 
             throw new OperatorUsageException("Versuche unären Operator " + op + " mit mehreren Argument aufzurufen.");
         } else if (root.getChildren().size() == 1 && !unary.contains(op)) {
             // Binärer Operator mit 1 Child
 
-            System.out.println("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] with only 1 argument");
+            Logger.logError("Line " + root.getLine() + " Operatorerror: Can't use [" + op + "] with only 1 argument", TypeChecker.class);
 
             throw new OperatorUsageException("Versuche binären Operator " + op + " mit einem Argument aufzurufen.");
         }
@@ -121,7 +126,7 @@ public final class TypeChecker {
             final String childReturnType = nodeTable.get(child);
 
             if (childReturnType == null) {
-                System.out.println("Variable " + child.getValue() + " wurde nicht deklariert.");
+                Logger.logError("Variable " + child.getValue() + " wurde nicht deklariert.", TypeChecker.class);
 
                 throw new SymbolNotDefinedException("Zugriff auf nicht deklarierte Variable " + child.getValue());
             }
@@ -130,7 +135,8 @@ public final class TypeChecker {
                 // Child returned Typ, welcher nicht im SymbolTable als Argumenttyp steht
                 // Der NodeTable enthält auch Literale, diese müssen also nicht einzeln behandelt werden
 
-                System.out.println("Line " + root.getLine() + " Typeerror: Can't use [" + op + "] with argument of type [" + nodeTable.get(child) + "]");
+                Logger.logError("Line " + root.getLine() + " Typeerror: Can't use [" + op
+                                + "] with argument of type [" + nodeTable.get(child) + "]", TypeChecker.class);
 
                 throw new OperatorTypeMismatchException("Versuche Operator " + op + " mit Argument vom Typ " + nodeTable.get(child) + " aufzurufen.");
             }
@@ -141,7 +147,9 @@ public final class TypeChecker {
             final SyntaxTreeNode right = root.getChildren().get(1);
 
             if (!nodeTable.get(left).equals(nodeTable.get(right))) {
-                System.out.println("Line " + root.getLine() + " Typeerror: Can't use [" + op + "] with arguments of type [" + nodeTable.get(left) + "] and [" + nodeTable.get(right) + "]");
+                Logger.logError("Line " + root.getLine() + " Typeerror: Can't use [" + op
+                                + "] with arguments of type [" + nodeTable.get(left) + "] and [" + nodeTable.get(right)
+                                + "]", TypeChecker.class);
 
                 throw new OperatorTypeMismatchException("Versuche Operator" + op + " mit Argumenten ungleichen Types zu verwenden.");
             }

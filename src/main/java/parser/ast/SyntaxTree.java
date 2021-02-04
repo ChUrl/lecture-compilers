@@ -25,7 +25,6 @@ public class SyntaxTree {
 
         ParseTreeCleaner.clean(abstractSyntaxTree, grammar);
         SyntaxTreeRebalancer.rebalance(abstractSyntaxTree);
-        System.out.println("Tree processing successful.");
 
         return abstractSyntaxTree;
     }

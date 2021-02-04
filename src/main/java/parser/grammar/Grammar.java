@@ -1,6 +1,7 @@
 package parser.grammar;
 
 import parser.ast.SyntaxTreeNode;
+import util.Logger;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,7 +23,6 @@ import static parser.grammar.GrammarAction.NAMETOVAL;
 import static parser.grammar.GrammarAction.PROMOTE;
 import static parser.grammar.GrammarAction.RENAMETO;
 import static parser.grammar.GrammarAction.VALTOVAL;
-import static util.Logger.log;
 
 /**
  * Repräsentiert die Parse-Grammatik und die Kontextaktionen.
@@ -90,7 +90,6 @@ public class Grammar {
     }
 
     public static Grammar fromFile(Path path) throws IOException {
-        System.out.println(" - Reading parser-grammar...");
         List<String> lines = Files.readAllLines(path);
 
         // Remove Whitespace + Comments
@@ -116,10 +115,10 @@ public class Grammar {
             actionMap.put(action, new HashSet<>());
         }
 
-        log("Parsing Grammar from File:");
+        Logger.logDebug("Beginning grammar parsing", Grammar.class);
         for (String currentLine : lines) {
 
-            log("Parsed: " + currentLine);
+            Logger.logInfo("Parsed: " + currentLine, Grammar.class);
 
             // Parse Keywords
             if (currentLine.startsWith("TERM:")) {
@@ -137,9 +136,8 @@ public class Grammar {
             }
         }
 
-        log("\n" + actionMap);
-        log("-".repeat(100));
-        System.out.println("Grammar parsed successfully.");
+        Logger.logInfo("Registered actions: " + actionMap, Grammar.class);
+        Logger.logDebug("Grammar parsed successfully", Grammar.class);
 
         return new Grammar(terminals, nonterminals,
                            actionMap, renameMappings, nameToValMappings,
@@ -171,6 +169,8 @@ public class Grammar {
             // Handle actions if they are given
 
             final Set<String> actionSet = parseActionSet(leftside, open, close);
+
+            Logger.logInfo("Current Line " + currentLine + " has Actions: " + actionSet, Grammar.class);
 
             // Validate Actions
             throwOnInvalidActionSet(actionSet);
@@ -214,7 +214,7 @@ public class Grammar {
         final String[] flagSplit = flag.split("=");
         final GrammarAction action = GrammarAction.valueOf(flagSplit[0].toUpperCase());
 
-        registerRegularAction(action, leftside, flag, actions);
+        registerAction(action, leftside, flag, actions);
 
         if (flagSplit.length > 1) {
 
@@ -226,11 +226,11 @@ public class Grammar {
     /**
      * Es wird ein Eintrag in der action-Map mit der entsprechenden leftside hinzugefügt.
      */
-    private static void registerRegularAction(GrammarAction action, String leftside, String flag,
-                                              Map<GrammarAction, Set<String>> actions) {
+    private static void registerAction(GrammarAction action, String leftside, String flag,
+                                       Map<GrammarAction, Set<String>> actions) {
 
         actions.get(action).add(leftside.trim());
-        log("Registered " + flag + ": " + leftside.trim());
+        Logger.logInfo("Registered " + flag + ": " + leftside.trim(), Grammar.class);
     }
 
     /**
@@ -245,6 +245,8 @@ public class Grammar {
         // "R=A,B,C" -> argSplit = {"A", "B", "C"}
         final int argStart = flag.indexOf('=');
         final String[] argSplit = flag.substring(argStart + 1).split(",");
+
+        Logger.logInfo("Registered " + flag + " args: " + argSplit, Grammar.class);
 
         switch (action) {
             case DELCHILD -> delChildMappings.put(leftside, Arrays.asList(argSplit));
@@ -267,6 +269,8 @@ public class Grammar {
         for (String prod : prods) {
             final GrammarRule rule = new GrammarRule(leftside, prod.split(" "));
             rules.add(rule);
+
+            Logger.logInfo("Registered production " + rule, Grammar.class);
         }
     }
 
@@ -277,6 +281,8 @@ public class Grammar {
 
         for (String flag : flagSet) {
             if (!actionSet.contains(flag.split("=")[0].toUpperCase())) {
+
+                Logger.logError("Action " + flag.split("=")[0] + " is invalid.", Grammar.class);
                 throw new GrammarParseException("Invalid Action: " + flag);
             }
         }

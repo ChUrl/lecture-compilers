@@ -2,14 +2,13 @@ package typechecker;
 
 import parser.ast.SyntaxTree;
 import parser.ast.SyntaxTreeNode;
+import util.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static util.Logger.log;
 
 /**
  * Speichert die Datentypen von Symbolen und Funktionen in einem Programm.
@@ -68,12 +67,13 @@ public final class TypeTable {
     }
 
     public static TypeTable fromAST(SyntaxTree tree) {
-        System.out.println(" - Building TypeTable...");
+        Logger.logDebug("Building typetable", TypeTable.class);
+
         final Map<String, String> symbolTable = new HashMap<>();
 
-        log("Creating TypeTable");
         initSymbolTable(tree.getRoot(), symbolTable);
-        log("-".repeat(100));
+
+        Logger.logDebug("Successfully built typetable", TypeTable.class);
 
         return new TypeTable(symbolTable);
     }
@@ -86,11 +86,11 @@ public final class TypeTable {
         if ("declaration".equals(root.getName())) {
             final SyntaxTreeNode child = root.getChildren().get(0);
 
-            log("Adding Entry " + child.getValue() + " -> " + root.getValue());
+            Logger.logInfo("Adding Entry " + child.getValue() + " -> " + root.getValue(), TypeTable.class);
             final String oldEntry = table.put(child.getValue(), root.getValue());
 
             if (oldEntry != null) {
-                System.out.println("Line " + root.getLine() + " Symbolerror: [" + child.getValue() + "] already defined");
+                Logger.logError("Line " + root.getLine() + " Symbolerror: [" + child.getValue() + "] already defined", TypeTable.class);
                 throw new SymbolAlreadyDefinedException("Das Symbol " + child.getValue() + " wurde bereits deklariert.");
             }
         }

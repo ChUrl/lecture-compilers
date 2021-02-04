@@ -1,11 +1,10 @@
 package parser.ast;
 
 import parser.grammar.Grammar;
+import util.Logger;
 
 import java.util.Collection;
 import java.util.HashSet;
-
-import static util.Logger.log;
 
 /**
  * Wendet in der Grammatik definierte Regeln auf einen Parsebaum an.
@@ -24,6 +23,8 @@ public final class ParseTreeCleaner {
     private ParseTreeCleaner() {}
 
     public static void clean(SyntaxTree parseTree, Grammar grammar) {
+        Logger.logDebug("Beginning cleaning of parse-tree", ParseTreeCleaner.class);
+
         deleteChildren(parseTree, grammar);
         deleteIfEmpty(parseTree, grammar);
         promote(parseTree, grammar);
@@ -32,17 +33,17 @@ public final class ParseTreeCleaner {
         nameToValue(parseTree, grammar);
         valueToValue(parseTree, grammar);
 
-        log("\nCleaned Tree:\n" + parseTree);
-        log("-".repeat(100));
-        System.out.println(" - Compressing syntax-tree...");
+        Logger.logDebug("Successfully cleaned the parse-tree", ParseTreeCleaner.class);
+        Logger.logInfo("\nCleaned Tree:\n" + parseTree, ParseTreeCleaner.class);
     }
 
     /**
      * Es werden Werte nach oben gereicht von [promote]-able Nodes.
      */
     public static void promote(SyntaxTree parseTree, Grammar grammar) {
-        log("\nPromoting nodes:");
+        Logger.logDebug(" :: Beginning up-propagation of nodes", ParseTreeCleaner.class);
         promote(parseTree.getRoot(), grammar);
+        Logger.logDebug(" :: Promoted nodes", ParseTreeCleaner.class);
     }
 
     private static void promote(SyntaxTreeNode root, Grammar grammar) {
@@ -56,8 +57,8 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            log("Promoting " + child.getName() + " -> " + root.getName());
-            log(root.toString());
+            Logger.logInfo("Promoting " + child.getName() + " -> " + root.getName(), ParseTreeCleaner.class);
+            Logger.logInfo(root.toString(), ParseTreeCleaner.class);
 
             root.setName(child.getName());
             root.setValue(child.getValue());
@@ -74,8 +75,9 @@ public final class ParseTreeCleaner {
      * Löscht leere Knoten mit [delIfEmpty].
      */
     public static void deleteIfEmpty(SyntaxTree parseTree, Grammar grammar) {
-        log("\nDeleting empty nodes:");
+        Logger.logDebug(" :: Beginning removal of empty nodes", ParseTreeCleaner.class);
         deleteIfEmpty(parseTree.getRoot(), grammar);
+        Logger.logDebug(" :: Removed all empty nodes", ParseTreeCleaner.class);
     }
 
     private static void deleteIfEmpty(SyntaxTreeNode root, Grammar grammar) {
@@ -88,7 +90,7 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            log("Removing " + child.getName());
+            Logger.logInfo("Removing " + child.getName(), ParseTreeCleaner.class);
 
             child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
@@ -101,8 +103,9 @@ public final class ParseTreeCleaner {
      * Löscht redundante Informationen in [delChildren]-Nodes (z.b. IF-child von COND) und Epsilon-Nodes.
      */
     public static void deleteChildren(SyntaxTree parseTree, Grammar grammar) {
-        log("Removing redundant children:");
+        Logger.logDebug(" :: Beginning removal of redundant children", ParseTreeCleaner.class);
         deleteChildren(parseTree.getRoot(), grammar);
+        Logger.logDebug(" :: Redundant children were removed", ParseTreeCleaner.class);
     }
 
     private static void deleteChildren(SyntaxTreeNode root, Grammar grammar) {
@@ -115,7 +118,7 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            log("Removing " + root.getName() + " -> " + child.getName());
+            Logger.logInfo("Removing " + root.getName() + " -> " + child.getName(), ParseTreeCleaner.class);
 
             child.setValue("REMOVE"); // If both childs have the same identity both are removed, so change one
             toRemove.add(child);
@@ -128,8 +131,9 @@ public final class ParseTreeCleaner {
      * Führt Umbenennungen durch.
      */
     private static void renameTo(SyntaxTree parseTree, Grammar grammar) {
-        log("\nRenaming nodes:");
+        Logger.logDebug(" :: Beginning renaming of nodes", ParseTreeCleaner.class);
         renameTo(parseTree.getRoot(), grammar);
+        Logger.logDebug(" :: Renamed nodes", ParseTreeCleaner.class);
     }
 
     private static void renameTo(SyntaxTreeNode root, Grammar grammar) {
@@ -140,7 +144,7 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            log("Rename " + root.getName() + " to " + grammar.getNewName(root) + ".");
+            Logger.logInfo("Rename " + root.getName() + " to " + grammar.getNewName(root) + ".", ParseTreeCleaner.class);
 
             root.setName(grammar.getNewName(root));
         }
@@ -150,8 +154,9 @@ public final class ParseTreeCleaner {
      * Verschiebt Knotennamen von [nametoval]-Nodes in Parent-Values und löscht das Child.
      */
     public static void nameToValue(SyntaxTree parseTree, Grammar grammar) {
-        log("\nMoving names to values:");
+        Logger.logDebug(" :: Beginning up-propagation of node-names", ParseTreeCleaner.class);
         nameToValue(parseTree.getRoot(), grammar);
+        Logger.logDebug(" :: Moved node-names to parent-values", ParseTreeCleaner.class);
     }
 
     private static void nameToValue(SyntaxTreeNode root, Grammar grammar) {
@@ -164,8 +169,8 @@ public final class ParseTreeCleaner {
                 continue;
             }
 
-            log("Moving " + child.getName() + " to value of " + root.getName());
-            log(root.toString());
+            Logger.logInfo("Moving " + child.getName() + " to value of " + root.getName(), ParseTreeCleaner.class);
+            Logger.logInfo(root.toString(), ParseTreeCleaner.class);
 
             root.setValue(child.getName());
 
@@ -182,8 +187,9 @@ public final class ParseTreeCleaner {
      * Variablennamen als Wert anstatt als Child-Node.
      */
     public static void valueToValue(SyntaxTree parseTree, Grammar grammar) {
-        log("\nMoving values to values:");
+        Logger.logDebug(" :: Beginning up-propagation of node-values", ParseTreeCleaner.class);
         valueToValue(parseTree.getRoot(), grammar);
+        Logger.logDebug(" :: Moved node-values to parent-values", ParseTreeCleaner.class);
     }
 
     private static void valueToValue(SyntaxTreeNode root, Grammar grammar) {
@@ -200,8 +206,8 @@ public final class ParseTreeCleaner {
                 && root.getChildren().get(0).getName().equals(root.getChildren().get(1).getName())) {
                 // Case where variable is assigned another variable with the same name
 
-                log("Moving " + root.getChildren().get(1).getValue() + " to value of " + root.getName());
-                log(root.toString());
+                Logger.logInfo("Moving " + root.getChildren().get(1).getValue() + " to value of " + root.getName(), ParseTreeCleaner.class);
+                Logger.logInfo(root.toString(), ParseTreeCleaner.class);
 
                 root.setValue(root.getChildren().get(1).getValue());
 
@@ -211,8 +217,8 @@ public final class ParseTreeCleaner {
             } else {
                 // Usual case where an expression is assigned
 
-                log("Moving " + child.getValue() + " to value of " + root.getName());
-                log(root.toString());
+                Logger.logInfo("Moving " + child.getValue() + " to value of " + root.getName(), ParseTreeCleaner.class);
+                Logger.logInfo(root.toString(), ParseTreeCleaner.class);
 
                 root.setValue(child.getValue());
                 toRemove.add(child);

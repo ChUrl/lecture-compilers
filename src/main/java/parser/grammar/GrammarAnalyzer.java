@@ -1,6 +1,7 @@
 package parser.grammar;
 
 import parser.ParsingTable;
+import util.Logger;
 
 import java.util.AbstractMap;
 import java.util.Arrays;
@@ -11,10 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-
-import static util.Logger.log;
-import static util.Logger.logIfTrue;
-import static util.Logger.logNullable;
 
 public final class GrammarAnalyzer {
 
@@ -37,17 +34,14 @@ public final class GrammarAnalyzer {
     private GrammarAnalyzer(Grammar grammar) {
         this.grammar = grammar;
 
-        log("Analyzing Grammar:\n");
+        Logger.logDebug("Beginning grammar analysis", GrammarAnalyzer.class);
 
-        // Es muss zwingend in der Reihenfolge [Nullable < First < Follow < Table] initialisiert werden
-        System.out.println(" - Initializing first-set...");
+        // Es muss zwingend in der Reihenfolge [First < Follow < Table] initialisiert werden
         this.first = this.initFirst();
-        System.out.println(" - Initializing follow-set...");
         this.follow = this.initFollow();
-        System.out.println(" - Initializing parse-table...");
         this.table = this.initParseTable();
 
-        System.out.println("Grammar analysis successful.");
+        Logger.logDebug("Grammar analysis successful", GrammarAnalyzer.class);
     }
 
     public static GrammarAnalyzer fromGrammar(Grammar grammar) {
@@ -55,6 +49,8 @@ public final class GrammarAnalyzer {
     }
 
     private Map<String, Set<String>> initFirst() {
+        Logger.logDebug(" :: Initializing first-set", GrammarAnalyzer.class);
+
         final Map<String, Set<String>> firstOut = new HashMap<>();
 
         // Die Methode funktioniert erst, nachdem first initialisiert ist.
@@ -64,8 +60,6 @@ public final class GrammarAnalyzer {
                                                   || firstOut.get(sym).contains(Grammar.EPSILON_SYMBOL);
         final Predicate<String[]> allNullable = split -> split.length == 0
                                                          || Arrays.stream(split).allMatch(nullable);
-
-        log("First Initialisieren:");
 
         // Initialisieren
         for (String nterm : this.grammar.getNonterminals()) {
@@ -113,7 +107,8 @@ public final class GrammarAnalyzer {
                                 final boolean changeNow = firstOut.get(leftside).addAll(firstYiNoEps);
                                 change = change || changeNow;
 
-                                logIfTrue(changeNow, "First: Added " + firstYiNoEps + " to " + leftside + " (All before are nullable)");
+                                Logger.logInfoIfTrue(changeNow, "First: Added " + firstYiNoEps + " to "
+                                                                + leftside + " (All before are nullable)", GrammarAnalyzer.class);
                             }
 
                             if (i == split.length - 1 && allNullable.test(split)) {
@@ -122,7 +117,8 @@ public final class GrammarAnalyzer {
                                 final boolean changeNow = firstOut.get(leftside).add(Grammar.EPSILON_SYMBOL);
                                 change = change || changeNow;
 
-                                logIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to " + leftside + " (All are nullable)");
+                                Logger.logInfoIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to "
+                                                                + leftside + " (All are nullable)", GrammarAnalyzer.class);
                             }
                         }
                     }
@@ -133,22 +129,23 @@ public final class GrammarAnalyzer {
                         final boolean changeNow = firstOut.get(leftside).add(Grammar.EPSILON_SYMBOL);
                         change = change || changeNow;
 
-                        logIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to " + leftside + " (X -> EPS exists)");
+                        Logger.logInfoIfTrue(changeNow, "First: Added " + Grammar.EPSILON_SYMBOL + " to "
+                                                        + leftside + " (X -> EPS exists)", GrammarAnalyzer.class);
                     }
                 }
             }
         } while (change);
 
-        log("\n" + firstOut);
-        log("-".repeat(100) + "\n");
+        Logger.logDebug(" :: First-set initialized successfully", GrammarAnalyzer.class);
+        Logger.logInfo("First Set: " + firstOut, GrammarAnalyzer.class);
 
         return firstOut;
     }
 
     private Map<String, Set<String>> initFollow() {
-        final Map<String, Set<String>> followOut = new HashMap<>();
+        Logger.logDebug(" :: Initializing follow-set", GrammarAnalyzer.class);
 
-        log("Follow Initialisieren:");
+        final Map<String, Set<String>> followOut = new HashMap<>();
 
         // Initialisieren
         for (String nterm : this.grammar.getNonterminals()) {
@@ -195,7 +192,8 @@ public final class GrammarAnalyzer {
                                 final boolean changeNow = followOut.get(split[i - 1]).addAll(firstXkNoEps);
                                 change = change || changeNow;
 
-                                logIfTrue(changeNow, "Follow: Added " + firstXkNoEps + " to " + split[i - 1] + " (Dazwischen nullable)");
+                                Logger.logInfoIfTrue(changeNow, "Follow: Added " + firstXkNoEps + " to "
+                                                                + split[i - 1] + " (Dazwischen nullable)", GrammarAnalyzer.class);
                             }
                         }
 
@@ -208,7 +206,8 @@ public final class GrammarAnalyzer {
                             final boolean changeNow = followOut.get(split[i - 1]).addAll(followOut.get(leftside));
                             change = change || changeNow;
 
-                            logIfTrue(changeNow, "Follow: Added " + leftside + " to " + split[i - 1] + " (Dahinter nullable)");
+                            Logger.logInfoIfTrue(changeNow, "Follow: Added " + leftside + " to "
+                                                            + split[i - 1] + " (Dahinter nullable)", GrammarAnalyzer.class);
                         }
                     }
 
@@ -218,23 +217,24 @@ public final class GrammarAnalyzer {
                         final boolean changeNow = followOut.get(split[split.length - 1]).addAll(followOut.get(leftside));
                         change = change || changeNow;
 
-                        logIfTrue(changeNow, "Follow: Added " + followOut.get(leftside) + " to " + split[split.length - 1] + " (Ende der Regel)");
+                        Logger.logInfoIfTrue(changeNow, "Follow: Added " + followOut.get(leftside) + " to "
+                                                        + split[split.length - 1] + " (Ende der Regel)", GrammarAnalyzer.class);
                     }
                 }
             }
 
         } while (change);
 
-        log("\n" + followOut);
-        log("-".repeat(100) + "\n");
+        Logger.logDebug(" :: Follow-set initialized successfully", GrammarAnalyzer.class);
+        Logger.logInfo("Follow Set: " + followOut, GrammarAnalyzer.class);
 
         return followOut;
     }
 
     private ParsingTable initParseTable() {
-        final Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
+        Logger.logDebug(" :: Initializing parse-table", GrammarAnalyzer.class);
 
-        log("Parsetable Aufstellen:");
+        final Map<Map.Entry<String, String>, String> tableOut = new HashMap<>();
 
         for (String leftside : this.grammar.getLeftSides()) {
 
@@ -248,8 +248,9 @@ public final class GrammarAnalyzer {
 
                     final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
-                    log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in first of " + rightside + ")");
-                    logNullable("Overwritten " + prev + "!\n", prev);
+                    Logger.logInfo("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym
+                                   + " in first of " + rightside + ")", GrammarAnalyzer.class);
+                    Logger.logInfoNullable(prev, "Overwritten " + prev + "!\n", GrammarAnalyzer.class);
                 }
 
                 final Set<String> followLeftside = this.follow(leftside);
@@ -262,8 +263,9 @@ public final class GrammarAnalyzer {
 
                         final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, sym), rightside);
 
-                        log("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym + " in follow of " + leftside + ")");
-                        logNullable("Overwritten " + prev + "!\n", prev);
+                        Logger.logInfo("Add " + rightside + " to cell (" + leftside + ", " + sym + ") (" + sym
+                                       + " in follow of " + leftside + ")", GrammarAnalyzer.class);
+                        Logger.logInfoNullable(prev, "Overwritten " + prev + "!\n", GrammarAnalyzer.class);
                     }
 
                     if (followLeftside.contains("$")) {
@@ -271,19 +273,21 @@ public final class GrammarAnalyzer {
 
                         final String prev = tableOut.put(new AbstractMap.SimpleEntry<>(leftside, "$"), rightside);
 
-                        log("Add " + rightside + " to cell (" + leftside + ", $) (epsilon in first of " + rightside + " and $ in follow of " + leftside + ")");
-                        logNullable("Overwritten " + prev + "!\n", prev);
+                        Logger.logInfo("Add " + rightside + " to cell (" + leftside
+                                       + ", $) (epsilon in first of " + rightside + " and $ in follow of "
+                                       + leftside + ")", GrammarAnalyzer.class);
+                        Logger.logInfoNullable(prev, "Overwritten " + prev + "!\n", GrammarAnalyzer.class);
                     }
                 }
             }
         }
 
-        final ParsingTable table = new ParsingTable(this.grammar, tableOut);
+        final ParsingTable parsingTable = new ParsingTable(this.grammar, tableOut);
 
-        log("\n" + table);
-        log("-".repeat(100) + "\n");
+        Logger.logDebug(" :: Parse-table initialized successfully", GrammarAnalyzer.class);
+        Logger.logInfo("ParsingTable: " + parsingTable, GrammarAnalyzer.class);
 
-        return table;
+        return parsingTable;
     }
 
 

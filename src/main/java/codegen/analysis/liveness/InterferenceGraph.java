@@ -21,6 +21,8 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
     }
 
     public static InterferenceGraph fromDataFlowGraph(DataFlowGraph dataFlowGraph, Map<String, Integer> varMap) {
+        Logger.logDebug("Generating interference-graph", InterferenceGraph.class);
+
         final List<InterferenceNode> interferenceNodes = new ArrayList<>();
 
         // Init graph
@@ -41,12 +43,14 @@ public final class InterferenceGraph implements Iterable<InterferenceNode> {
 
                     if (leftNode.isPresent() && rightNode.isPresent()) {
                         final boolean change = leftNode.get().addNeighbour(rightNode.get());
-                        Logger.logIfTrue(change, "Added interference neighbour: " + left + " -> " + right);
+                        Logger.logInfoIfTrue(change, "Added interference neighbour: " + left + " -> " + right, InterferenceGraph.class);
                     }
 
                 }
             }
         }
+
+        Logger.logDebug("Successfully generated interference-graph", InterferenceGraph.class);
 
         return interferenceGraph;
     }

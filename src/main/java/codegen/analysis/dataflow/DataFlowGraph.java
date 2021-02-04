@@ -4,6 +4,7 @@ import codegen.flowgraph.FlowBasicBlock;
 import codegen.flowgraph.FlowGraph;
 import codegen.flowgraph.FlowInstruction;
 import util.GraphvizCaller;
+import util.Logger;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +26,8 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
     }
 
     public static DataFlowGraph fromFlowGraph(FlowGraph flowGraph) {
+        Logger.logDebug("Beginning data-flow-graph generation", DataFlowGraph.class);
+
         final List<DataFlowNode> dataFlowNodes = new ArrayList<>();
 
         // Initialize all DataFlowNodes
@@ -36,6 +39,8 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
         final DataFlowGraph dataFlowGraph = new DataFlowGraph(dataFlowNodes);
         initNodePosition(flowGraph, dataFlowGraph);
+
+        Logger.logDebug("Successfully generated data-flow-graph", DataFlowGraph.class);
 
         return dataFlowGraph;
     }

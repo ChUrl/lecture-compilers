@@ -2,10 +2,9 @@ package codegen.analysis;
 
 import parser.ast.SyntaxTree;
 import parser.ast.SyntaxTreeNode;
+import util.Logger;
 
 import java.util.Set;
-
-import static util.Logger.log;
 
 /**
  * Ermittelt die maximal benötigte Stacktiefe für ein Programm.
@@ -24,12 +23,13 @@ public final class StackSizeAnalyzer {
     private StackSizeAnalyzer() {}
 
     public static int runStackModel(SyntaxTree tree) {
-        log("\nDetermining required stack depth:");
+        Logger.logDebug("Determining minimal stack-depth", StackSizeAnalyzer.class);
 
         final StackModel stack = new StackModel();
 
         runStackModel(tree.getRoot().getChildren().get(3).getChildren().get(11), stack);
 
+        Logger.logDebug("Found required stack-depth", StackSizeAnalyzer.class);
         return stack.getMax();
     }
 

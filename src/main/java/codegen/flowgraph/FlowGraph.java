@@ -48,10 +48,14 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
      * und zu Blöcken aus der {@link #predecessorMap} hergestellt.
      */
     public void addLabel(String label) {
+        Logger.logInfo("Adding Label: " + label, FlowGraph.class);
+
         final FlowBasicBlock newBlock = new FlowBasicBlock(label);
 
         // Resolve missing successors/predecessors from jumps
         if (this.predecessorMap.containsKey(label)) {
+            Logger.logInfo("Handling PredecessorMap Entry: " + this.predecessorMap.get(label), FlowGraph.class);
+
             this.predecessorMap.get(label).addSuccessorBlock(newBlock);
             newBlock.addPredecessorBlock(this.predecessorMap.get(label));
         }
@@ -75,6 +79,8 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
      * @param jumpInstruction Der verwendete Sprungbefehl.
      */
     public void addJump(String jumpInstruction, String label) {
+        Logger.logInfo("Adding Jump to Label: " + label, FlowGraph.class);
+
         this.addInstruction(jumpInstruction, label);
 
         final FlowBasicBlock newBlock = new FlowBasicBlock();
@@ -105,6 +111,7 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
             // Successor doesn't exist, so wait until it does
 
             // Current node is predecessor of label-block
+            Logger.logInfo("Adding Entry to PredecessorMap: " + currentBlock, FlowGraph.class);
             currentBlock.ifPresent(flowBasicBlock -> this.predecessorMap.put(label, flowBasicBlock));
         }
 
@@ -112,6 +119,8 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
     }
 
     public void addInstruction(String instruction, String... args) {
+        Logger.logInfo("Adding Instruction: " + instruction, FlowGraph.class);
+
         if (this.basicBlocks.isEmpty()) {
             this.basicBlocks.add(new FlowBasicBlock("START")); // First block doesn't exist
         }
@@ -127,14 +136,14 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
      * Ein Block ist "leer", wenn er kein Label und keine Instructions hat.
      */
     public void purgeEmptyBlocks() {
-        Logger.log("\nPurging empty blocks: ");
+        Logger.logDebug("Purging empty blocks", FlowGraph.class);
 
         final Collection<FlowBasicBlock> toRemove = new HashSet<>();
 
         // Collect removable blocks
         for (FlowBasicBlock block : this.basicBlocks) {
             if (block.isEmpty()) {
-                Logger.log("Marking Block " + this.basicBlocks.indexOf(block) + " as removable.");
+                Logger.logInfo("Marking Block " + this.basicBlocks.indexOf(block) + " as removable.", FlowGraph.class);
                 toRemove.add(block);
             }
         }
@@ -146,8 +155,8 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
             for (FlowBasicBlock predecessor : block.getBlockPredecessorSet()) {
                 for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
 
-                    Logger.log("Rerouting Block " + this.basicBlocks.indexOf(predecessor)
-                               + " to Block " + this.basicBlocks.indexOf(successor));
+                    Logger.logInfo("Rerouting Block " + this.basicBlocks.indexOf(predecessor)
+                                   + " to Block " + this.basicBlocks.indexOf(successor), FlowGraph.class);
                     predecessor.addSuccessorBlock(successor);
                     successor.addPredecessorBlock(predecessor);
                 }
@@ -164,6 +173,8 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
         }
 
         this.basicBlocks.removeAll(toRemove);
+
+        Logger.logDebug("Successfully removed all empty blocks and rerouted graph", FlowGraph.class);
     }
 
     private Optional<FlowBasicBlock> getBlockByLabel(String label) {
@@ -198,8 +209,6 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
            .append("node[shape=Mrecord]\n");
 
         for (FlowBasicBlock block : this.basicBlocks) {
-            System.out.println(block);
-            System.out.println("-".repeat(100));
             dot.append(block.getId())
                .append(" [label=\"{<f0> ")
                .append(this.basicBlocks.indexOf(block))

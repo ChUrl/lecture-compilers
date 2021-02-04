@@ -1,14 +1,13 @@
 package parser;
 
 import parser.ast.SyntaxTree;
-
-import static util.Logger.log;
+import util.Logger;
 
 public class ParseException extends RuntimeException {
 
     public ParseException(String message, SyntaxTree syntaxTree) {
         super("\n" + message);
 
-        log("\nAST at last state:\n" + syntaxTree);
+        Logger.logException("\nAST at last state:\n" + syntaxTree, ParseException.class);
     }
 }

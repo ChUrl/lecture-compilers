@@ -1,10 +1,10 @@
 package parser.ast;
 
+import util.Logger;
+
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
-import static util.Logger.log;
 
 /**
  * Ein SyntaxTree wird an bestimmten Stellen rotiert, sodass bestimmte Eigenschaften
@@ -62,23 +62,24 @@ public final class SyntaxTreeRebalancer {
      * </ul>
      */
     public static void rebalance(SyntaxTree abstractSyntaxTree) {
+        Logger.logDebug("Beginning rebalancing of syntax-tree", SyntaxTreeRebalancer.class);
+
         flip(abstractSyntaxTree);
         leftPrecedence(abstractSyntaxTree);
         operatorPrecedence(abstractSyntaxTree);
         flipCommutativeExpr(abstractSyntaxTree);
 
-        log(abstractSyntaxTree.toString());
-        log("-".repeat(100));
-
-        System.out.println(" - Balancing syntax-tree...");
+        Logger.logDebug("Successfully rebalanced syntax-tree", SyntaxTreeRebalancer.class);
+        Logger.logInfo("AST after rebalancing:" + abstractSyntaxTree, SyntaxTreeRebalancer.class);
     }
 
     /**
      * Baum spiegeln, damit höhere Ebenen links sind und EXPR vorwärts laufen.
      */
     public static void flip(SyntaxTree abstractSyntaxTree) {
-        log("Flipping tree for ltr evaluation");
+        Logger.logDebug(" :: Flipping tree for ltr evaluation", SyntaxTreeRebalancer.class);
         flip(abstractSyntaxTree.getRoot());
+        Logger.logDebug(" :: Successfully flipped tree", SyntaxTreeRebalancer.class);
     }
 
     private static void flip(SyntaxTreeNode root) {
@@ -93,8 +94,9 @@ public final class SyntaxTreeRebalancer {
      * Kommutative Ausdrücke werden gespiegelt, damit die tiefen Teilexpressions zuerst berechnet werden.
      */
     public static void flipCommutativeExpr(SyntaxTree abstractSyntaxTree) {
-        log("Flipping commutative expressions for stack efficiency");
+        Logger.logDebug(" :: Flipping commutative expressions for stack efficiency", SyntaxTreeRebalancer.class);
         flipCommutativeExpr(abstractSyntaxTree.getRoot());
+        Logger.logDebug(" :: Succesfully optimized stack efficiency", SyntaxTreeRebalancer.class);
     }
 
     private static void flipCommutativeExpr(SyntaxTreeNode root) {
@@ -108,8 +110,8 @@ public final class SyntaxTreeRebalancer {
             if (root.getChildren().size() == 2 && root.getChildren().get(0).size() < root.getChildren().get(1).size()) {
                 // Make the bigger subtree the left one
 
-                log("Flipping " + root.getName() + ": " + root.getValue() + " for stack efficiency.");
-                log(root.toString());
+                Logger.logInfo("Flipping " + root.getName() + ": " + root.getValue() + " for stack efficiency.", SyntaxTreeRebalancer.class);
+                Logger.logInfo(root.toString(), SyntaxTreeRebalancer.class);
 
                 Collections.reverse(root.getChildren());
             }
@@ -121,8 +123,9 @@ public final class SyntaxTreeRebalancer {
      * Es werden EXPR-Nodes (2 Childs, 1 davon EXPR, Kein Wert) solange wie möglich linksrotiert.
      */
     public static void leftPrecedence(SyntaxTree abstractSyntaxTree) {
-        log("Left-rotating expressions for left-precedence");
+        Logger.logDebug(" :: Left-rotating expressions for left-precedence", SyntaxTreeRebalancer.class);
         leftPrecedence(abstractSyntaxTree.getRoot());
+        Logger.logDebug(" :: Successfully rotated expressions for left-precedence", SyntaxTreeRebalancer.class);
     }
 
     private static void leftPrecedence(SyntaxTreeNode root) {
@@ -150,8 +153,8 @@ public final class SyntaxTreeRebalancer {
      * @return Es wird false zurückgegeben, sobald keine weitere Rotation mehr möglich ist.
      */
     private static boolean specialLeftRotate(SyntaxTreeNode root) {
-        log("Special-Left-Rotation around " + root.getName());
-        log(root.toString());
+        Logger.logInfo("Special-Left-Rotation around " + root.getName(), SyntaxTreeRebalancer.class);
+        Logger.logInfo(root.toString(), SyntaxTreeRebalancer.class);
 
         final SyntaxTreeNode left = root.getChildren().get(0);
         final SyntaxTreeNode right = root.getChildren().get(1);
@@ -195,13 +198,15 @@ public final class SyntaxTreeRebalancer {
      * als die Operatoren mit niedriger Priorität.
      */
     public static void operatorPrecedence(SyntaxTree abstractSyntaxTree) {
-        log("Right-rotating expressions for operator-precedence");
+        Logger.logDebug(" :: Right-rotating expressions for operator-precedence", SyntaxTreeRebalancer.class);
 
         boolean changed;
 
         do {
             changed = operatorPrecedence(abstractSyntaxTree.getRoot());
         } while (changed);
+
+        Logger.logDebug(" :: Rotated expressions for operator-precedence", SyntaxTreeRebalancer.class);
     }
 
     public static boolean operatorPrecedence(SyntaxTreeNode root) {
@@ -240,8 +245,8 @@ public final class SyntaxTreeRebalancer {
     }
 
     private static void simpleRightRotate(SyntaxTreeNode root) {
-        log("Right-Rotation around " + root.getName() + ": " + root.getValue());
-        log(root.toString());
+        Logger.logInfo("Right-Rotation around " + root.getName() + ": " + root.getValue(), SyntaxTreeRebalancer.class);
+        Logger.logInfo(root.toString(), SyntaxTreeRebalancer.class);
 
         final SyntaxTreeNode left = root.getChildren().get(0);
         final SyntaxTreeNode right = root.getChildren().get(1);
