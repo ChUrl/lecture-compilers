@@ -27,7 +27,7 @@ class LexerTest {
         return null;
     }
 
-    private List<String> getSymbols(Lexer lex) {
+    private static List<String> getSymbols(Lexer lex) {
         return lex.getAllTokens().stream()
                   .map(tok -> lex.getVocabulary().getSymbolicName(tok.getType()))
                   .collect(Collectors.toUnmodifiableList());
@@ -37,7 +37,7 @@ class LexerTest {
     void testEmptyFile() {
         final Lexer lex = this.initLexer("EmptyFile.stups");
 
-        final List<String> token = this.getSymbols(lex);
+        final List<String> token = LexerTest.getSymbols(lex);
 
         assertThat(token).isEmpty();
     }
@@ -46,7 +46,7 @@ class LexerTest {
     void testWhitespace() {
         final Lexer lex = this.initLexer("Whitespace.stups");
 
-        final List<String> token = this.getSymbols(lex);
+        final List<String> token = LexerTest.getSymbols(lex);
 
         assertThat(token).containsExactly("IDENTIFIER",
                                           "IDENTIFIER",
@@ -58,7 +58,7 @@ class LexerTest {
     void testEmptyMain() {
         final Lexer lex = this.initLexer("EmptyMain.stups");
 
-        final List<String> token = this.getSymbols(lex);
+        final List<String> token = LexerTest.getSymbols(lex);
 
         assertThat(token).containsExactly("CLASS",
                                           "IDENTIFIER",
@@ -82,7 +82,7 @@ class LexerTest {
     void testGeneralWhile() {
         final Lexer lex = this.initLexer("GeneralWhile.stups");
 
-        final List<String> token = this.getSymbols(lex);
+        final List<String> token = LexerTest.getSymbols(lex);
 
         assertThat(token).hasSize(68)
                          .containsSequence("WHILE",
@@ -102,7 +102,7 @@ class LexerTest {
     void testGeneralComment() {
         final Lexer lex = this.initLexer("GeneralComment.stups");
 
-        final List<String> token = this.getSymbols(lex);
+        final List<String> token = LexerTest.getSymbols(lex);
 
         assertThat(token).hasSize(21)
                          .doesNotContain("WHITESPACE")
@@ -125,7 +125,7 @@ class LexerTest {
     void testGeneralIfElse() {
         final Lexer lex = this.initLexer("GeneralIfElse.stups");
 
-        final List<String> token = this.getSymbols(lex);
+        final List<String> token = LexerTest.getSymbols(lex);
 
         assertThat(token).hasSize(96)
                          .containsSequence("IF",
