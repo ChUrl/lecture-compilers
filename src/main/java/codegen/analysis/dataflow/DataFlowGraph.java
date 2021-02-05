@@ -116,8 +116,8 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
                .append("}\"];\n");
         }
 
-        dot.append("START[label=\"START\"];\n")
-           .append("END[label=\"END\"];\n");
+        dot.append("START[label=\"START\" shape=box];\n")
+           .append("END[label=\"END\" shape=box];\n");
 
         dot.append("START -> \"").append(this.dataFlowNodes.get(0).getId()).append("\";\n");
         dot.append("\"").append(this.dataFlowNodes.get(this.dataFlowNodes.size() - 1).getId()).append("\" -> END;\n");
@@ -127,6 +127,16 @@ public final class DataFlowGraph implements Iterable<DataFlowNode> {
 
                 dot.append("\"").append(node.getId()).append("\" -> \"").append(successor.getId()).append("\";\n");
             }
+        }
+
+        for (DataFlowNode node : this.dataFlowNodes) {
+            dot.append("{ rank=same; ");
+            for (DataFlowNode successor : node.getSuccessorSet()) {
+
+                dot.append("\"").append(successor.getId()).append("\", ");
+            }
+            dot.deleteCharAt(dot.lastIndexOf(","));
+            dot.append("}\n");
         }
 
         dot.append("}");

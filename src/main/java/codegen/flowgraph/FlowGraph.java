@@ -204,10 +204,6 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
     public String printToImage() {
         final Optional<FlowBasicBlock> currentBlock = this.getCurrentBlock();
 
-        if (this.basicBlocks.isEmpty() || currentBlock.isEmpty()) {
-            return "Can't export empty graph: FlowGraph.svg";
-        }
-
         final StringBuilder dot = new StringBuilder();
 
         dot.append("digraph dfd {\n")
@@ -225,18 +221,36 @@ public class FlowGraph implements Iterable<FlowBasicBlock> {
                .append("}\"];\n");
         }
 
-        dot.append("START[label=\"START\"];\n")
-           .append("END[label=\"END\"];\n");
+        dot.append("START[label=\"START\" shape=box];\n")
+           .append("END[label=\"END\" shape=box];\n");
 
-        dot.append("START -> \"").append(this.basicBlocks.get(0).getId()).append("\";\n");
-        dot.append("\"").append(currentBlock.get().getId()).append("\" -> END;\n");
 
-        for (FlowBasicBlock block : this.basicBlocks) {
-            // Successors
+        if (!this.basicBlocks.isEmpty() && currentBlock.isPresent()) {
 
-            for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
-                dot.append("\"").append(block.getId()).append("\" -> \"").append(successor.getId()).append("\";\n");
+            dot.append("START -> \"").append(this.basicBlocks.get(0).getId()).append("\";\n");
+            dot.append("\"").append(currentBlock.get().getId()).append("\" -> END;\n");
+
+            for (FlowBasicBlock block : this.basicBlocks) {
+                // Successors
+
+                for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
+                    dot.append("\"").append(block.getId()).append("\" -> \"").append(successor.getId()).append("\";\n");
+                }
             }
+
+            for (FlowBasicBlock block : this.basicBlocks) {
+                dot.append("{ rank=same; ");
+                for (FlowBasicBlock successor : block.getBlockSuccessorSet()) {
+
+                    dot.append("\"").append(successor.getId()).append("\", ");
+                }
+                dot.deleteCharAt(dot.lastIndexOf(","));
+                dot.append("}\n");
+            }
+        } else {
+            // Main-method is empty
+
+            dot.append("START -> END");
         }
 
         dot.append("}");

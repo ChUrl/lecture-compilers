@@ -67,9 +67,15 @@ public class SyntaxTree {
 
             dot.append("\"").append(current.getId()).append("\"")
                .append(" [label=\"{<f0> ")
-               .append(current.getName())
+               .append(current.getName()
+                              .replace("\"", "\\\"")
+                              .replace("<", "less")
+                              .replace(">", "greater"))
                .append("|<f1> ")
-               .append(current.getValue())
+               .append(current.getValue()
+                              .replace("\"", "\\\"")
+                              .replace("<", "less")
+                              .replace(">", "greater"))
                .append("}\"];\n");
 
             current.getChildren().forEach(stack::push);
