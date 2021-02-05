@@ -6,9 +6,9 @@ import java.util.function.Supplier;
 // Maximal professioneller Logger
 public final class Logger {
 
-    private static final boolean LOG_ENABLED = true;
+    private static final boolean LOG_ENABLED = false;
     private static final boolean LOG_EXCEPTIONS = false;
-    private static final int LOG_LEVEL = 2; // 0 = ERROR, 1 = DEBUG, 2 = INFO
+    private static final int LOG_LEVEL = 0; // 0 = ERROR, 1 = DEBUG, 2 = INFO
 
     private static final Map<String, Boolean> packages;
 
