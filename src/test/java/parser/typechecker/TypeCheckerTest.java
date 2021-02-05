@@ -23,7 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class TypeCheckerTest {
 
-    private final Path path = Paths.get(this.getClass().getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+    private final Path path = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
     private final Grammar grammar = Grammar.fromFile(this.path);
     private final StupsParser stupsParser = StupsParser.fromGrammar(this.grammar);
 
@@ -39,9 +39,8 @@ class TypeCheckerTest {
     private SyntaxTree getTree(String expr) {
         final Lexer lex = new StupsLexer(CharStreams.fromString(exprToProg(expr)));
         final SyntaxTree tree = this.stupsParser.parse(lex.getAllTokens(), lex.getVocabulary());
-        final SyntaxTree ast = SyntaxTree.toAbstractSyntaxTree(tree, this.grammar);
 
-        return ast;
+        return SyntaxTree.toAbstractSyntaxTree(tree, this.grammar);
     }
 
     @ParameterizedTest

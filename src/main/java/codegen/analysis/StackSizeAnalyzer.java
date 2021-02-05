@@ -27,7 +27,11 @@ public final class StackSizeAnalyzer {
 
         final StackModel stack = new StackModel();
 
-        runStackModel(tree.getRoot().getChildren().get(3).getChildren().get(11), stack);
+        if (tree.getRoot().getChildren().size() > 1) {
+            // Or else main-method would be empty
+
+            runStackModel(tree.getRoot().getChildren().get(1), stack);
+        }
 
         Logger.logDebug("Found required stack-depth", StackSizeAnalyzer.class);
         return stack.getMax();
@@ -64,7 +68,7 @@ public final class StackSizeAnalyzer {
     private static void println(SyntaxTreeNode root, StackModel stack) {
         stack.push(root); // Getstatic
 
-        runStackModel(root.getChildren().get(1).getChildren().get(1), stack);
+        runStackModel(root.getChildren().get(0).getChildren().get(0), stack);
 
         stack.pop(); // Objectref
         stack.pop(); // Argument

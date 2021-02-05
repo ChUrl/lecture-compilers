@@ -24,7 +24,7 @@ class ParseTreeCleanerTest {
 
     @BeforeAll
     static void init() throws IOException, URISyntaxException {
-        final Path path = Paths.get(ParseTreeCleanerTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Path path = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
         grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
     }
@@ -49,7 +49,7 @@ class ParseTreeCleanerTest {
 
         ParseTreeCleaner.deleteChildren(tree, grammar);
 
-        assertThat(before - tree.size()).isEqualTo(3);
+        assertThat(before - tree.size()).isEqualTo(19);
     }
 
     @Test
@@ -79,6 +79,6 @@ class ParseTreeCleanerTest {
 
         ParseTreeCleaner.clean(tree, grammar);
 
-        assertThat(tree.size()).isEqualTo(28);
+        assertThat(tree.size()).isEqualTo(10);
     }
 }

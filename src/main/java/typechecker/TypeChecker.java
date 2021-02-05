@@ -59,7 +59,7 @@ public final class TypeChecker {
         } else if ("par_expr".equals(root.getName())) {
             // Nodetable Eintrag für Klammern
 
-            final SyntaxTreeNode centerChild = root.getChildren().get(1);
+            final SyntaxTreeNode centerChild = root.getChildren().get(0);
 
             nodeTable.put(root, nodeTable.get(centerChild));
         } else if ("IDENTIFIER".equals(root.getName())) {

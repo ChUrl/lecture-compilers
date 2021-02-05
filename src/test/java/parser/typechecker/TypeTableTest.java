@@ -28,7 +28,7 @@ class TypeTableTest {
 
     @BeforeAll
     static void init() throws IOException, URISyntaxException {
-        final Path path = Paths.get(TypeTableTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Path path = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
         grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
     }

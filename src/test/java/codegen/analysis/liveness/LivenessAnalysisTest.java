@@ -34,7 +34,7 @@ class LivenessAnalysisTest {
 
     @BeforeAll
     static void init() throws IOException, URISyntaxException {
-        final Path path = Paths.get(LivenessAnalysisTest.class.getClassLoader().getResource("exampleGrammars/Grammar.grammar").toURI());
+        final Path path = Paths.get(System.getProperty("user.dir") + "/stups.grammar");
         final Grammar grammar = Grammar.fromFile(path);
         parser = StupsParser.fromGrammar(grammar);
         stupsGrammar = grammar;

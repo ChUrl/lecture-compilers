@@ -89,7 +89,7 @@ public final class FlowGraphGenerator {
 
     private static FlowGraph initFlowGraph(SyntaxTree tree, Map<String, Integer> varMap, String source) {
         final String bytecodeVersion = "49.0";
-        final String clazz = tree.getRoot().getChildren().get(1).getValue();
+        final String clazz = tree.getRoot().getChildren().get(0).getValue();
         final int stackSize = StackSizeAnalyzer.runStackModel(tree);
         final int localCount = varMap.size() + 1;
 
@@ -104,8 +104,14 @@ public final class FlowGraphGenerator {
     public FlowGraph generateGraph() {
         Logger.logDebug("Beginning generation of source-graph", FlowGraphGenerator.class);
 
+        if (this.tree.getRoot().getChildren().size() == 1) {
+            // Empty main-method
+
+            return this.graph;
+        }
+
         // Skip the first 2 identifiers: ClassName, MainArgs
-        this.generateNode(this.tree.getRoot().getChildren().get(3).getChildren().get(11));
+        this.generateNode(this.tree.getRoot().getChildren().get(1));
         this.graph.purgeEmptyBlocks();
 
         Logger.logDebug("Source-graph generation complete", FlowGraphGenerator.class);
@@ -176,7 +182,7 @@ public final class FlowGraphGenerator {
         this.graph.addLabel("LOOPstart" + currentLabel);
 
         // Condition while ( ... ) {
-        this.generateNode(root.getChildren().get(0).getChildren().get(1));
+        this.generateNode(root.getChildren().get(0).getChildren().get(0));
 
         // Jump out of loop if condition is false
         this.graph.addJump("ifeq", "LOOPend" + currentLabel);
@@ -202,7 +208,7 @@ public final class FlowGraphGenerator {
         final String inst = switch (type) {
             case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "istore";
             case "STRING_TYPE" -> "astore";
-            default -> throw new IllegalStateException("Unexpected value: " + type);
+            default -> throw new CodeGenerationException("Unexpected value: " + type);
         };
 
         Logger.logInfo("assign(): Node \"" + root.getName() + ": " + root.getValue() + "\" => " + inst, FlowGraphGenerator.class);
@@ -239,7 +245,7 @@ public final class FlowGraphGenerator {
             inst = switch (root.getValue()) {
                 case "ADD" -> "";
                 case "SUB" -> "ineg";
-                default -> throw new IllegalStateException("Unexpected value: " + root.getValue());
+                default -> throw new CodeGenerationException("Unexpected value: " + root.getValue());
             };
         } else if (root.getChildren().size() == 2) { //! Stack - 1
             // Binary operator
@@ -253,7 +259,7 @@ public final class FlowGraphGenerator {
                 case "MUL" -> "imul";
                 case "DIV" -> "idiv";
                 case "MOD" -> "irem"; // Remainder operator
-                default -> throw new IllegalStateException("Unexpected value: " + root.getValue());
+                default -> throw new CodeGenerationException("Unexpected value: " + root.getValue());
             };
         }
 
@@ -276,7 +282,7 @@ public final class FlowGraphGenerator {
             if (!"NOT".equals(node.getValue())) {
                 // Possibility doesn't exist, would be frontend-error
 
-                throw new IllegalStateException("Unexpected value: " + node.getValue());
+                throw new CodeGenerationException("Unexpected value: " + node.getValue());
             }
 
             this.generateNode(node.getChildren().get(0));
@@ -298,12 +304,12 @@ public final class FlowGraphGenerator {
             final String cmpeq = switch (type) {
                 case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "if_icmpeq";
                 case "STRING_TYPE" -> "if_accmpeq";
-                default -> throw new IllegalStateException("Unexpected value: " + type);
+                default -> throw new CodeGenerationException("Unexpected value: " + type);
             };
             final String cmpne = switch (type) {
                 case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "if_icmpne";
                 case "STRING_TYPE" -> "if_accmpne";
-                default -> throw new IllegalStateException("Unexpected value: " + type);
+                default -> throw new CodeGenerationException("Unexpected value: " + type);
             };
 
             // The comparison operations need to jump
@@ -316,7 +322,7 @@ public final class FlowGraphGenerator {
                 case "LESS_EQUAL" -> this.genComparisonInst("if_icmple", "LE", currentLabel);
                 case "GREATER" -> this.genComparisonInst("if_icmpgt", "GT", currentLabel);
                 case "GREATER_EQUAL" -> this.genComparisonInst("if_icmpge", "GE", currentLabel);
-                default -> throw new IllegalStateException("Unexpected value: " + node.getValue());
+                default -> throw new CodeGenerationException("Unexpected value: " + node.getValue());
             }
         }
     }
@@ -359,7 +365,7 @@ public final class FlowGraphGenerator {
         final String inst = switch (type) {
             case "INTEGER_TYPE", "BOOLEAN_TYPE" -> "iload";
             case "STRING_TYPE" -> "aload";
-            default -> throw new IllegalStateException("Unexpected value: " + type);
+            default -> throw new CodeGenerationException("Unexpected value: " + type);
         };
 
         Logger.logInfo("identifier(): Node \"" + node.getName() + ": " + node.getValue() + "\" => " + inst, FlowGraphGenerator.class);
@@ -370,12 +376,12 @@ public final class FlowGraphGenerator {
     private void printlnNode(SyntaxTreeNode node) { //! Stack + 1
         this.graph.addInstruction("getstatic", "java/lang/System/out", "Ljava/io/PrintStream;");
 
-        final SyntaxTreeNode expr = node.getChildren().get(1).getChildren().get(1);
+        final SyntaxTreeNode expr = node.getChildren().get(0).getChildren().get(0);
         final String type = switch (this.nodeTypeMap.get(expr)) {
             case "BOOLEAN_TYPE" -> "Z";
             case "INTEGER_TYPE" -> "I";
             case "STRING_TYPE" -> "Ljava/lang/String;";
-            default -> throw new IllegalStateException("Unexpected value: " + this.nodeTypeMap.get(expr));
+            default -> throw new CodeGenerationException("Unexpected value: " + this.nodeTypeMap.get(expr));
         };
 
         this.generateNode(expr);
